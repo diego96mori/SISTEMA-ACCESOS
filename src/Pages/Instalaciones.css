@@ -1,0 +1,27 @@
+.equipo-box {
+  border: 1px solid #e0e0e0;
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  background: #fafafa;
+}
+.form-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.form-row label {
+  width: 160px;
+  font-weight: 500;
+}
+
+.form-row .form-control {
+  flex: 1;
+    margin-left: 10px;   /* 🔥 agrega esto */
+
+}
+.form-row label {
+  display: block;
+  margin-bottom: 6px;
+}

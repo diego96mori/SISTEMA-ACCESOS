@@ -1,0 +1,110 @@
+:root{
+  --campfire-1:#EC6014;
+  --campfire-2:#F88F23;
+  --campfire-3:#FBB931;
+  --bg:#0f172a;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  font-family: "Segoe UI", sans-serif;
+  background: var(--bg);
+}
+
+.home-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #636363, #85827E);
+}
+
+.home-card {
+  background: #FFECD1;
+  padding: 60px 40px;
+  border-radius: 20px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25);
+  text-align: center;
+  width: 90%;
+  max-width: 500px;
+  animation: fadeIn 0.6s ease;
+}
+
+/* TITULO GRANDE */
+.brand-title {
+  font-size: 40px;
+  font-weight: bold;
+  letter-spacing: 3px;
+  margin-bottom: 5px;
+  color: #636363;
+}
+
+/* SUBTITULO */
+.home-title {
+  font-size: 18px;
+  margin-bottom: 40px;
+  color: #85827E;
+}
+
+/* BOTONES PRINCIPALES */
+.home-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-bottom: 30px;
+}
+
+.home-buttons button {
+  width: 100%;
+  background: #D1B39F;
+  border: none;
+  padding: 18px;
+  border-radius: 12px;
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+}
+
+.home-buttons button:hover {
+  background: #FFD1B3;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+}
+
+/* BOTON ADMIN */
+.admin-btn {
+  width: 100%;
+  background: #636363;
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.admin-btn:hover {
+  background: #85827E;
+  transform: translateY(-3px);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

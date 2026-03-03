@@ -1,0 +1,222 @@
+/* ===== CONTENEDOR GENERAL ===== */
+
+.form-wrapper{
+  padding:8px 20px 40px 20px;  /* ↓ antes 40px arriba */
+  display:flex;
+  justify-content:center;
+}
+.form-card{
+  background:#ffffff;
+  border-radius:16px;
+  padding:30px;
+  width:100%;
+  max-width:1100px;
+  box-shadow:0 20px 40px rgba(0,0,0,.2);
+}
+
+/* ===== BARRA SUPERIOR ===== */
+
+.brandbar{
+  background:linear-gradient(
+    90deg,
+    var(--campfire-1),
+    var(--campfire-2),
+    var(--campfire-3)
+  );
+  padding:10px 18px;
+  border-radius:12px;
+  font-weight:800;
+  color:#1a1a1a;
+  display:inline-block;
+  margin-bottom:6px;   /* ↓ antes 25px */
+}
+/* ===== TITULOS ===== */
+
+.section-title{
+  color:#b86b00;
+  font-weight:700;
+  margin-bottom:10px;
+}
+
+hr{
+  margin-top:5px;
+  margin-bottom:20px;
+}
+
+/* ===== INPUTS ===== */
+
+.form-control,
+.form-select{
+  height:38px;
+  font-size:14px;
+}
+
+textarea.form-control{
+  height:80px;
+  resize:none;
+}
+
+/* ===== MUI INPUT ALTURA IGUAL ===== */
+
+.MuiInputBase-root {
+  height: 38px !important;
+}
+
+.MuiInputBase-input {
+  padding: 8px 12px !important;
+  font-size: 14px !important;
+}
+
+/* ===== OCULTAR FLECHAS ===== 
+
+.MuiPickersArrowSwitcher-root {
+  display: none !important;
+}*/
+
+/* ===== CENTRAR HORA GRANDE ===== */
+
+.MuiTimePickerToolbar-root {
+  text-align: center !important;
+}
+
+.MuiTimePickerToolbar-hourMinuteLabel {
+  justify-content: center !important;
+}
+
+/* ===== QUITAR SCROLL HORIZONTAL DEL MODAL ===== */
+
+.MuiDialog-paper {
+  overflow-x: hidden !important;
+}
+.volver-wrapper{
+  margin-top:6px;
+}
+
+.volver-btn{
+  background:none;
+  border:none;
+  font-size:13px;
+  color:#1976d2;
+  cursor:pointer;
+  padding:0;
+}
+
+.volver-btn:hover{
+  text-decoration:underline;
+}
+/* Labels del bloque Nodo a ingresar */
+.nodo-section label {
+  font-weight: 600;
+  margin-bottom: 6px;
+  display: block;
+}
+.brand-container{
+  max-width:1100px;
+  margin:8px auto 4px auto;  /* ↓ mucho más compacto */
+  padding:0 20px;
+}
+/* ===== Personal contador ===== */
+
+.personal-count{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.personal-input{
+  width:80px !important;   /* tamaño pequeño */
+  height:34px;
+  text-align:center;
+}
+/* ===== SCTR estilo profesional ===== */
+
+.sctr-wrapper{
+  max-width:600px;
+}
+
+.sctr-box{
+  border:1px solid #ced4da;
+  border-radius:8px;
+  padding:8px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-height:42px;
+  flex-wrap:wrap;
+  background:white;
+}
+
+.btn-select{
+  background:#f8f9fa;
+  border:1px solid #ced4da;
+  padding:4px 10px;
+  border-radius:6px;
+  font-size:13px;
+  cursor:pointer;
+}
+
+.btn-select:hover{
+  background:#e9ecef;
+}
+
+.sctr-inside{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+  align-items:center;
+}
+
+.placeholder-text{
+  font-size:13px;
+  color:#777;
+}
+
+.chip{
+  display:flex;
+  align-items:center;
+  background:#fff3e0;
+  border:1px solid #ffb74d;
+  padding:4px 8px;
+  border-radius:20px;
+  font-size:12px;
+  max-width:220px;
+}
+
+.chip-text{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  max-width:180px;
+}
+
+.chip-remove{
+  margin-left:6px;
+  cursor:pointer;
+  font-weight:bold;
+  color:#d32f2f;
+}
+
+.chip-remove:hover{
+  color:#b71c1c;
+}
+/* ===== Correo dividido ===== */
+
+.correo-group{
+  display:flex;
+}
+
+.correo-user{
+  border-top-right-radius:0;
+  border-bottom-right-radius:0;
+}
+
+.correo-domain{
+  max-width:160px;
+  border-top-left-radius:0;
+  border-bottom-left-radius:0;
+}
+
+.same-btn{
+  height: 45px;
+  min-width: 150px;
+}
