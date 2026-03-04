@@ -245,9 +245,13 @@ function Dashboard() {
                     <td className="p-3">{a.tipos_trabajo?.nombre}</td>
                     <td className="p-3">{a.detalle_trabajo}</td>
 
-                    <td className="p-3">
-                      {a.trabajo_contrata === "SI" ? "SI" : ""}
-                    </td>
+ <td className="p-3">
+  {a.trabajo_contrata === "SI" ? (
+    <span className="text-green-600 font-semibold">SI</span>
+  ) : (
+    <span className="text-gray-500">NO</span>
+  )}
+</td>
 
                     <td className="p-3">{a.nombre_contrata}</td>
 
