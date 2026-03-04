@@ -75,11 +75,11 @@ const { data, error } = await supabase
 .order("id", { ascending: false });
 
 if(error){
-  console.log("ERROR SUPABASE:", error);
+  console.log(error.message);
 }
 
 setAccesos(data || []);
-
+  setLoading(false);   // ← ESTA LÍNEA FALTA
   };
 
 
