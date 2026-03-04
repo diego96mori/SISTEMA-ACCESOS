@@ -54,10 +54,12 @@ function Dashboard() {
         hora_salida_real,
         estado_acceso,
         motivo_cancelacion,
-        estado,
         detalle_trabajo,
         trabajo_contrata,
         nombre_contrata,
+        sctr_url,
+        correo_aprobado,
+        correo_denegado,
         nodos ( nombre ),
         empresas ( nombre ),
         tipos_trabajo ( nombre ),
@@ -182,27 +184,30 @@ function Dashboard() {
 
                 <tr>
 
-                  <th className="p-3">ID_ACCESO</th>
-                  <th className="p-3">NODO</th>
-                  <th className="p-3">Fecha ingreso</th>
-                  <th className="p-3">Hora ingreso</th>
+                  <th className="p-3">ID</th>
+                  <th className="p-3">Nodo</th>
+                  <th className="p-3">Fecha</th>
+                  <th className="p-3">Hora</th>
                   <th className="p-3">Solicitante</th>
-                  <th className="p-3">Tipo Doc</th>
+                  <th className="p-3">Doc</th>
                   <th className="p-3">Documento</th>
                   <th className="p-3">Teléfono</th>
                   <th className="p-3">Correo</th>
                   <th className="p-3">Empresa</th>
-                  <th className="p-3">Área Responsable</th>
-                  <th className="p-3">Tipo Trabajo</th>
+                  <th className="p-3">Área</th>
+                  <th className="p-3">Trabajo</th>
                   <th className="p-3">Detalle</th>
                   <th className="p-3">Contrata</th>
-                  <th className="p-3">Nombre Contrata</th>
+                  <th className="p-3">Nombre</th>
 
-                  <th className="p-3">Ingreso Real</th>
-                  <th className="p-3">Salida Real</th>
-                  <th className="p-3">Estado Acceso</th>
-                  <th className="p-3">Motivo Cancelación</th>
+                  <th className="p-3">Ingreso</th>
+                  <th className="p-3">Salida</th>
                   <th className="p-3">Estado</th>
+                  <th className="p-3">Motivo</th>
+
+                  <th className="p-3">SCTR</th>
+                  <th className="p-3">Aprobar</th>
+                  <th className="p-3">Denegar</th>
 
                   <th className="p-3">Personal</th>
 
@@ -228,7 +233,7 @@ function Dashboard() {
                     <td className="p-3">{a.hora_ingreso}</td>
 
                     <td className="p-3">
-                      {a.solicitante_nombre} {a.solicitante_ap_paterno} {a.solicitante_ap_materno}
+                      {a.solicitante_nombre} {a.solicitante_ap_paterno}
                     </td>
 
                     <td className="p-3">{a.tipos_documento?.nombre}</td>
@@ -240,14 +245,56 @@ function Dashboard() {
                     <td className="p-3">{a.tipos_trabajo?.nombre}</td>
                     <td className="p-3">{a.detalle_trabajo}</td>
 
-                    <td className="p-3">{a.trabajo_contrata}</td>
+                    <td className="p-3">
+                      {a.trabajo_contrata === "SI" ? "SI" : ""}
+                    </td>
+
                     <td className="p-3">{a.nombre_contrata}</td>
 
                     <td className="p-3">{a.hora_ingreso_real}</td>
                     <td className="p-3">{a.hora_salida_real}</td>
                     <td className="p-3">{a.estado_acceso}</td>
                     <td className="p-3">{a.motivo_cancelacion}</td>
-                    <td className="p-3">{a.estado}</td>
+
+
+                    {/* SCTR */}
+
+                    <td className="p-3 text-center">
+
+                      {a.sctr_url && (
+                        <a
+                          href={a.sctr_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-blue-600 text-xl"
+                        >
+                          📄
+                        </a>
+                      )}
+
+                    </td>
+
+
+
+                    {/* BOTONES */}
+
+                    <td className="p-3">
+
+                      <button className="bg-green-500 text-white px-3 py-1 rounded">
+                        ✔
+                      </button>
+
+                    </td>
+
+                    <td className="p-3">
+
+                      <button className="bg-red-500 text-white px-3 py-1 rounded">
+                        ✖
+                      </button>
+
+                    </td>
+
+
 
                     <td className="p-3">
                       {a.solicitante_nombre} {a.solicitante_ap_paterno}
@@ -277,7 +324,7 @@ function Dashboard() {
 
       {mostrarModal && (
 
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black/20 flex items-center justify-center">
 
           <div className="bg-white p-6 rounded-xl w-96">
 
