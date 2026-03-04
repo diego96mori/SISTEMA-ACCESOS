@@ -44,38 +44,41 @@ function Dashboard() {
 
   const cargarAccesos = async () => {
 
-    const { data } = await supabase
-      .from("accesos")
-      .select(`
-        id,
-        fecha_ingreso,
-        hora_ingreso,
-        hora_ingreso_real,
-        hora_salida_real,
-        estado_acceso,
-        motivo_cancelacion,
-        detalle_trabajo,
-        trabajo_contrata,
-        nombre_contrata,
-        sctr_url,
-        correo_aprobado,
-        correo_denegado,
-        nodos ( nombre ),
-        empresas ( nombre ),
-        tipos_trabajo ( nombre ),
-        tipos_documento:solicitante_tipo_doc_id ( nombre ),
-        areas_responsable:area_responsable_id ( nombre ),
-        solicitante_nombre,
-        solicitante_ap_paterno,
-        solicitante_ap_materno,
-        solicitante_num_doc,
-        solicitante_telefono,
-        solicitante_correo
-      `)
-      .order("id", { ascending: false });
+const { data, error } = await supabase
+.from("accesos")
+.select(`
+  id,
+  fecha_ingreso,
+  hora_ingreso,
+  hora_ingreso_real,
+  hora_salida_real,
+  estado_acceso,
+  motivo_cancelacion,
+  detalle_trabajo,
+  trabajo_contrata,
+  nombre_contrata,
+  sctr_url,
+  correo_aprobado,
+  correo_denegado,
+  nodos ( nombre ),
+  empresas ( nombre ),
+  tipos_trabajo ( nombre ),
+  tipos_documento:solicitante_tipo_doc_id ( nombre ),
+  areas_responsable:area_responsable_id ( nombre ),
+  solicitante_nombre,
+  solicitante_ap_paterno,
+  solicitante_ap_materno,
+  solicitante_num_doc,
+  solicitante_telefono,
+  solicitante_correo
+`)
+.order("id", { ascending: false });
 
-    setAccesos(data || []);
-    setLoading(false);
+if(error){
+  console.log("ERROR SUPABASE:", error);
+}
+
+setAccesos(data || []);
 
   };
 
