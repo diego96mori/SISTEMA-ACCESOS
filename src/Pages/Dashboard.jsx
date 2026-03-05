@@ -42,48 +42,53 @@ function Dashboard() {
 
 
 
+  const cargarAccesos = async () => {
 
+    const { data, error } = await supabase
+      .from("accesos")
+      .select(`
+        id,
+        fecha_ingreso,
+        hora_ingreso,
+        hora_ingreso_real,
+        hora_salida_real,
+        estado_acceso,
+        motivo_cancelacion,
+        detalle_trabajo,
+        trabajo_contrata,
+        nombre_contrata,
+        sctr_path,
 
-const cargarAccesos = async () => {
+        solicitante_nombre,
+        solicitante_ap_paterno,
+        solicitante_num_doc,
+        solicitante_telefono,
+        solicitante_correo,
 
-const { data, error } = await supabase
-.from("accesos")
-.select(`
-  id,
-  fecha_ingreso,
-  hora_ingreso,
-  hora_ingreso_real,
-  hora_salida_real,
-  estado_acceso,
-  motivo_cancelacion,
-  detalle_trabajo,
-  trabajo_contrata,
-  nombre_contrata,
-  sctr_path,
-  correo_aprobado,
-  correo_denegado,
-  nodos ( nombre ),
-  empresas ( nombre ),
-  tipos_trabajo ( nombre ),
-  tipos_documento:solicitante_tipo_doc_id ( nombre ),
-  areas_responsable:area_responsable_id ( nombre ),
-  solicitante_nombre,
-  solicitante_ap_paterno,
-  solicitante_ap_materno,
-  solicitante_num_doc,
-  solicitante_telefono,
-  solicitante_correo
-`)
-.order("id", { ascending: false });
+        nodos ( nombre ),
+        empresas ( nombre ),
+        tipos_trabajo ( nombre ),
+        tipos_documento:solicitante_tipo_doc_id ( nombre ),
+        areas_responsable:area_responsable_id ( nombre ),
 
-if (error) {
-  console.log(error.message);
-}
+        personal_acceso (
+          nombre,
+          ap_paterno,
+          ap_materno,
+          num_doc,
+          telefono
+        )
+      `)
+      .order("id", { ascending: false });
 
-setAccesos(data || []);
-setLoading(false);
+    if (error) {
+      console.log(error.message);
+    }
 
-};
+    setAccesos(data || []);
+    setLoading(false);
+
+  };
 
 
 
@@ -130,6 +135,19 @@ setLoading(false);
 
 
 
+  const obtenerSctr = (path) => {
+
+    const { data } = supabase
+      .storage
+      .from("sctr")
+      .getPublicUrl(path);
+
+    return data.publicUrl;
+
+  };
+
+
+
   return (
 
     <div className="flex min-h-screen bg-gray-100">
@@ -158,13 +176,10 @@ setLoading(false);
         <div className="flex justify-between items-center mb-6">
 
           <div>
-
             <h1 className="text-2xl font-semibold">Lista de Accesos</h1>
-
             {user && (
               <p className="text-sm text-gray-500">{user.email}</p>
             )}
-
           </div>
 
           <button
@@ -184,38 +199,31 @@ setLoading(false);
             <p className="p-6">Cargando...</p>
           ) : (
 
-            <table className="min-w-full text-sm">
+            <table className="min-w-full text-sm border-separate border-spacing-y-2">
 
-              <thead className="bg-gray-50 text-gray-600">
+              <thead className="bg-gray-100 sticky top-0">
 
                 <tr>
 
-                  <th className="p-3">ID</th>
-                  <th className="p-3">Nodo</th>
-                  <th className="p-3">Fecha</th>
-                  <th className="p-3">Hora</th>
-                  <th className="p-3">Solicitante</th>
-                  <th className="p-3">Doc</th>
-                  <th className="p-3">Documento</th>
-                  <th className="p-3">Teléfono</th>
-                  <th className="p-3">Correo</th>
-                  <th className="p-3">Empresa</th>
-                  <th className="p-3">Área</th>
-                  <th className="p-3">Trabajo</th>
-                  <th className="p-3">Detalle</th>
-                  <th className="p-3">Contrata</th>
-                  <th className="p-3">Nombre</th>
-
-                  <th className="p-3">Ingreso</th>
-                  <th className="p-3">Salida</th>
-                  <th className="p-3">Estado</th>
-                  <th className="p-3">Motivo</th>
-
-                  <th className="p-3">SCTR</th>
-                  <th className="p-3">Aprobar</th>
-                  <th className="p-3">Denegar</th>
-
-                  <th className="p-3">Personal</th>
+                  <th className="p-4">ID</th>
+                  <th className="p-4">Nodo</th>
+                  <th className="p-4">Fecha</th>
+                  <th className="p-4">Hora</th>
+                  <th className="p-4">Solicitante</th>
+                  <th className="p-4">Documento</th>
+                  <th className="p-4">Teléfono</th>
+                  <th className="p-4">Empresa</th>
+                  <th className="p-4">Área</th>
+                  <th className="p-4">Trabajo</th>
+                  <th className="p-4">Detalle</th>
+                  <th className="p-4">Contrata</th>
+                  <th className="p-4">Nombre</th>
+                  <th className="p-4">Ingreso</th>
+                  <th className="p-4">Salida</th>
+                  <th className="p-4">Estado</th>
+                  <th className="p-4">Motivo</th>
+                  <th className="p-4">SCTR</th>
+                  <th className="p-4">Personal</th>
 
                 </tr>
 
@@ -230,89 +238,82 @@ setLoading(false);
                   <tr
                     key={a.id}
                     onClick={() => abrirModal(a)}
-                    className="border-t hover:bg-gray-50 cursor-pointer"
+                    className="bg-white hover:bg-gray-50 shadow-sm cursor-pointer"
                   >
 
-                    <td className="p-3">{a.id}</td>
-                    <td className="p-3">{a.nodos?.nombre}</td>
-                    <td className="p-3">{a.fecha_ingreso}</td>
-                    <td className="p-3">{a.hora_ingreso}</td>
+                    <td className="p-4">{a.id}</td>
+                    <td className="p-4">{a.nodos?.nombre}</td>
+                    <td className="p-4">{a.fecha_ingreso}</td>
+                    <td className="p-4">{a.hora_ingreso}</td>
 
-                    <td className="p-3">
+                    <td className="p-4">
                       {a.solicitante_nombre} {a.solicitante_ap_paterno}
                     </td>
 
-                    <td className="p-3">{a.tipos_documento?.nombre}</td>
-                    <td className="p-3">{a.solicitante_num_doc}</td>
-                    <td className="p-3">{a.solicitante_telefono}</td>
-                    <td className="p-3">{a.solicitante_correo}</td>
-                    <td className="p-3">{a.empresas?.nombre}</td>
-                    <td className="p-3">{a.areas_responsable?.nombre}</td>
-                    <td className="p-3">{a.tipos_trabajo?.nombre}</td>
-                    <td className="p-3">{a.detalle_trabajo}</td>
+                    <td className="p-4">{a.solicitante_num_doc}</td>
+                    <td className="p-4">{a.solicitante_telefono}</td>
+                    <td className="p-4">{a.empresas?.nombre}</td>
+                    <td className="p-4">{a.areas_responsable?.nombre}</td>
+                    <td className="p-4">{a.tipos_trabajo?.nombre}</td>
+                    <td className="p-4">{a.detalle_trabajo}</td>
 
-<td className="p-3">
-  {a.trabajo_contrata ? (
-    <span className="text-green-600 font-semibold">SI</span>
-  ) : (
-    <span className="text-gray-500">NO</span>
-  )}
-</td>
-                    <td className="p-3">
-  {a.trabajo_contrata ? a.nombre_contrata : "-"}
-</td>
+                    <td className="p-4">
+                      {a.trabajo_contrata ? "SI" : "NO"}
+                    </td>
 
-                    <td className="p-3">{a.hora_ingreso_real}</td>
-                    <td className="p-3">{a.hora_salida_real}</td>
-                    <td className="p-3">{a.estado_acceso}</td>
-                    <td className="p-3">{a.motivo_cancelacion}</td>
+                    <td className="p-4">
+                      {a.trabajo_contrata ? a.nombre_contrata : "-"}
+                    </td>
+
+                    <td className="p-4">{a.hora_ingreso_real}</td>
+                    <td className="p-4">{a.hora_salida_real}</td>
+                    <td className="p-4">{a.estado_acceso}</td>
+                    <td className="p-4">{a.motivo_cancelacion}</td>
 
 
-                    {/* SCTR */}
 
-                    <td className="p-3 text-center">
+                    <td className="p-4 text-center">
 
-                    {a.sctr_path && a.sctr_path.length > 0 && (
-  <a
-    href={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/sctr/${a.sctr_path[0]}`}
-    target="_blank"
-    rel="noreferrer"
-    className="text-blue-600 text-xl"
-  >
-    📄
-  </a>
-)}
+                      {a.sctr_path && a.sctr_path.length > 0 && (
+                        <a
+                          href={obtenerSctr(a.sctr_path[0])}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-blue-600 text-xl"
+                        >
+                          📄
+                        </a>
+                      )}
 
                     </td>
 
 
 
-                    {/* BOTONES */}
+                    <td className="p-4">
 
-                    <td className="p-3">
+                      {a.personal_acceso?.map((p, i) => (
 
-                      <button className="bg-green-500 text-white px-3 py-1 rounded">
-                        ✔
-                      </button>
+                        <div
+                          key={i}
+                          className="mb-2 p-2 bg-gray-50 rounded border"
+                        >
 
-                    </td>
+                          <div className="font-semibold">
+                            {p.nombre} {p.ap_paterno}
+                          </div>
 
-                    <td className="p-3">
+                          <div className="text-xs text-gray-500">
+                            DNI: {p.num_doc}
+                          </div>
 
-                      <button className="bg-red-500 text-white px-3 py-1 rounded">
-                        ✖
-                      </button>
+                          <div className="text-xs">
+                            {p.telefono}
+                          </div>
 
-                    </td>
+                        </div>
 
+                      ))}
 
-
-                    <td className="p-3">
-                      {a.solicitante_nombre} {a.solicitante_ap_paterno}
-                      <br />
-                      {a.tipos_documento?.nombre}:{a.solicitante_num_doc}
-                      <br />
-                      {a.solicitante_telefono}
                     </td>
 
                   </tr>
@@ -419,3 +420,4 @@ setLoading(false);
 }
 
 export default Dashboard;
+
