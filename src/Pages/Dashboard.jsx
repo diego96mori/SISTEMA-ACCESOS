@@ -44,6 +44,8 @@ function Dashboard() {
 
   const cargarAccesos = async () => {
 
+const cargarAccesos = async () => {
+
 const { data, error } = await supabase
 .from("accesos")
 .select(`
@@ -74,13 +76,14 @@ const { data, error } = await supabase
 `)
 .order("id", { ascending: false });
 
-if(error){
+if (error) {
   console.log(error.message);
-}git
+}
 
 setAccesos(data || []);
-  setLoading(false);   // ← ESTA LÍNEA FALTA
-  };
+setLoading(false);
+
+};
 
 
 
@@ -269,16 +272,16 @@ setAccesos(data || []);
 
                     <td className="p-3 text-center">
 
-                      {a.sctr_url && (
-                        <a
-                          href={a.sctr_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-blue-600 text-xl"
-                        >
-                          📄
-                        </a>
-                      )}
+                    {a.sctr_path && a.sctr_path.length > 0 && (
+  <a
+    href={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/sctr/${a.sctr_path[0]}`}
+    target="_blank"
+    rel="noreferrer"
+    className="text-blue-600 text-xl"
+  >
+    📄
+  </a>
+)}
 
                     </td>
 
