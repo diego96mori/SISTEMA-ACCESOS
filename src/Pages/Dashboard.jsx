@@ -274,15 +274,15 @@ function Dashboard() {
 
                     <td className="p-4 text-center">
 
-                      {a.sctr_path && a.sctr_path.length > 0 && (
+                      {a.sctr_path &&  (
                         <a
-                          href={obtenerSctr(a.sctr_path[0])}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-blue-600 text-xl"
-                        >
-                          📄
-                        </a>
+  href={obtenerSctr(a.sctr_path)}
+  target="_blank"
+  rel="noreferrer"
+  className="text-blue-600 hover:text-blue-800 text-xl"
+>
+📄
+</a>
                       )}
 
                     </td>
