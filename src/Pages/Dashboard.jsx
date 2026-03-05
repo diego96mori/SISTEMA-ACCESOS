@@ -57,7 +57,7 @@ const { data, error } = await supabase
   detalle_trabajo,
   trabajo_contrata,
   nombre_contrata,
-  sctr_url,
+  sctr_path,
   correo_aprobado,
   correo_denegado,
   nodos ( nombre ),
@@ -76,7 +76,7 @@ const { data, error } = await supabase
 
 if(error){
   console.log(error.message);
-}
+}git
 
 setAccesos(data || []);
   setLoading(false);   // ← ESTA LÍNEA FALTA
