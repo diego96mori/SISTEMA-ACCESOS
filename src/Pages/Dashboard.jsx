@@ -135,19 +135,6 @@ function Dashboard() {
 
 
 
-  const obtenerSctr = (path) => {
-
-    const { data } = supabase
-      .storage
-      .from("sctr")
-      .getPublicUrl(path);
-
-    return data.publicUrl;
-
-  };
-
-
-
   return (
 
     <div className="flex min-h-screen bg-gray-100">
@@ -274,18 +261,33 @@ function Dashboard() {
 
                     <td className="p-4 text-center">
 
-                      {a.sctr_path &&  (
-                        <a
-  href={obtenerSctr(a.sctr_path)}
-  target="_blank"
-  rel="noreferrer"
-  className="text-blue-600 hover:text-blue-800 text-xl"
->
-📄
-</a>
-                      )}
+{a.sctr_path && (
 
-                    </td>
+  (Array.isArray(a.sctr_path) ? a.sctr_path : [a.sctr_path]).map((archivo, i) => {
+
+    const { data } = supabase
+      .storage
+      .from("sctr")
+      .getPublicUrl(archivo);
+
+    return (
+      <a
+        key={i}
+        href={data.publicUrl}
+        target="_blank"
+        rel="noreferrer"
+        className="text-blue-600 text-xl mr-2 hover:text-blue-800 cursor-pointer"
+        onClick={(e) => e.stopPropagation()}
+      >
+        📄
+      </a>
+    );
+
+  })
+
+)}
+
+</td>
 
 
 
