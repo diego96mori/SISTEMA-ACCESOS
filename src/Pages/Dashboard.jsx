@@ -141,31 +141,41 @@ setAcciones(accionesIniciales);
   };
 const manejarAccion = async (id, tipo, correo) => {
 
-  if (acciones[id]) return;
+  if (acciones[id] === "APROBADO" || acciones[id] === "DENEGADO") return;
 
-  // 1. Guardar en BD
-  await supabase
-    .from("accesos")
-    .update({ estado_aprobacion: tipo })
-    .eq("id", id);
-
-  // 2. LLAMAR A TU FUNCIÓN (ESTO ES LO NUEVO)
-  await fetch("https://stkgsygonyxtrdhlgusx.supabase.co/functions/v1/enviar-correo", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      correo: correo,
-      estado: tipo
-    })
-  });
-
-  // 3. Actualizar UI
+  // 🔥 1. ACTUALIZA UI INMEDIATO
   setAcciones(prev => ({
     ...prev,
     [id]: tipo
   }));
+
+  try {
+
+    // 2. Guardar en BD
+    await supabase
+      .from("accesos")
+      .update({ estado_aprobacion: tipo })
+      .eq("id", id);
+
+    // 3. Llamar función correo
+    const res = await fetch("https://stkgsygonyxtrdhlgusx.supabase.co/functions/v1/enviar-correo", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer sb_publishable_lzLwfUm87890uaQlGaByJw_iuW0PCq4"
+  },
+  body: JSON.stringify({
+    correo: correo,
+    estado: tipo
+  })
+});
+
+    const data = await res.json();
+    console.log("RESPUESTA CORREO:", data);
+
+  } catch (error) {
+    console.error("ERROR:", error);
+  }
 
 };
 
@@ -343,37 +353,41 @@ const manejarAccion = async (id, tipo, correo) => {
 
   <div className="flex flex-col gap-2">
 
-    <button
-      disabled={acciones[a.id]}
-      onClick={(e) => {
-        e.stopPropagation();
-        manejarAccion(a.id, "APROBADO", a.solicitante_correo);
-      }}
-      className={`px-3 py-1 rounded text-white 
-        ${acciones[a.id] === "APROBADO"
-          ? "bg-green-700"
-          : "bg-green-500 hover:bg-green-600"}
-        ${acciones[a.id] ? "opacity-60 cursor-not-allowed" : ""}
-      `}
-    >
-      Aprobar
-    </button>
+  <button
+  disabled={acciones[a.id]}
+  onClick={(e) => {
+    e.stopPropagation();
+    manejarAccion(a.id, "APROBADO", a.solicitante_correo);
+  }}
+  className={`px-3 py-1 rounded text-white transition-all
+    ${acciones[a.id] === "APROBADO"
+      ? "bg-green-800 scale-105 shadow-lg"
+      : "bg-green-500 hover:bg-green-600"}
+    ${acciones[a.id] && acciones[a.id] !== "APROBADO"
+      ? "opacity-40"
+      : ""}
+  `}
+>
+  Aprobar
+</button>
 
-    <button
-      disabled={acciones[a.id]}
-      onClick={(e) => {
-        e.stopPropagation();
-        manejarAccion(a.id, "DENEGADO", a.solicitante_correo);
-      }}
-      className={`px-3 py-1 rounded text-white 
-        ${acciones[a.id] === "DENEGADO"
-          ? "bg-red-700"
-          : "bg-red-500 hover:bg-red-600"}
-        ${acciones[a.id] && "opacity-60 cursor-not-allowed"}
-      `}
-    >
-      Denegar
-    </button>
+ <button
+  disabled={acciones[a.id]}
+  onClick={(e) => {
+    e.stopPropagation();
+    manejarAccion(a.id, "DENEGADO", a.solicitante_correo);
+  }}
+  className={`px-3 py-1 rounded text-white transition-all
+    ${acciones[a.id] === "DENEGADO"
+      ? "bg-red-800 scale-105 shadow-lg"
+      : "bg-red-500 hover:bg-red-600"}
+    ${acciones[a.id] && acciones[a.id] !== "DENEGADO"
+      ? "opacity-40"
+      : ""}
+  `}
+>
+  Denegar
+</button>
 
   </div>
 
