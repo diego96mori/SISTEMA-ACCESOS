@@ -18,6 +18,7 @@ function Dashboard() {
   const [estadoAcceso, setEstadoAcceso] = useState("PENDIENTE");
   const [motivoCancelacion, setMotivoCancelacion] = useState("");
 
+  const [acciones, setAcciones] = useState({});
 
 
   useEffect(() => {
@@ -57,6 +58,7 @@ function Dashboard() {
         detalle_trabajo,
         trabajo_contrata,
         nombre_contrata,
+        estado_aprobacion,
         sctr_path,
 
         solicitante_nombre,
@@ -85,6 +87,11 @@ function Dashboard() {
       console.log(error.message);
     }
 
+    const accionesIniciales = {};
+    (data || []).forEach(a => {
+    accionesIniciales[a.id] = a.estado_aprobacion;
+    });
+setAcciones(accionesIniciales);
     setAccesos(data || []);
     setLoading(false);
 
@@ -117,6 +124,29 @@ function Dashboard() {
 
 
   const guardarControl = async () => {
+
+    const manejarAccion = async (id, tipo, correo) => {
+
+  if (acciones[id]) return;
+
+  // 1. Guardar en BD
+  await supabase
+    .from("accesos")
+    .update({ estado_aprobacion: tipo })
+    .eq("id", id);
+
+  // 2. Actualizar UI
+  setAcciones(prev => ({
+    ...prev,
+    [id]: tipo
+  }));
+
+  // 3. (temporal) correo
+  console.log("Correo a:", correo, "Estado:", tipo);
+
+};
+
+
 
     await supabase
       .from("accesos")
@@ -211,6 +241,7 @@ function Dashboard() {
                   <th className="p-4">Motivo</th>
                   <th className="p-4">SCTR</th>
                   <th className="p-4">Personal</th>
+                  <th className="p-4">Acción</th>
 
                 </tr>
 
@@ -291,8 +322,49 @@ function Dashboard() {
 
 
 
-                    <td className="p-4">
+  <td className="p-4">
   <div className="p-3 bg-gray-50 rounded border text-sm">
+
+  <td className="p-4">
+
+  <div className="flex flex-col gap-2">
+
+    <button
+      disabled={acciones[a.id]}
+      onClick={(e) => {
+        e.stopPropagation();
+        manejarAccion(a.id, "APROBADO", a.solicitante_correo);
+      }}
+      className={`px-3 py-1 rounded text-white 
+        ${acciones[a.id] === "APROBADO"
+          ? "bg-green-700"
+          : "bg-green-500 hover:bg-green-600"}
+        ${acciones[a.id] && "opacity-60 cursor-not-allowed"}
+      `}
+    >
+      Aprobar
+    </button>
+
+    <button
+      disabled={acciones[a.id]}
+      onClick={(e) => {
+        e.stopPropagation();
+        manejarAccion(a.id, "DENEGADO", a.solicitante_correo);
+      }}
+      className={`px-3 py-1 rounded text-white 
+        ${acciones[a.id] === "DENEGADO"
+          ? "bg-red-700"
+          : "bg-red-500 hover:bg-red-600"}
+        ${acciones[a.id] && "opacity-60 cursor-not-allowed"}
+      `}
+    >
+      Denegar
+    </button>
+
+  </div>
+
+</td>
+
 
     {a.personal_acceso?.map((p, i) => (
       <div key={i} className="mb-1">
