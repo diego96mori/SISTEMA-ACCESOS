@@ -292,17 +292,31 @@ function Dashboard() {
 
 
                     <td className="p-4">
-  <div className="p-3 bg-gray-50 rounded border text-sm">
 
-    {a.personal_acceso?.map((p, i) => (
-      <div key={i} className="mb-1">
-        <span className="font-semibold">{i + 1}) </span>
-        {p.nombre} {p.ap_paterno} {p.ap_materno} - DNI : {p.num_doc} - {p.telefono}
-      </div>
-    ))}
+                      {a.personal_acceso?.map((p, i) => (
 
-  </div>
-</td>
+                        <div
+                          key={i}
+                          className="mb-2 p-2 bg-gray-50 rounded border"
+                        >
+
+                          <div className="font-semibold">
+                            {p.nombre} {p.ap_paterno}
+                          </div>
+
+                          <div className="text-xs text-gray-500">
+                            DNI: {p.num_doc}
+                          </div>
+
+                          <div className="text-xs">
+                            {p.telefono}
+                          </div>
+
+                        </div>
+
+                      ))}
+
+                    </td>
 
                   </tr>
 
