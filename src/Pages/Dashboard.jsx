@@ -125,29 +125,6 @@ setAcciones(accionesIniciales);
 
   const guardarControl = async () => {
 
-    const manejarAccion = async (id, tipo, correo) => {
-
-  if (acciones[id]) return;
-
-  // 1. Guardar en BD
-  await supabase
-    .from("accesos")
-    .update({ estado_aprobacion: tipo })
-    .eq("id", id);
-
-  // 2. Actualizar UI
-  setAcciones(prev => ({
-    ...prev,
-    [id]: tipo
-  }));
-
-  // 3. (temporal) correo
-  console.log("Correo a:", correo, "Estado:", tipo);
-
-};
-
-
-
     await supabase
       .from("accesos")
       .update({
@@ -162,7 +139,23 @@ setAcciones(accionesIniciales);
     cargarAccesos();
 
   };
+const manejarAccion = async (id, tipo, correo) => {
 
+  if (acciones[id]) return;
+
+  await supabase
+    .from("accesos")
+    .update({ estado_aprobacion: tipo })
+    .eq("id", id);
+
+  setAcciones(prev => ({
+    ...prev,
+    [id]: tipo
+  }));
+
+  console.log("Correo a:", correo, "Estado:", tipo);
+
+};
 
 
   return (
@@ -324,8 +317,17 @@ setAcciones(accionesIniciales);
 
   <td className="p-4">
   <div className="p-3 bg-gray-50 rounded border text-sm">
+    {a.personal_acceso?.map((p, i) => (
+      <div key={i} className="mb-1">
+        <span className="font-semibold">{i + 1}) </span>
+        {p.nombre} {p.ap_paterno} {p.ap_materno} - DNI : {p.num_doc} - {p.telefono}
+      </div>
+    ))}
 
-  <td className="p-4">
+  </div>
+</td>
+
+<td className="p-4">
 
   <div className="flex flex-col gap-2">
 
@@ -363,17 +365,6 @@ setAcciones(accionesIniciales);
 
   </div>
 
-</td>
-
-
-    {a.personal_acceso?.map((p, i) => (
-      <div key={i} className="mb-1">
-        <span className="font-semibold">{i + 1}) </span>
-        {p.nombre} {p.ap_paterno} {p.ap_materno} - DNI : {p.num_doc} - {p.telefono}
-      </div>
-    ))}
-
-  </div>
 </td>
 
                   </tr>
