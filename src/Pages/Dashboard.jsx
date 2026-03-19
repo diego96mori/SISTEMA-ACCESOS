@@ -143,17 +143,29 @@ const manejarAccion = async (id, tipo, correo) => {
 
   if (acciones[id]) return;
 
+  // 1. Guardar en BD
   await supabase
     .from("accesos")
     .update({ estado_aprobacion: tipo })
     .eq("id", id);
 
+  // 2. LLAMAR A TU FUNCIÓN (ESTO ES LO NUEVO)
+  await fetch("https://stkgsygonyxtrdhlgusx.supabase.co/functions/v1/enviar-correo", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      correo: correo,
+      estado: tipo
+    })
+  });
+
+  // 3. Actualizar UI
   setAcciones(prev => ({
     ...prev,
     [id]: tipo
   }));
-
-  console.log("Correo a:", correo, "Estado:", tipo);
 
 };
 
@@ -341,7 +353,7 @@ const manejarAccion = async (id, tipo, correo) => {
         ${acciones[a.id] === "APROBADO"
           ? "bg-green-700"
           : "bg-green-500 hover:bg-green-600"}
-        ${acciones[a.id] && "opacity-60 cursor-not-allowed"}
+        ${acciones[a.id] ? "opacity-60 cursor-not-allowed" : ""}
       `}
     >
       Aprobar
