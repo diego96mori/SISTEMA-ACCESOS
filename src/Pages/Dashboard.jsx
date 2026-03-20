@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "../supabaseClient";
+import { supabase, supabaseAnonKey } from "../supabaseClient";
 import { useNavigate } from "react-router-dom";
 
 function Dashboard() {
@@ -161,9 +161,10 @@ const manejarAccion = async (id, tipo, correo) => {
       {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
-        },
+  "Content-Type": "application/json",
+  "Authorization": `Bearer ${supabaseAnonKey}`,
+  "apikey": supabaseAnonKey
+},
         body: JSON.stringify({
           correo: correo,
           estado: tipo
