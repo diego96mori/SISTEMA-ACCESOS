@@ -155,7 +155,7 @@ const manejarAccion = async (id, tipo, correo) => {
       .from("accesos")
       .update({ estado_aprobacion: tipo })
       .eq("id", id);
-
+console.log("KEY:", supabaseAnonKey);
     const res = await fetch(
       "https://stkgsygonyxtrdhlgusx.supabase.co/functions/v1/super-endpoint",
       {
