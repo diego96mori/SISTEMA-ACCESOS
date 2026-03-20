@@ -19,6 +19,7 @@ function Dashboard() {
   const [motivoCancelacion, setMotivoCancelacion] = useState("");
 
   const [acciones, setAcciones] = useState({});
+  const [mensaje, setMensaje] = useState("");
 
 
   useEffect(() => {
@@ -143,7 +144,6 @@ const manejarAccion = async (id, tipo, correo) => {
 
   if (acciones[id] === "APROBADO" || acciones[id] === "DENEGADO") return;
 
-  // 🔥 1. ACTUALIZA UI INMEDIATO
   setAcciones(prev => ({
     ...prev,
     [id]: tipo
@@ -151,31 +151,48 @@ const manejarAccion = async (id, tipo, correo) => {
 
   try {
 
-    // 2. Guardar en BD
     await supabase
       .from("accesos")
       .update({ estado_aprobacion: tipo })
       .eq("id", id);
 
-    // 3. Llamar función correo
-    const res = await fetch("https://stkgsygonyxtrdhlgusx.supabase.co/functions/v1/enviar-correo", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    "Authorization": "Bearer sb_publishable_lzLwfUm87890uaQlGaByJw_iuW0PCq4"
-  },
-  body: JSON.stringify({
-    correo: correo,
-    estado: tipo
-  })
-});
+    const res = await fetch(
+      "https://stkgsygonyxtrdhlgusx.supabase.co/functions/v1/super-endpoint",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+        },
+        body: JSON.stringify({
+          correo: correo,
+          estado: tipo
+        })
+      }
+    );
 
     const data = await res.json();
+
     console.log("RESPUESTA CORREO:", data);
 
+    // 🔥 VALIDACIÓN REAL
+    if (res.ok) {
+      setMensaje("✅ Correo enviado correctamente");
+    } else {
+      setMensaje("❌ Error al enviar correo");}
+     setTimeout(() => {
+    setMensaje("");
+  }, 3000);
+
+
   } catch (error) {
-    console.error("ERROR:", error);
-  }
+  console.error("ERROR:", error);
+  setMensaje("❌ Error de conexión con el servidor");
+
+  setTimeout(() => {
+    setMensaje("");
+  }, 3000);
+}
 
 };
 
@@ -204,8 +221,14 @@ const manejarAccion = async (id, tipo, correo) => {
       {/* MAIN */}
 
       <div className="flex-1 p-8">
+              {mensaje && (
+  <div className="mb-4 p-3 bg-green-100 text-green-800 rounded">
+    {mensaje}
+  </div>
+)}
 
         <div className="flex justify-between items-center mb-6">
+   
 
           <div>
             <h1 className="text-2xl font-semibold">Lista de Accesos</h1>
