@@ -6,6 +6,7 @@ import Llaves from "./Pages/Llaves";
 import AdminLogin from "./Pages/AdminLogin";
 import Dashboard from "./Pages/Dashboard";
 import ProtectedRoute from "./Pages/ProtectedRoute";
+import Equipos from "./Pages/Equipos";
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         <Route path="/llaves" element={<Llaves />} />
         <Route path="/admin" element={<AdminLogin />} />
         <Route path="/dashboard" element={<ProtectedRoute> <Dashboard /></ProtectedRoute>} />
+        <Route path="/equipos" element={<Equipos />} />
       </Routes>
     </BrowserRouter>
   );
