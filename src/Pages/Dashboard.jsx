@@ -265,10 +265,10 @@ console.log("KEY:", supabaseAnonKey);
                   <th className="p-4 min-w-[140px]">Nodo</th>
                   <th className="p-4 min-w-[120px]">Fecha</th>
                   <th className="p-4 min-w-[100px]">Hora</th>
-                  <th className="p-4 min-w-[170px]">Solicitante</th>
+                  <th className="p-4 min-w-[160px]">Solicitante</th>
                   <th className="p-4">Documento</th>
                   <th className="p-4">Teléfono</th>
-                  <th className="p-4 min-w-[160px]">Empresa</th>
+                  <th className="p-4 min-w-[140px]">Empresa</th>
                   <th className="p-4 min-w-[160px]">Área</th>
                   <th className="p-4 min-w-[160px]">Trabajo</th>
                   <th className="p-4 min-w-[200px]">Detalle</th>
@@ -304,7 +304,7 @@ console.log("KEY:", supabaseAnonKey);
                     <td className="p-4">{a.hora_ingreso}</td>
 
                     <td className="p-4">
-                      {a.solicitante_nombre} {a.solicitante_ap_paterno}
+                      {a.solicitante_nombre} {a.solicitante_ap_paterno} {a.solicitante_ap_materno}
                     </td>
 
                     <td className="p-4">{a.solicitante_num_doc}</td>
