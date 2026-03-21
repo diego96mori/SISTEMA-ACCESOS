@@ -367,9 +367,11 @@ console.log("KEY:", supabaseAnonKey);
   <div className="p-3 bg-gray-50 rounded border text-sm space-y-1">
     {a.personal_acceso?.map((p, i) => (
       <div key={i} className="truncate">
-        <span className="font-semibold">{i + 1})</span> {p.nombre} {p.ap_paterno}
+        <span className="font-semibold">{i + 1})</span> {p.nombre} {p.ap_paterno}{p.ap_materno}
         <br />
         <span className="text-gray-500 text-xs">DNI: {p.num_doc}</span>
+        <br />
+        <span className="text-gray-500 text-xs">Telf: {p.telefono}</span>
       </div>
     ))}
   </div>
