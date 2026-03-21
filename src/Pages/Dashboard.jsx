@@ -271,9 +271,7 @@ console.log("KEY:", supabaseAnonKey);
                   <th className="p-4 min-w-[180px]">Empresa</th>
                   <th className="p-4 min-w-[160px]">Área</th>
                   <th className="p-4 min-w-[160px]">Trabajo</th>
-                 <td className="p-4 max-w-[250px] truncate">
-  {a.detalle_trabajo}
-</td>
+                  <th className="p-4 min-w-[200px]">Detalle</th>
                   <th className="p-4">Contrata</th>
                   <th className="p-4">Nombre</th>
                   <th className="p-4">Ingreso</th>
@@ -314,7 +312,9 @@ console.log("KEY:", supabaseAnonKey);
                     <td className="p-4">{a.empresas?.nombre}</td>
                     <td className="p-4">{a.areas_responsable?.nombre}</td>
                     <td className="p-4">{a.tipos_trabajo?.nombre}</td>
-                    <td className="p-4">{a.detalle_trabajo}</td>
+                    <td className="p-4 max-w-[250px] truncate">
+                    {a.detalle_trabajo}
+                    </td>
 
                     <td className="p-4">
                       {a.trabajo_contrata ? "SI" : "NO"}
