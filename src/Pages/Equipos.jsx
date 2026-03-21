@@ -16,27 +16,39 @@ function Equipos() {
   const cargarMovimientos = async () => {
 
     const { data, error } = await supabase
-      .from("movimientos")
-      .select(`
-        id,
-        tipo_movimiento,
-        created_at,
+  .from("movimientos")
+  .select(`
+    id,
+    tipo_movimiento,
+    created_at,
 
-        accesos (
-          id,
-          fecha_ingreso,
-          nodos ( nombre )
-        ),
+    accesos!inner (
+      id,
+      fecha_ingreso,
+      nodos ( nombre )
+    ),
 
-        equipo_retirado:equipo_retirado_id (
-          id, marca, modelo, serie, rack_id, ru_inicio, cantidad_ru
-        ),
+    equipos (
+      id,
+      marca,
+      modelo,
+      serie,
+      rack_id,
+      ru_inicio,
+      cantidad_ru,
+      estado
+    ),
 
-        equipo_nuevo:equipo_nuevo_id (
-          id, marca, modelo, serie, rack_id, ru_inicio, cantidad_ru
-        )
-      `)
-      .order("id", { ascending: false });
+    reemplazos (
+      equipo_retirado:equipo_retirado_id (
+        marca, modelo, serie
+      ),
+      equipo_nuevo:equipo_nuevo_id (
+        marca, modelo, serie
+      )
+    )
+  `)
+  .order("id", { ascending: false });
 
     if (error) {
       console.log(error.message);
@@ -97,52 +109,69 @@ function Equipos() {
                 </tr>
               </thead>
 
-              <tbody>
+       <tbody>
+  {movimientos.flatMap((m) => {
 
-                {movimientos.map((m) => {
+    let reemplazo = m.reemplazos?.[0];
 
-                  const equipo =
-                    m.tipo_movimiento === "INSTALACION DE EQUIPOS"
-                      ? m.equipo_nuevo
-                      : m.tipo_movimiento === "RETIRO DE EQUIPOS"
-                      ? m.equipo_retirado
-                      : m.equipo_nuevo;
+    // 🔵 INSTALACION / RETIRO
+    if (
+      m.tipo_movimiento === "INSTALACION DE EQUIPOS" ||
+      m.tipo_movimiento === "RETIRO DE EQUIPOS"
+    ) {
+      return (m.equipos || []).map((equipo, i) => {
 
-                  const ruFin = equipo?.ru_inicio
-                    ? equipo.ru_inicio + equipo.cantidad_ru - 1
-                    : null;
+        const ruFin = equipo?.ru_inicio
+          ? equipo.ru_inicio + equipo.cantidad_ru - 1
+          : null;
 
-                  return (
-                    <tr key={m.id} className="border-b">
+        return (
+          <tr key={`${m.id}-${i}`} className="border-b">
 
-                      <td className="p-4">{m.accesos?.id}</td>
-                      <td className="p-4">{m.accesos?.nodos?.nombre}</td>
-                      <td className="p-4">{m.accesos?.fecha_ingreso}</td>
-                      <td className="p-4">{m.tipo_movimiento}</td>
+            <td className="p-4">{m.accesos?.id}</td>
+            <td className="p-4">{m.accesos?.nodos?.nombre}</td>
+            <td className="p-4">{m.accesos?.fecha_ingreso}</td>
+            <td className="p-4">{m.tipo_movimiento}</td>
 
-                      <td className="p-4">
-                        {m.tipo_movimiento === "REEMPLAZO DE EQUIPOS"
-                          ? `RETIRA: ${m.equipo_retirado?.marca} → INSTALA: ${m.equipo_nuevo?.marca}`
-                          : `${equipo?.marca || ""} ${equipo?.modelo || ""}`}
-                      </td>
+            <td className="p-4">
+              {equipo?.marca} {equipo?.modelo}
+            </td>
 
-                      <td className="p-4">
-                        {equipo?.rack_id ? `RACK ${equipo.rack_id}` : "-"}
-                      </td>
+            <td className="p-4">
+              {equipo?.rack_id ? `RACK ${equipo.rack_id}` : "-"}
+            </td>
 
-                      <td className="p-4">
-                        {equipo?.ru_inicio
-                          ? `${equipo.ru_inicio}-${ruFin}`
-                          : "-"}
-                      </td>
+            <td className="p-4">
+              {equipo?.ru_inicio ? `${equipo.ru_inicio}-${ruFin}` : "-"}
+            </td>
 
-                    </tr>
-                  );
+          </tr>
+        );
+      });
+    }
 
-                })}
+    // 🟣 REEMPLAZO
+    return [
+      <tr key={m.id} className="border-b">
 
-              </tbody>
+        <td className="p-4">{m.accesos?.id}</td>
+        <td className="p-4">{m.accesos?.nodos?.nombre}</td>
+        <td className="p-4">{m.accesos?.fecha_ingreso}</td>
+        <td className="p-4">{m.tipo_movimiento}</td>
 
+        <td className="p-4">
+          RETIRA: {reemplazo?.equipo_retirado?.marca} →
+          INSTALA: {reemplazo?.equipo_nuevo?.marca}
+        </td>
+
+        <td className="p-4">-</td>
+        <td className="p-4">-</td>
+
+      </tr>
+    ];
+
+  })}
+</tbody>
             </table>
 
           )}
