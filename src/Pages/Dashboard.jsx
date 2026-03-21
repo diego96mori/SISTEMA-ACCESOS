@@ -249,29 +249,31 @@ console.log("KEY:", supabaseAnonKey);
 
 
 
-        <div className="bg-white rounded-xl shadow overflow-auto">
+        <div className="bg-white rounded-xl shadow overflow-x-auto">
 
           {loading ? (
             <p className="p-6">Cargando...</p>
           ) : (
 
-            <table className="min-w-full text-sm border-separate border-spacing-y-2">
+           <table className="min-w-full text-sm border-separate border-spacing-y-2 whitespace-nowrap">
 
-              <thead className="bg-gray-100 sticky top-0">
+             <thead className="bg-gray-100 sticky top-0 text-gray-700 text-xs uppercase">
 
                 <tr>
 
                   <th className="p-4">ID</th>
-                  <th className="p-4">Nodo</th>
-                  <th className="p-4">Fecha</th>
-                  <th className="p-4">Hora</th>
-                  <th className="p-4">Solicitante</th>
+                  <th className="p-4 min-w-[140px]">Nodo</th>
+                  <th className="p-4 min-w-[120px]">Fecha</th>
+                  <th className="p-4 min-w-[100px]">Hora</th>
+                  <th className="p-4 min-w-[200px]">Solicitante</th>
                   <th className="p-4">Documento</th>
                   <th className="p-4">Teléfono</th>
-                  <th className="p-4">Empresa</th>
-                  <th className="p-4">Área</th>
-                  <th className="p-4">Trabajo</th>
-                  <th className="p-4">Detalle</th>
+                  <th className="p-4 min-w-[180px]">Empresa</th>
+                  <th className="p-4 min-w-[160px]">Área</th>
+                  <th className="p-4 min-w-[160px]">Trabajo</th>
+                 <td className="p-4 max-w-[250px] truncate">
+  {a.detalle_trabajo}
+</td>
                   <th className="p-4">Contrata</th>
                   <th className="p-4">Nombre</th>
                   <th className="p-4">Ingreso</th>
@@ -279,7 +281,7 @@ console.log("KEY:", supabaseAnonKey);
                   <th className="p-4">Estado</th>
                   <th className="p-4">Motivo</th>
                   <th className="p-4">SCTR</th>
-                  <th className="p-4">Personal</th>
+                  <th className="p-4 min-w-[200px]">Personal</th>
                   <th className="p-4">Acción</th>
 
                 </tr>
@@ -293,10 +295,10 @@ console.log("KEY:", supabaseAnonKey);
                 {accesos.map((a) => (
 
                   <tr
-                    key={a.id}
-                    onClick={() => abrirModal(a)}
-                    className="bg-white hover:bg-gray-50 shadow-sm cursor-pointer"
-                  >
+  key={a.id}
+  onClick={() => abrirModal(a)}
+  className="bg-white hover:bg-blue-50 shadow-sm cursor-pointer transition"
+>
 
                     <td className="p-4">{a.id}</td>
                     <td className="p-4">{a.nodos?.nombre}</td>
@@ -361,15 +363,15 @@ console.log("KEY:", supabaseAnonKey);
 
 
 
-  <td className="p-4">
-  <div className="p-3 bg-gray-50 rounded border text-sm">
+<td className="p-4 min-w-[250px]">
+  <div className="p-3 bg-gray-50 rounded border text-sm space-y-1">
     {a.personal_acceso?.map((p, i) => (
-      <div key={i} className="mb-1">
-        <span className="font-semibold">{i + 1}) </span>
-        {p.nombre} {p.ap_paterno} {p.ap_materno} - DNI : {p.num_doc} - {p.telefono}
+      <div key={i} className="truncate">
+        <span className="font-semibold">{i + 1})</span> {p.nombre} {p.ap_paterno}
+        <br />
+        <span className="text-gray-500 text-xs">DNI: {p.num_doc}</span>
       </div>
     ))}
-
   </div>
 </td>
 
