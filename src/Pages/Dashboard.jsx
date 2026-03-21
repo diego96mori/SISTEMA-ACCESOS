@@ -266,7 +266,7 @@ console.log("KEY:", supabaseAnonKey);
                   <th className="p-4 min-w-[140px]">Nodo</th>
                   <th className="p-4 min-w-[120px]">Fecha</th>
                   <th className="p-4 min-w-[100px]">Hora</th>
-                  <th className="p-4 min-w-[160px]">Solicitante</th>
+                  <th className="p-4 min-w-[140px]">Solicitante</th>
                   <th className="p-4">Documento</th>
                   <th className="p-4">Teléfono</th>
                   <th className="p-4 min-w-[140px]">Empresa</th>
