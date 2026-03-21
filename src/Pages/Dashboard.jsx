@@ -64,6 +64,7 @@ function Dashboard() {
 
         solicitante_nombre,
         solicitante_ap_paterno,
+        solicitante_ap_materno,
         solicitante_num_doc,
         solicitante_telefono,
         solicitante_correo,
