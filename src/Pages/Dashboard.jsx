@@ -265,10 +265,10 @@ console.log("KEY:", supabaseAnonKey);
                   <th className="p-4 min-w-[140px]">Nodo</th>
                   <th className="p-4 min-w-[120px]">Fecha</th>
                   <th className="p-4 min-w-[100px]">Hora</th>
-                  <th className="p-4 min-w-[200px]">Solicitante</th>
+                  <th className="p-4 min-w-[170px]">Solicitante</th>
                   <th className="p-4">Documento</th>
                   <th className="p-4">Teléfono</th>
-                  <th className="p-4 min-w-[180px]">Empresa</th>
+                  <th className="p-4 min-w-[160px]">Empresa</th>
                   <th className="p-4 min-w-[160px]">Área</th>
                   <th className="p-4 min-w-[160px]">Trabajo</th>
                   <th className="p-4 min-w-[200px]">Detalle</th>
@@ -363,11 +363,11 @@ console.log("KEY:", supabaseAnonKey);
 
 
 
-<td className="p-4 min-w-[250px]">
-  <div className="p-3 bg-gray-50 rounded border text-sm space-y-1">
+<td className="p-4">
+  <div className="inline-block max-w-[200px] w-fit p-3 bg-gray-50 rounded border text-sm space-y-1">
     {a.personal_acceso?.map((p, i) => (
       <div key={i} className="truncate">
-        <span className="font-semibold">{i + 1})</span> {p.nombre} {p.ap_paterno}{p.ap_materno}
+        <span className="font-semibold">{i + 1})</span> {p.nombre} {p.ap_paterno} {p.ap_materno}
         <br />
         <span className="text-gray-500 text-xs">DNI: {p.num_doc}</span>
         <br />
