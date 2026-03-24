@@ -110,7 +110,7 @@ function Equipos() {
                   <th className="p-4 w-[150px]">Nodo</th>
                   <th className="p-4 w-[120px]">Fecha</th>
                   <th className="p-4 w-[180px]">Movimiento</th>
-                  <th className="p-4 w-[250px]">Equipo</th>
+                 <th className="p-4 w-[200px]">Equipo</th>
                  <th className="p-4 w-[120px]">Rack</th>
                   <th className="p-4 w-[100px]">RU</th>
                 </tr>
@@ -237,7 +237,9 @@ if (m.tipo_movimiento === "REEMPLAZO DE EQUIPOS") {
 
       <td className="p-4">
         <div className="bg-red-50 border rounded-lg p-2 text-xs">
-          <td className="p-4 text-red-600">RETIRO</td>
+          <div className="text-red-600 font-semibold mb-1">
+  RETIRO
+</div>
           <div><b>EQUIPO:</b> {reemplazo?.equipo_retirado?.modelo}</div>
 <div><b>MARCA:</b> {reemplazo?.equipo_retirado?.marca}</div>
 <div><b>SERIE:</b> {reemplazo?.equipo_retirado?.serie}</div>
@@ -257,7 +259,9 @@ if (m.tipo_movimiento === "REEMPLAZO DE EQUIPOS") {
 
       <td className="p-4">
         <div className="bg-green-50 border rounded-lg p-2 text-xs">
-          <td className="p-4 text-green-600">INSTALACION</td>
+         <div className="text-green-600 font-semibold mb-1">
+  INSTALACION
+</div>
   <div><b>EQUIPO:</b> {reemplazo?.equipo_nuevo?.modelo}</div>
 <div><b>MARCA:</b> {reemplazo?.equipo_nuevo?.marca}</div>
 <div><b>SERIE:</b> {reemplazo?.equipo_nuevo?.serie}</div>
@@ -300,7 +304,7 @@ if (m.tipo_movimiento === "INGRESO_FO") {
 
   // 🟢 PATCHPANEL (si existen equipos)
   (m.equipos || [])
-  .filter(eq => eq.movimiento_id === m.id)
+ .filter(eq => eq.movimiento_id === m.id && eq.tipo_equipo_id === 9)
   .forEach((equipo, i) => {
 
     const ruFin = equipo.ru_inicio + equipo.cantidad_ru - 1;
@@ -311,12 +315,12 @@ if (m.tipo_movimiento === "INGRESO_FO") {
         <td className="p-4">{m.accesos?.id}</td>
         <td className="p-4">{m.accesos?.nodos?.nombre}</td>
         <td className="p-4">{m.accesos?.fecha_ingreso}</td>
-        <td className="p-4 text-green-600">INGRESO FO</td>
+        <td className="p-4 text-blue-600">INGRESO FO</td>
 
        <td className="p-4">
-  <div className="bg-green-50 border rounded-lg p-2 text-xs">
+  <div className="bg-blue-50 border rounded-lg p-2 text-xs">
 
-    <div className="text-green-600 font-semibold mb-1">
+    <div className="text-blue-600 font-semibold mb-1">
       PATCH PANEL
     </div>
 
