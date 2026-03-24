@@ -139,7 +139,7 @@ if (m.tipo_movimiento === "INSTALACION DE EQUIPOS") {
           <td className="p-4 text-green-600">{m.tipo_movimiento}</td>
 
  <td className="p-4">
-  <div className="bg-gray-50 border rounded-lg p-2 text-xs">
+  <div className="bg-gray-50 border rounded-lg p-2 text-xs inline-block max-w-[180px]">
 
    
       <div className="text-green-600 font-semibold mb-1">
@@ -189,7 +189,7 @@ if (m.tipo_movimiento === "RETIRO DE EQUIPOS") {
           <td className="p-4 text-red-600">{m.tipo_movimiento}</td>
 
 <td className="p-4">
-  <div className="bg-gray-50 border rounded-lg p-2 text-xs">
+  <div className="bg-gray-50 border rounded-lg p-2 text-xs inline-block max-w-[180px]">
 
     
       <div className="text-red-600 font-semibold mb-1">
@@ -226,6 +226,11 @@ if (m.tipo_movimiento === "RETIRO DE EQUIPOS") {
     // 🟣 REEMPLAZO
 if (m.tipo_movimiento === "REEMPLAZO DE EQUIPOS") {
 
+  const equipoReal = m.equipos?.find(e => e.movimiento_id === m.id);
+const ruFin = equipoReal?.ru_inicio
+  ? equipoReal.ru_inicio + equipoReal.cantidad_ru - 1
+  : null;
+
   return [
 
     // 🔴 FILA RETIRO
@@ -246,8 +251,13 @@ if (m.tipo_movimiento === "REEMPLAZO DE EQUIPOS") {
         </div>
       </td>
 
-      <td className="p-4">-</td>
-      <td className="p-4">-</td>
+      <td className="p-4">
+  {equipoReal?.rack_id ? `Rack ${equipoReal.rack_id}` : "-"}
+</td>
+
+<td className="p-4">
+  {equipoReal?.ru_inicio ? `${equipoReal.ru_inicio}-${ruFin}` : "-"}
+</td>
     </tr>,
 
     // 🟢 FILA INSTALACION
@@ -268,8 +278,13 @@ if (m.tipo_movimiento === "REEMPLAZO DE EQUIPOS") {
         </div>
       </td>
 
-      <td className="p-4">-</td>
-      <td className="p-4">-</td>
+     <td className="p-4">
+  {equipoReal?.rack_id ? `Rack ${equipoReal.rack_id}` : "-"}
+</td>
+
+<td className="p-4">
+  {equipoReal?.ru_inicio ? `${equipoReal.ru_inicio}-${ruFin}` : "-"}
+</td>
     </tr>
 
   ];
@@ -304,7 +319,10 @@ if (m.tipo_movimiento === "INGRESO_FO") {
 
   // 🟢 PATCHPANEL (si existen equipos)
   (m.equipos || [])
- .filter(eq => eq.movimiento_id === m.id && eq.tipo_equipo_id === 9)
+  .filter(eq =>
+    eq.movimiento_id === m.id &&
+    eq.tipos_equipo?.nombre === "PATCH PANEL"
+  )
   .forEach((equipo, i) => {
 
     const ruFin = equipo.ru_inicio + equipo.cantidad_ru - 1;
@@ -317,20 +335,25 @@ if (m.tipo_movimiento === "INGRESO_FO") {
         <td className="p-4">{m.accesos?.fecha_ingreso}</td>
         <td className="p-4 text-blue-600">INGRESO FO</td>
 
-       <td className="p-4">
-  <div className="bg-blue-50 border rounded-lg p-2 text-xs">
+        <td className="p-4">
+          <div className="bg-blue-50 border rounded-lg p-2 text-xs inline-block max-w-[160px]">
 
-    <div className="text-blue-600 font-semibold mb-1">
-      PATCH PANEL
-    </div>
+            <div className="text-blue-600 font-semibold mb-1">
+              PATCH PANEL
+            </div>
 
-    <div><b>EQUIPO:</b> PATCH PANEL</div>
+            <div><b>EQUIPO:</b> PATCH PANEL</div>
 
-  </div>
-</td>
+          </div>
+        </td>
 
-        <td className="p-4">Rack {equipo.rack_id}</td>
-        <td className="p-4">{equipo.ru_inicio}-{ruFin}</td>
+        <td className="p-4">
+          {equipo.rack_id ? `Rack ${equipo.rack_id}` : "-"}
+        </td>
+
+        <td className="p-4">
+          {equipo.ru_inicio ? `${equipo.ru_inicio}-${ruFin}` : "-"}
+        </td>
 
       </tr>
     );
