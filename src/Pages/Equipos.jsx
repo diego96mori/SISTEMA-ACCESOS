@@ -21,7 +21,7 @@ function Equipos() {
     id,
     tipo_movimiento,
     created_at,
-    cantidad_hilos,
+    
 
     accesos!inner (
       id,
@@ -37,6 +37,7 @@ function Equipos() {
   rack_id,
   ru_inicio,
   cantidad_ru,
+  cantidad_hilos,
   estado,
   movimiento_id,
 
@@ -283,7 +284,7 @@ if (m.tipo_movimiento === "INGRESO_FO") {
 
       <td className="p-4">
         <div className="bg-blue-50 border rounded-lg p-2 text-xs">
-          <div><b>FIBRA:</b> {m.cantidad_hilos || "?"} hilos</div>
+          <div><b>FIBRA:</b> {m.equipos?.[0]?.cantidad_hilos || "?"} hilos</div>
         </div>
       </td>
 
