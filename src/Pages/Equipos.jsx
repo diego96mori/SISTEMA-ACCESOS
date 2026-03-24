@@ -137,11 +137,23 @@ if (m.tipo_movimiento === "INSTALACION DE EQUIPOS") {
           <td className="p-4">{m.accesos?.fecha_ingreso}</td>
           <td className="p-4 text-green-600">{m.tipo_movimiento}</td>
 
-         <td className="p-4">
+ <td className="p-4">
   <div className="bg-gray-50 border rounded-lg p-2 text-xs">
+
+   
+      <div className="text-green-600 font-semibold mb-1">
+        INSTALACION
+      </div>
+  
+
     <div><b>EQUIPO:</b> {equipo.tipos_equipo?.nombre || "-"}</div>
-    <div><b>MARCA:</b> {equipo.marca}</div>
-    <div><b>MODELO:</b> {equipo.modelo}</div>
+    <div><b>MARCA:</b> {equipo.marca || "-"}</div>
+    <div><b>MODELO:</b> {equipo.modelo || "-"}</div>
+
+    {equipo.serie && (
+      <div><b>SERIE:</b> {equipo.serie}</div>
+    )}
+
   </div>
 </td>
 
@@ -175,11 +187,25 @@ if (m.tipo_movimiento === "RETIRO DE EQUIPOS") {
           <td className="p-4">{m.accesos?.fecha_ingreso}</td>
           <td className="p-4 text-red-600">{m.tipo_movimiento}</td>
 
-        <td className="p-4">
+<td className="p-4">
   <div className="bg-gray-50 border rounded-lg p-2 text-xs">
+
+    
+      <div className="text-red-600 font-semibold mb-1">
+        RETIRO
+      </div>
+    
+
+
     <div><b>EQUIPO:</b> {equipo.tipos_equipo?.nombre || "-"}</div>
-    <div><b>MARCA:</b> {equipo.marca}</div>
-    <div><b>MODELO:</b> {equipo.modelo}</div>
+    <div><b>MARCA:</b> {equipo.marca || "-"}</div>
+    <div><b>MODELO:</b> {equipo.modelo || "-"}</div>
+
+    {equipo.serie && (
+      <div><b>SERIE:</b> {equipo.serie}</div>
+    )}
+
+ 
   </div>
 </td>
           <td className="p-4">
@@ -261,6 +287,7 @@ if (m.tipo_movimiento === "INGRESO_FO") {
         </div>
       </td>
 
+
       <td className="p-4">-</td>
       <td className="p-4">-</td>
     </tr>
@@ -281,11 +308,21 @@ if (m.tipo_movimiento === "INGRESO_FO") {
         <td className="p-4">{m.accesos?.fecha_ingreso}</td>
         <td className="p-4 text-green-600">PATCHPANEL</td>
 
-        <td className="p-4">
-          <div className="bg-green-50 border rounded-lg p-2 text-xs">
-            <div><b>EQUIPO:</b> {equipo.marca}</div>
-          </div>
-        </td>
+       <td className="p-4">
+  <div className="bg-green-50 border rounded-lg p-2 text-xs">
+
+    <div className="text-green-600 font-semibold mb-1">
+      PATCH PANEL
+    </div>
+
+    <div><b>EQUIPO:</b> PATCH PANEL</div>
+
+    <div><b>RACK:</b> {equipo.rack_id}</div>
+
+    <div><b>RU:</b> {equipo.ru_inicio}-{equipo.ru_inicio + equipo.cantidad_ru - 1}</div>
+
+  </div>
+</td>
 
         <td className="p-4">Rack {equipo.rack_id}</td>
         <td className="p-4">{equipo.ru_inicio}-{ruFin}</td>
