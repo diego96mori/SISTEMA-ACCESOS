@@ -115,45 +115,73 @@ function Equipos() {
 
     let reemplazo = m.reemplazos?.[0];
 
-    // 🔵 INSTALACION / RETIRO
-    if (
-      m.tipo_movimiento === "INSTALACION DE EQUIPOS" ||
-      m.tipo_movimiento === "RETIRO DE EQUIPOS"
-    ) {
-      return (m.equipos || [])
-  .filter(eq => eq.movimiento_id === m.id)
-  .map((equipo, i) => {
+    
+   // 🔵 INSTALACION
+if (m.tipo_movimiento === "INSTALACION DE EQUIPOS") {
+  return (m.equipos || [])
+    .filter(eq => eq.estado === "ACTIVO")
+    .map((equipo, i) => {
 
-        const ruFin = equipo?.ru_inicio
-          ? equipo.ru_inicio + equipo.cantidad_ru - 1
-          : null;
+      const ruFin = equipo.ru_inicio + equipo.cantidad_ru - 1;
 
-        return (
-          <tr key={`${m.id}-${i}`} className="border-b">
+      return (
+        <tr key={`${m.id}-${i}`} className="border-b">
 
-            <td className="p-4">{m.accesos?.id}</td>
-            <td className="p-4">{m.accesos?.nodos?.nombre}</td>
-            <td className="p-4">{m.accesos?.fecha_ingreso}</td>
-            <td className="p-4">{m.tipo_movimiento}</td>
+          <td className="p-4">{m.accesos?.id}</td>
+          <td className="p-4">{m.accesos?.nodos?.nombre}</td>
+          <td className="p-4">{m.accesos?.fecha_ingreso}</td>
+          <td className="p-4 text-green-600">{m.tipo_movimiento}</td>
 
-          <td className="p-4 max-w-[250px] truncate">
-  <div className="font-semibold truncate">
-    {equipo?.marca} {equipo?.modelo}
-  </div>
-  <div className="text-xs text-gray-500 truncate">
-    Serie: {equipo?.serie || "-"}
-  </div>
-</td>
-            <td className="p-4">Rack {equipo?.rack_id || "-"}</td>
+          <td className="p-4">
+            {equipo.marca} {equipo.modelo}
+          </td>
 
-            <td className="p-4">
-              {equipo?.ru_inicio ? `${equipo.ru_inicio}-${ruFin}` : "-"}
-            </td>
+          <td className="p-4">
+            Rack {equipo.rack_id}
+          </td>
 
-          </tr>
-        );
-      });
-    }
+          <td className="p-4">
+            {equipo.ru_inicio}-{ruFin}
+          </td>
+
+        </tr>
+      );
+    });
+}
+
+
+// 🔴 RETIRO
+if (m.tipo_movimiento === "RETIRO DE EQUIPOS") {
+  return (m.equipos || [])
+    .filter(eq => eq.estado === "RETIRADO")
+    .map((equipo, i) => {
+
+      const ruFin = equipo.ru_inicio + equipo.cantidad_ru - 1;
+
+      return (
+        <tr key={`${m.id}-${i}`} className="border-b">
+
+          <td className="p-4">{m.accesos?.id}</td>
+          <td className="p-4">{m.accesos?.nodos?.nombre}</td>
+          <td className="p-4">{m.accesos?.fecha_ingreso}</td>
+          <td className="p-4 text-red-600">{m.tipo_movimiento}</td>
+
+          <td className="p-4">
+            {equipo.marca} {equipo.modelo}
+          </td>
+
+          <td className="p-4">
+            Rack {equipo.rack_id}
+          </td>
+
+          <td className="p-4">
+            {equipo.ru_inicio}-{ruFin}
+          </td>
+
+        </tr>
+      );
+    });
+}
 
     // 🟣 REEMPLAZO
     return [
