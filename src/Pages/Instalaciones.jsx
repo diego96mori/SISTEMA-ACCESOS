@@ -214,8 +214,28 @@ if (tipoTrabajoId === 1) {
 
 if (tipoTrabajoId === 2) {
   for (let eq of equiposRetiro) {
-    if (!eq?.rackId || !eq?.ruInicio) {
+    if (!eq?.rackId || !eq?.ruInicio || !eq?.cantidadRu) {
       alert("Complete todos los datos de retiro");
+      setSaving(false);
+      return;
+    }
+  }
+}
+
+if (tipoTrabajoId === 3) {
+  for (let i = 0; i < cantidadEquipos; i++) {
+
+    const ret = equiposRetiro[i];
+    const inst = equiposInstalacion[i];
+
+    if (!ret?.rackId || !ret?.ruInicio || !ret?.cantidadRu) {
+      alert("Complete datos de RETIRO en reemplazo");
+      setSaving(false);
+      return;
+    }
+
+    if (!inst?.rackId || !inst?.ruInicio || !inst?.cantidadRu) {
+      alert("Complete datos de INSTALACIÓN en reemplazo");
       setSaving(false);
       return;
     }
