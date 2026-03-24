@@ -102,7 +102,7 @@ function Equipos() {
             <p className="p-6">Cargando...</p>
           ) : (
 
-            <table className="min-w-full text-sm table-fixed">
+            <table className="min-w-full text-sm">
 
               <thead className="bg-gray-100 text-xs uppercase">
                 <tr>
@@ -139,7 +139,7 @@ if (m.tipo_movimiento === "INSTALACION DE EQUIPOS") {
           <td className="p-4 text-green-600">{m.tipo_movimiento}</td>
 
  <td className="p-4">
-  <div className="bg-gray-50 border rounded-lg p-2 text-xs inline-block max-w-[180px]">
+  <div className="bg-gray-50 border rounded-lg p-2 text-xs inline-block">
 
    
       <div className="text-green-600 font-semibold mb-1">
@@ -189,10 +189,10 @@ if (m.tipo_movimiento === "RETIRO DE EQUIPOS") {
           <td className="p-4 text-red-600">{m.tipo_movimiento}</td>
 
 <td className="p-4">
-  <div className="bg-gray-50 border rounded-lg p-2 text-xs inline-block max-w-[180px]">
+  <div className="bg-gray-50 border rounded-lg p-2 text-xs inline-block ">
 
     
-      <div className="text-red-600 font-semibold mb-1">
+      <div className="text-purple-600 font-semibold mb-1">
         RETIRO
       </div>
     
@@ -238,10 +238,10 @@ const ruFin = equipoReal?.ru_inicio
       <td className="p-4">{m.accesos?.id}</td>
       <td className="p-4">{m.accesos?.nodos?.nombre}</td>
       <td className="p-4">{m.accesos?.fecha_ingreso}</td>
-      <td className="p-4 text-red-600">REEMPLAZO DE EQUIPOS</td>
+      <td className="p-4 text-purple-600">REEMPLAZO DE EQUIPOS</td>
 
       <td className="p-4">
-        <div className="bg-red-50 border rounded-lg p-2 text-xs">
+        <div className="bg-purple-50 border rounded-lg p-2 text-xs inline-block w-fit">
           <div className="text-red-600 font-semibold mb-1">
   RETIRO
 </div>
@@ -265,10 +265,10 @@ const ruFin = equipoReal?.ru_inicio
       <td className="p-4">{m.accesos?.id}</td>
       <td className="p-4">{m.accesos?.nodos?.nombre}</td>
       <td className="p-4">{m.accesos?.fecha_ingreso}</td>
-      <td className="p-4 text-green-600">REEMPLAZO DE EQUIPOS</td>
+      <td className="p-4 text-purple-600">REEMPLAZO DE EQUIPOS</td>
 
       <td className="p-4">
-        <div className="bg-green-50 border rounded-lg p-2 text-xs">
+        <div className="bg-purple-50 border rounded-lg p-2 text-xs inline-block w-fit">
          <div className="text-green-600 font-semibold mb-1">
   INSTALACION
 </div>
@@ -338,10 +338,7 @@ if (m.tipo_movimiento === "INGRESO_FO") {
         <td className="p-4">
           <div className="bg-blue-50 border rounded-lg p-2 text-xs inline-block max-w-[160px]">
 
-            <div className="text-blue-600 font-semibold mb-1">
-              PATCH PANEL
-            </div>
-
+         
             <div><b>EQUIPO:</b> PATCH PANEL</div>
 
           </div>
