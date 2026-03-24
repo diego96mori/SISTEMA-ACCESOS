@@ -21,6 +21,7 @@ function Equipos() {
     id,
     tipo_movimiento,
     created_at,
+    cantidad_hilos,
 
     accesos!inner (
       id,
@@ -28,17 +29,21 @@ function Equipos() {
       nodos ( nombre )
     ),
 
-    equipos (
-      id,
-      marca,
-      modelo,
-      serie,
-      rack_id,
-      ru_inicio,
-      cantidad_ru,
-      estado,
-      movimiento_id
-    ),
+  equipos (
+  id,
+  marca,
+  modelo,
+  serie,
+  rack_id,
+  ru_inicio,
+  cantidad_ru,
+  estado,
+  movimiento_id,
+
+  tipos_equipo (
+    nombre
+  )
+),
 
     reemplazos (
       equipo_retirado:equipo_retirado_id (
@@ -132,9 +137,13 @@ if (m.tipo_movimiento === "INSTALACION DE EQUIPOS") {
           <td className="p-4">{m.accesos?.fecha_ingreso}</td>
           <td className="p-4 text-green-600">{m.tipo_movimiento}</td>
 
-          <td className="p-4">
-            {equipo.marca} {equipo.modelo}
-          </td>
+         <td className="p-4">
+  <div className="bg-gray-50 border rounded-lg p-2 text-xs">
+    <div><b>EQUIPO:</b> {equipo.tipos_equipo?.nombre || "-"}</div>
+    <div><b>MARCA:</b> {equipo.marca}</div>
+    <div><b>MODELO:</b> {equipo.modelo}</div>
+  </div>
+</td>
 
           <td className="p-4">
             Rack {equipo.rack_id}
@@ -166,10 +175,13 @@ if (m.tipo_movimiento === "RETIRO DE EQUIPOS") {
           <td className="p-4">{m.accesos?.fecha_ingreso}</td>
           <td className="p-4 text-red-600">{m.tipo_movimiento}</td>
 
-          <td className="p-4">
-            {equipo.marca} {equipo.modelo}
-          </td>
-
+        <td className="p-4">
+  <div className="bg-gray-50 border rounded-lg p-2 text-xs">
+    <div><b>EQUIPO:</b> {equipo.tipos_equipo?.nombre || "-"}</div>
+    <div><b>MARCA:</b> {equipo.marca}</div>
+    <div><b>MODELO:</b> {equipo.modelo}</div>
+  </div>
+</td>
           <td className="p-4">
             Rack {equipo.rack_id}
           </td>
@@ -184,27 +196,106 @@ if (m.tipo_movimiento === "RETIRO DE EQUIPOS") {
 }
 
     // 🟣 REEMPLAZO
-    return [
-      <tr key={m.id} className="border-b">
+    // 🟣 REEMPLAZO
+if (m.tipo_movimiento === "REEMPLAZO DE EQUIPOS") {
+
+  return [
+
+    // 🔴 FILA RETIRO
+    <tr key={`${m.id}-retira`} className="border-b">
+      <td className="p-4">{m.accesos?.id}</td>
+      <td className="p-4">{m.accesos?.nodos?.nombre}</td>
+      <td className="p-4">{m.accesos?.fecha_ingreso}</td>
+      <td className="p-4 text-red-600">RETIRO</td>
+
+      <td className="p-4">
+        <div className="bg-red-50 border rounded-lg p-2 text-xs">
+          <div><b>EQUIPO:</b> {reemplazo?.equipo_retirado?.modelo}</div>
+<div><b>MARCA:</b> {reemplazo?.equipo_retirado?.marca}</div>
+<div><b>SERIE:</b> {reemplazo?.equipo_retirado?.serie}</div>
+        </div>
+      </td>
+
+      <td className="p-4">-</td>
+      <td className="p-4">-</td>
+    </tr>,
+
+    // 🟢 FILA INSTALACION
+    <tr key={`${m.id}-instala`} className="border-b">
+      <td className="p-4">{m.accesos?.id}</td>
+      <td className="p-4">{m.accesos?.nodos?.nombre}</td>
+      <td className="p-4">{m.accesos?.fecha_ingreso}</td>
+      <td className="p-4 text-green-600">INSTALACION</td>
+
+      <td className="p-4">
+        <div className="bg-green-50 border rounded-lg p-2 text-xs">
+  <div><b>EQUIPO:</b> {reemplazo?.equipo_nuevo?.modelo}</div>
+<div><b>MARCA:</b> {reemplazo?.equipo_nuevo?.marca}</div>
+<div><b>SERIE:</b> {reemplazo?.equipo_nuevo?.serie}</div>
+        </div>
+      </td>
+
+      <td className="p-4">-</td>
+      <td className="p-4">-</td>
+    </tr>
+
+  ];
+}
+
+
+if (m.tipo_movimiento === "INGRESO_FO") {
+
+  let filas = [];
+
+  // 🔵 FILA FIBRA
+  filas.push(
+    <tr key={`${m.id}-fibra`} className="border-b">
+      <td className="p-4">{m.accesos?.id}</td>
+      <td className="p-4">{m.accesos?.nodos?.nombre}</td>
+      <td className="p-4">{m.accesos?.fecha_ingreso}</td>
+      <td className="p-4 text-blue-600">INGRESO FO</td>
+
+      <td className="p-4">
+        <div className="bg-blue-50 border rounded-lg p-2 text-xs">
+          <div><b>FIBRA:</b> {m.cantidad_hilos || "?"} hilos</div>
+        </div>
+      </td>
+
+      <td className="p-4">-</td>
+      <td className="p-4">-</td>
+    </tr>
+  );
+
+  // 🟢 PATCHPANEL (si existen equipos)
+  (m.equipos || [])
+  .filter(eq => eq.movimiento_id === m.id)
+  .forEach((equipo, i) => {
+
+    const ruFin = equipo.ru_inicio + equipo.cantidad_ru - 1;
+
+    filas.push(
+      <tr key={`${m.id}-pp-${i}`} className="border-b">
 
         <td className="p-4">{m.accesos?.id}</td>
         <td className="p-4">{m.accesos?.nodos?.nombre}</td>
         <td className="p-4">{m.accesos?.fecha_ingreso}</td>
-        <td className="p-4">{m.tipo_movimiento}</td>
+        <td className="p-4 text-green-600">PATCHPANEL</td>
 
-      <td className="p-4 max-w-[250px]">
-  <div className="text-red-600 text-xs truncate">
-    RETIRA: {reemplazo?.equipo_retirado?.marca}
-  </div>
-  <div className="text-green-600 text-xs truncate">
-    INSTALA: {reemplazo?.equipo_nuevo?.marca}
-  </div>
-</td>
-        <td className="p-4">-</td>
-        <td className="p-4">-</td>
+        <td className="p-4">
+          <div className="bg-green-50 border rounded-lg p-2 text-xs">
+            <div><b>EQUIPO:</b> {equipo.marca}</div>
+          </div>
+        </td>
+
+        <td className="p-4">Rack {equipo.rack_id}</td>
+        <td className="p-4">{equipo.ru_inicio}-{ruFin}</td>
 
       </tr>
-    ];
+    );
+  });
+
+  return filas;
+}
 
   })}
 </tbody>
