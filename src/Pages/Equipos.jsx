@@ -95,7 +95,7 @@ function Equipos() {
             <p className="p-6">Cargando...</p>
           ) : (
 
-            <table className="min-w-full text-sm">
+            <table className="min-w-full text-sm table-fixed">
 
               <thead className="bg-gray-100 text-xs uppercase">
                 <tr>
@@ -103,7 +103,7 @@ function Equipos() {
                   <th className="p-4 w-[150px]">Nodo</th>
                   <th className="p-4 w-[120px]">Fecha</th>
                   <th className="p-4 w-[180px]">Movimiento</th>
-                  <th className="p-4">Equipo</th>
+                  <th className="p-4 w-[250px]">Equipo</th>
                  <th className="p-4 w-[120px]">Rack</th>
                   <th className="p-4 w-[100px]">RU</th>
                 </tr>
@@ -137,9 +137,14 @@ function Equipos() {
               {equipo?.marca} {equipo?.modelo}
             </td>
 
-            <td className="p-4">
-              {equipo?.rack_id ? `RACK ${equipo.rack_id}` : "-"}
-            </td>
+          <td className="p-4 max-w-[250px] truncate">
+  <div className="font-semibold truncate">
+    {equipo?.marca} {equipo?.modelo}
+  </div>
+  <div className="text-xs text-gray-500 truncate">
+    Serie: {equipo?.serie || "-"}
+  </div>
+</td>
 
             <td className="p-4">
               {equipo?.ru_inicio ? `${equipo.ru_inicio}-${ruFin}` : "-"}
@@ -159,11 +164,14 @@ function Equipos() {
         <td className="p-4">{m.accesos?.fecha_ingreso}</td>
         <td className="p-4">{m.tipo_movimiento}</td>
 
-        <td className="p-4">
-          RETIRA: {reemplazo?.equipo_retirado?.marca} →
-          INSTALA: {reemplazo?.equipo_nuevo?.marca}
-        </td>
-
+      <td className="p-4 max-w-[250px]">
+  <div className="text-red-600 text-xs truncate">
+    RETIRA: {reemplazo?.equipo_retirado?.marca}
+  </div>
+  <div className="text-green-600 text-xs truncate">
+    INSTALA: {reemplazo?.equipo_nuevo?.marca}
+  </div>
+</td>
         <td className="p-4">-</td>
         <td className="p-4">-</td>
 
