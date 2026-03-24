@@ -233,10 +233,11 @@ if (m.tipo_movimiento === "REEMPLAZO DE EQUIPOS") {
       <td className="p-4">{m.accesos?.id}</td>
       <td className="p-4">{m.accesos?.nodos?.nombre}</td>
       <td className="p-4">{m.accesos?.fecha_ingreso}</td>
-      <td className="p-4 text-red-600">RETIRO</td>
+      <td className="p-4 text-red-600">REEMPLAZO DE EQUIPOS</td>
 
       <td className="p-4">
         <div className="bg-red-50 border rounded-lg p-2 text-xs">
+          <td className="p-4 text-red-600">RETIRO</td>
           <div><b>EQUIPO:</b> {reemplazo?.equipo_retirado?.modelo}</div>
 <div><b>MARCA:</b> {reemplazo?.equipo_retirado?.marca}</div>
 <div><b>SERIE:</b> {reemplazo?.equipo_retirado?.serie}</div>
@@ -252,10 +253,11 @@ if (m.tipo_movimiento === "REEMPLAZO DE EQUIPOS") {
       <td className="p-4">{m.accesos?.id}</td>
       <td className="p-4">{m.accesos?.nodos?.nombre}</td>
       <td className="p-4">{m.accesos?.fecha_ingreso}</td>
-      <td className="p-4 text-green-600">INSTALACION</td>
+      <td className="p-4 text-green-600">REEMPLAZO DE EQUIPOS</td>
 
       <td className="p-4">
         <div className="bg-green-50 border rounded-lg p-2 text-xs">
+          <td className="p-4 text-green-600">INSTALACION</td>
   <div><b>EQUIPO:</b> {reemplazo?.equipo_nuevo?.modelo}</div>
 <div><b>MARCA:</b> {reemplazo?.equipo_nuevo?.marca}</div>
 <div><b>SERIE:</b> {reemplazo?.equipo_nuevo?.serie}</div>
@@ -273,6 +275,7 @@ if (m.tipo_movimiento === "REEMPLAZO DE EQUIPOS") {
 if (m.tipo_movimiento === "INGRESO_FO") {
 
   let filas = [];
+  const fibra = m.equipos?.find(e => e.cantidad_hilos);
 
   // 🔵 FILA FIBRA
   filas.push(
@@ -284,7 +287,8 @@ if (m.tipo_movimiento === "INGRESO_FO") {
 
       <td className="p-4">
         <div className="bg-blue-50 border rounded-lg p-2 text-xs">
-          <div><b>FIBRA:</b> {m.equipos?.[0]?.cantidad_hilos || "?"} hilos</div>
+          
+          <div><b>FIBRA:</b> {fibra?.cantidad_hilos || "?"} hilos</div>
         </div>
       </td>
 
@@ -307,7 +311,7 @@ if (m.tipo_movimiento === "INGRESO_FO") {
         <td className="p-4">{m.accesos?.id}</td>
         <td className="p-4">{m.accesos?.nodos?.nombre}</td>
         <td className="p-4">{m.accesos?.fecha_ingreso}</td>
-        <td className="p-4 text-green-600">PATCHPANEL</td>
+        <td className="p-4 text-green-600">INGRESO FO</td>
 
        <td className="p-4">
   <div className="bg-green-50 border rounded-lg p-2 text-xs">
@@ -317,10 +321,6 @@ if (m.tipo_movimiento === "INGRESO_FO") {
     </div>
 
     <div><b>EQUIPO:</b> PATCH PANEL</div>
-
-    <div><b>RACK:</b> {equipo.rack_id}</div>
-
-    <div><b>RU:</b> {equipo.ru_inicio}-{equipo.ru_inicio + equipo.cantidad_ru - 1}</div>
 
   </div>
 </td>
