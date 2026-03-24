@@ -119,7 +119,7 @@ function Equipos() {
    // 🔵 INSTALACION
 if (m.tipo_movimiento === "INSTALACION DE EQUIPOS") {
   return (m.equipos || [])
-    .filter(eq => eq.estado === "ACTIVO")
+    
     .map((equipo, i) => {
 
       const ruFin = equipo.ru_inicio + equipo.cantidad_ru - 1;
@@ -153,7 +153,7 @@ if (m.tipo_movimiento === "INSTALACION DE EQUIPOS") {
 // 🔴 RETIRO
 if (m.tipo_movimiento === "RETIRO DE EQUIPOS") {
   return (m.equipos || [])
-    .filter(eq => eq.estado === "RETIRADO")
+    
     .map((equipo, i) => {
 
       const ruFin = equipo.ru_inicio + equipo.cantidad_ru - 1;
