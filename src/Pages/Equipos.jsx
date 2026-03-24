@@ -141,7 +141,7 @@ function Equipos() {
     Serie: {equipo?.serie || "-"}
   </div>
 </td>
-            <td className="p-4">{equipo?.rack_id || "-"}</td>
+            <td className="p-4">Rack {equipo?.rack_id || "-"}</td>
 
             <td className="p-4">
               {equipo?.ru_inicio ? `${equipo.ru_inicio}-${ruFin}` : "-"}
