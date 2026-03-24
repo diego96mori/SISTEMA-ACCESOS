@@ -36,7 +36,8 @@ function Equipos() {
       rack_id,
       ru_inicio,
       cantidad_ru,
-      estado
+      estado,
+      movimiento_id
     ),
 
     reemplazos (
@@ -119,7 +120,9 @@ function Equipos() {
       m.tipo_movimiento === "INSTALACION DE EQUIPOS" ||
       m.tipo_movimiento === "RETIRO DE EQUIPOS"
     ) {
-      return (m.equipos || []).map((equipo, i) => {
+      return (m.equipos || [])
+  .filter(eq => eq.movimiento_id === m.id)
+  .map((equipo, i) => {
 
         const ruFin = equipo?.ru_inicio
           ? equipo.ru_inicio + equipo.cantidad_ru - 1
