@@ -133,10 +133,6 @@ function Equipos() {
             <td className="p-4">{m.accesos?.fecha_ingreso}</td>
             <td className="p-4">{m.tipo_movimiento}</td>
 
-            <td className="p-4">
-              {equipo?.marca} {equipo?.modelo}
-            </td>
-
           <td className="p-4 max-w-[250px] truncate">
   <div className="font-semibold truncate">
     {equipo?.marca} {equipo?.modelo}
@@ -145,6 +141,7 @@ function Equipos() {
     Serie: {equipo?.serie || "-"}
   </div>
 </td>
+            <td className="p-4">{equipo?.rack_id || "-"}</td>
 
             <td className="p-4">
               {equipo?.ru_inicio ? `${equipo.ru_inicio}-${ruFin}` : "-"}
