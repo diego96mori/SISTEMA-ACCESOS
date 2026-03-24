@@ -99,13 +99,13 @@ function Equipos() {
 
               <thead className="bg-gray-100 text-xs uppercase">
                 <tr>
-                  <th className="p-4">ID Solicitud</th>
-                  <th className="p-4">Nodo</th>
-                  <th className="p-4">Fecha</th>
-                  <th className="p-4">Movimiento</th>
+                  <th className="p-4 w-[80px]">ID Solicitud</th>
+                  <th className="p-4 w-[150px]">Nodo</th>
+                  <th className="p-4 w-[120px]">Fecha</th>
+                  <th className="p-4 w-[180px]">Movimiento</th>
                   <th className="p-4">Equipo</th>
-                  <th className="p-4">Rack</th>
-                  <th className="p-4">RU</th>
+                 <th className="p-4 w-[120px]">Rack</th>
+                  <th className="p-4 w-[100px]">RU</th>
                 </tr>
               </thead>
 
