@@ -119,8 +119,8 @@ function Equipos() {
    // 🔵 INSTALACION
 if (m.tipo_movimiento === "INSTALACION DE EQUIPOS") {
   return (m.equipos || [])
-    
-    .map((equipo, i) => {
+.filter(eq => eq.movimiento_id === m.id)
+.map((equipo, i) => {
 
       const ruFin = equipo.ru_inicio + equipo.cantidad_ru - 1;
 
@@ -153,8 +153,8 @@ if (m.tipo_movimiento === "INSTALACION DE EQUIPOS") {
 // 🔴 RETIRO
 if (m.tipo_movimiento === "RETIRO DE EQUIPOS") {
   return (m.equipos || [])
-    
-    .map((equipo, i) => {
+.filter(eq => eq.movimiento_id === m.id)
+.map((equipo, i) => {
 
       const ruFin = equipo.ru_inicio + equipo.cantidad_ru - 1;
 
