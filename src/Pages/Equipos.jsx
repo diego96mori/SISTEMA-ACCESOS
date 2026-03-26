@@ -34,12 +34,14 @@ function Equipos() {
   marca,
   modelo,
   serie,
-  rack_id,
+
   ru_inicio,
   cantidad_ru,
   cantidad_hilos,
   estado,
   movimiento_id,
+
+   racks ( nombre ),
 
   tipos_equipo (
     nombre
@@ -159,7 +161,7 @@ if (m.tipo_movimiento === "INSTALACION DE EQUIPOS") {
 </td>
 
           <td className="p-4">
-            Rack {equipo.rack_id}
+           {equipo.racks?.nombre || "-"}
           </td>
 
           <td className="p-4">
@@ -210,7 +212,7 @@ if (m.tipo_movimiento === "RETIRO DE EQUIPOS") {
   </div>
 </td>
           <td className="p-4">
-            Rack {equipo.rack_id}
+            {equipo.racks?.nombre || "-"}
           </td>
 
           <td className="p-4">
@@ -251,8 +253,8 @@ const ruFin = equipoReal?.ru_inicio
         </div>
       </td>
 
-      <td className="p-4">
-  {equipoReal?.rack_id ? `Rack ${equipoReal.rack_id}` : "-"}
+ <td className="p-4 font-semibold text-gray-700">
+  {equipo.racks?.nombre || "-"}
 </td>
 
 <td className="p-4">
@@ -279,7 +281,7 @@ const ruFin = equipoReal?.ru_inicio
       </td>
 
      <td className="p-4">
-  {equipoReal?.rack_id ? `Rack ${equipoReal.rack_id}` : "-"}
+ {equipoReal?.racks?.nombre || "-"}
 </td>
 
 <td className="p-4">
@@ -345,7 +347,7 @@ if (m.tipo_movimiento === "INGRESO_FO") {
         </td>
 
         <td className="p-4">
-          {equipo.rack_id ? `Rack ${equipo.rack_id}` : "-"}
+          {equipo.racks?.nombre || "-"}
         </td>
 
         <td className="p-4">
