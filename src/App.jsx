@@ -7,7 +7,7 @@ import AdminLogin from "./Pages/AdminLogin";
 import Dashboard from "./Pages/Dashboard";
 import ProtectedRoute from "./Pages/ProtectedRoute";
 import Equipos from "./Pages/Equipos";
-
+import RacksView from "./pages/RacksView";
 function App() {
   return (
     <BrowserRouter>
@@ -19,6 +19,7 @@ function App() {
         <Route path="/admin" element={<AdminLogin />} />
         <Route path="/dashboard" element={<ProtectedRoute> <Dashboard /></ProtectedRoute>} />
         <Route path="/equipos" element={<Equipos />} />
+        <Route path="/racks" element={<RacksView />} />
       </Routes>
     </BrowserRouter>
   );
