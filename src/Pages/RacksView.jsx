@@ -159,20 +159,22 @@ return (
 
       {/* 🔹 RACK VISUAL */}
       <div className="border rounded-lg overflow-hidden">
-{(() => {
+
+      {(() => {
   const bloques = [];
   let i = 0;
 
   while (i < ruData.length) {
     const actual = ruData[i];
 
+    // 🔹 LIBRE
     if (!actual.equipo) {
       bloques.push(
-        <div key={actual.id} className="flex border-b bg-gray-100 h-[28px]">
+        <div key={actual.id} className="flex border-b h-[28px]">
           <div className="w-12 bg-gray-800 text-white text-xs flex items-center justify-center">
             {actual.numero_ru}
           </div>
-          <div className="flex-1 px-2 text-xs flex items-center">
+          <div className="flex-1 px-2 text-xs flex items-center bg-gray-100">
             LIBRE
           </div>
         </div>
@@ -181,45 +183,45 @@ return (
       continue;
     }
 
-    const equipo = actual.equipo;
-    const altura = equipo.cantidad_ru;
+    const eq = actual.equipo;
+    const altura = eq.cantidad_ru * 28;
 
-    // 🔥 pintar TODAS las RU del equipo
-    for (let j = 0; j < altura; j++) {
+    bloques.push(
+      <div key={eq.id} className="flex border-b">
 
-      bloques.push(
-        <div
-          key={`${equipo.id}-${j}`}
-          className="flex border-b bg-green-300 h-[28px]"
-        >
-          {/* NUMERO RU */}
-          <div className="w-12 bg-gray-800 text-white text-xs flex items-center justify-center">
-            {equipo.ru_inicio + altura - 1 - j}
-          </div>
-
-          {/* TEXTO SOLO EN LA PRIMERA FILA */}
-          <div className="flex-1 px-2 text-xs flex items-center">
-            {j === 0 ? (
-              <>
-                <span className="font-semibold">
-                  {equipo.tipos_equipo?.nombre}
-                </span>
-                {" - "}
-                {equipo.modelo}
-              </>
-            ) : null}
-          </div>
-
+        {/* NUMEROS (SIEMPRE SEPARADOS) */}
+        <div className="flex flex-col">
+          {Array.from({ length: eq.cantidad_ru }).map((_, j) => (
+            <div
+              key={j}
+              className="w-12 h-[28px] bg-gray-800 text-white text-xs flex items-center justify-center"
+            >
+              {eq.ru_inicio + eq.cantidad_ru - 1 - j}
+            </div>
+          ))}
         </div>
-      );
-    }
 
-    i += altura;
+        {/* BLOQUE VERDE UNIFICADO */}
+        <div
+          className="flex-1 bg-green-300 flex items-center justify-center text-xs"
+          style={{ height: `${altura}px` }}
+        >
+          <div className="text-center">
+            <div className="font-semibold">
+              {eq.tipos_equipo?.nombre}
+            </div>
+            <div>{eq.modelo}</div>
+          </div>
+        </div>
+
+      </div>
+    );
+
+    i += eq.cantidad_ru;
   }
 
   return bloques;
 })()}
-      
 
       </div>
 
