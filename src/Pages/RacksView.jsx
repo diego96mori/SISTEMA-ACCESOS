@@ -71,10 +71,10 @@ function RacksView() {
     setRuData(resultado);
   };
 return (
-  <div className="min-h-screen bg-gray-100 flex justify-center items-start py-10">
+  <div className="min-h-screen bg-gray-100 flex">
 
     {/* CONTENEDOR PRINCIPAL */}
-    <div className="bg-white rounded-2xl shadow-lg p-6 w-[500px]">
+    <div className="bg-white rounded-2xl shadow-lg p-6 w-[700px] mx-auto mt-10">
 
       {/* 🔹 TÍTULO */}
       <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">
@@ -127,39 +127,57 @@ return (
       {/* 🔹 RACK VISUAL */}
       <div className="border rounded-lg overflow-hidden">
 
-        {ruData.map(ru => (
-          <div
-            key={ru.id}
-            className={`flex items-center border-b ${
-              ru.equipo ? "bg-green-200" : "bg-gray-100"
-            }`}
-            style={{ height: "28px" }}   // 🔥 altura compacta tipo rack
-          >
+      {(() => {
+  const bloques = [];
+  let i = 0;
 
-            {/* NUMERO RU */}
-            <div className="w-12 bg-gray-800 text-white text-center text-xs h-full flex items-center justify-center">
-              {ru.numero_ru}
-            </div>
+  while (i < ruData.length) {
+    const actual = ruData[i];
 
-            {/* INFO */}
-            <div className="flex-1 px-2 text-xs">
-
-              {ru.equipo ? (
-                <>
-                  <span className="font-semibold">
-                    {ru.equipo.tipos_equipo?.nombre}
-                  </span>
-                  {" - "}
-                  {ru.equipo.modelo}
-                </>
-              ) : (
-                <span className="text-gray-500">LIBRE</span>
-              )}
-
-            </div>
-
+    if (!actual.equipo) {
+      bloques.push(
+        <div key={actual.id} className="flex border-b bg-gray-100 h-[28px]">
+          <div className="w-12 bg-gray-800 text-white text-xs flex items-center justify-center">
+            {actual.numero_ru}
           </div>
-        ))}
+          <div className="flex-1 px-2 text-xs flex items-center">
+            LIBRE
+          </div>
+        </div>
+      );
+      i++;
+      continue;
+    }
+
+    const equipo = actual.equipo;
+    const inicio = equipo.ru_inicio;
+    const fin = equipo.ru_inicio + equipo.cantidad_ru - 1;
+    const altura = equipo.cantidad_ru * 28;
+
+    bloques.push(
+      <div
+        key={equipo.id}
+        className="flex border-b bg-green-300"
+        style={{ height: `${altura}px` }}
+      >
+        <div className="w-12 bg-gray-800 text-white text-xs flex items-center justify-center">
+          {fin} - {inicio}
+        </div>
+
+        <div className="flex-1 px-2 text-xs flex flex-col justify-center">
+          <span className="font-semibold">
+            {equipo.tipos_equipo?.nombre}
+          </span>
+          <span>{equipo.modelo}</span>
+        </div>
+      </div>
+    );
+
+    i += equipo.cantidad_ru;
+  }
+
+  return bloques;
+})()}
 
       </div>
 
