@@ -106,9 +106,9 @@ return (
 </aside>
 
     {/* CONTENEDOR PRINCIPAL */}
-    <div className="flex-1 p-6 flex justify-center">
+    <div className="flex-1 p-6 flex justify-center items-start">
 
-  <div className="bg-white rounded-2xl shadow-lg p-6 w-[500px]">
+  <div className="bg-white rounded-2xl shadow-lg p-6 w-[700px]">
   
 
       {/* 🔹 TÍTULO */}
@@ -138,7 +138,7 @@ return (
             ))}
           </select>
         </div>
-        </div>
+      
 
         <div className="flex flex-col w-1/2">
           <label className="text-sm font-semibold mb-1">Rack</label>
@@ -161,7 +161,7 @@ return (
       </div>
 
       {/* 🔹 RACK VISUAL */}
-     <div className="border rounded-lg overflow-hidden max-h-[600px] overflow-y-auto">
+     <div className="border rounded-lg overflow-hidden max-h-[600px] overflow-y-auto w-full">
 
       {(() => {
   const bloques = [];
@@ -230,6 +230,7 @@ return (
 
     </div>
 
+  </div>
   </div>
 );
 }
