@@ -49,12 +49,18 @@ function Equipos() {
 ),
 
     reemplazos (
-      equipo_retirado:equipo_retirado_id (
-        marca, modelo, serie
-      ),
-      equipo_nuevo:equipo_nuevo_id (
-        marca, modelo, serie
-      )
+     equipo_retirado:equipo_retirado_id (
+  marca,
+  modelo,
+  serie,
+  tipos_equipo ( nombre )
+),
+equipo_nuevo:equipo_nuevo_id (
+  marca,
+  modelo,
+  serie,
+  tipos_equipo ( nombre )
+)
     )
   `)
   .order("id", { ascending: false });
@@ -170,7 +176,7 @@ if (m.tipo_movimiento === "INSTALACION DE EQUIPOS") {
 </td>
 
           <td className="p-4">
-           {equipoReal?.racks?.nombre || "-"}
+           {equipo?.racks?.nombre || "-"}
           </td>
 
           <td className="p-4">
@@ -221,7 +227,7 @@ if (m.tipo_movimiento === "RETIRO DE EQUIPOS") {
   </div>
 </td>
           <td className="p-4">
-            {equipoReal?.racks?.nombre || "-"}
+          {equipo?.racks?.nombre || "-"}
           </td>
 
           <td className="p-4">
@@ -266,7 +272,7 @@ const ruFin = equipoReal?.ru_inicio
       </td>
 
  <td className="p-4 font-semibold text-gray-700">
-{equipoReal?.racks?.nombre || "-"}
+{equipo?.racks?.nombre || "-"}
 </td>
 
 <td className="p-4">
@@ -286,14 +292,15 @@ const ruFin = equipoReal?.ru_inicio
          <div className="text-green-600 font-semibold mb-1">
   INSTALACION
 </div>
-  <div><b>EQUIPO:</b> {reemplazo?.equipo_nuevo?.modelo}</div>
-<div><b>MARCA:</b> {reemplazo?.equipo_nuevo?.marca}</div>
-<div><b>SERIE:</b> {reemplazo?.equipo_nuevo?.serie}</div>
+  <div><b>EQUIPO:</b> {reemplazo?.equipo_nuevo?.tipos_equipo?.nombre || "-"}</div>
+<div><b>MARCA:</b> {reemplazo?.equipo_nuevo?.marca || "-"}</div>
+<div><b>MODELO:</b> {reemplazo?.equipo_nuevo?.modelo || "-"}</div>
+<div><b>SERIE:</b> {reemplazo?.equipo_nuevo?.serie || "-"}</div>
         </div>
       </td>
 
      <td className="p-4">
- {equipoReal?.racks?.nombre || "-"}
+ {equipo?.racks?.nombre || "-"}
 </td>
 
 <td className="p-4">
@@ -359,7 +366,7 @@ if (m.tipo_movimiento === "INGRESO_FO") {
         </td>
 
         <td className="p-4">
-        {equipoReal?.racks?.nombre || "-"}
+        {equipo?.racks?.nombre || "-"}
         </td>
 
         <td className="p-4">
