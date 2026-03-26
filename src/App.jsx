@@ -7,7 +7,7 @@ import AdminLogin from "./Pages/AdminLogin";
 import Dashboard from "./Pages/Dashboard";
 import ProtectedRoute from "./Pages/ProtectedRoute";
 import Equipos from "./Pages/Equipos";
-import RacksView from "./pages/RacksView";
+import RacksView from "./Pages/RacksView";
 function App() {
   return (
     <BrowserRouter>

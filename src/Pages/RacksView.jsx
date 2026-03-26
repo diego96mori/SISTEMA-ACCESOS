@@ -48,11 +48,11 @@ function RacksView() {
       .eq("estado", "ACTIVO");
 
     // 🔥 3. mapear RU con equipos
-    const resultado = ru.map(r => {
+    const resultado = (ru || []).map(r => {
 
       let equipoEncontrado = null;
 
-      for (let eq of equipos) {
+      for (let eq of (equipos || [])){
         const inicio = eq.ru_inicio;
         const fin = eq.ru_inicio + eq.cantidad_ru - 1;
 
@@ -82,8 +82,9 @@ function RacksView() {
         <select
           value={nodoId}
           onChange={(e) => {
-            setNodoId(e.target.value);
-            cargarRacks(e.target.value);
+  const id = Number(e.target.value);
+  setNodoId(id);
+  cargarRacks(id);
             setRackId("");
             setRuData([]);
           }}
@@ -97,10 +98,11 @@ function RacksView() {
 
         <select
           value={rackId}
-          onChange={(e) => {
-            setRackId(e.target.value);
-            cargarRU(e.target.value);
-          }}
+        onChange={(e) => {
+  const id = Number(e.target.value);
+  setRackId(id);
+  cargarRU(id);
+}}
           className="border p-2 rounded"
         >
           <option value="">Seleccione Rack</option>
@@ -118,9 +120,9 @@ function RacksView() {
           <div
             key={ru.id}
             className={`flex border-b ${
-              ru.estado === "OCUPADO"
-                ? "bg-green-200"
-                : "bg-gray-100"
+             ru.equipo
+  ? "bg-green-200"
+  : "bg-gray-100"
             }`}
           >
 
