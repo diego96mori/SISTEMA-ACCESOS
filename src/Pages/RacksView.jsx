@@ -70,80 +70,87 @@ function RacksView() {
 
     setRuData(resultado);
   };
+return (
+  <div className="min-h-screen bg-gray-100 flex justify-center items-start py-10">
 
-  return (
-    <div className="p-6">
+    {/* CONTENEDOR PRINCIPAL */}
+    <div className="bg-white rounded-2xl shadow-lg p-6 w-[500px]">
 
-      <h2 className="text-xl font-bold mb-4">Vista de Racks</h2>
+      {/* 🔹 TÍTULO */}
+      <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">
+        Vista de Rack
+      </h2>
 
-      {/* FILTROS */}
+      {/* 🔹 FILTROS */}
       <div className="flex gap-4 mb-6">
 
-        <select
-          value={nodoId}
-          onChange={(e) => {
-  const id = Number(e.target.value);
-  setNodoId(id);
-  cargarRacks(id);
-            setRackId("");
-            setRuData([]);
-          }}
-          className="border p-2 rounded"
-        >
-          <option value="">Seleccione Nodo</option>
-          {nodos.map(n => (
-            <option key={n.id} value={n.id}>{n.nombre}</option>
-          ))}
-        </select>
+        <div className="flex flex-col w-1/2">
+          <label className="text-sm font-semibold mb-1">Nodo</label>
+          <select
+            value={nodoId}
+            onChange={(e) => {
+              const id = Number(e.target.value);
+              setNodoId(id);
+              cargarRacks(id);
+              setRackId("");
+              setRuData([]);
+            }}
+            className="border p-2 rounded"
+          >
+            <option value="">Seleccione</option>
+            {nodos.map(n => (
+              <option key={n.id} value={n.id}>{n.nombre}</option>
+            ))}
+          </select>
+        </div>
 
-        <select
-          value={rackId}
-        onChange={(e) => {
-  const id = Number(e.target.value);
-  setRackId(id);
-  cargarRU(id);
-}}
-          className="border p-2 rounded"
-        >
-          <option value="">Seleccione Rack</option>
-          {racks.map(r => (
-            <option key={r.id} value={r.id}>{r.nombre}</option>
-          ))}
-        </select>
+        <div className="flex flex-col w-1/2">
+          <label className="text-sm font-semibold mb-1">Rack</label>
+          <select
+            value={rackId}
+            onChange={(e) => {
+              const id = Number(e.target.value);
+              setRackId(id);
+              cargarRU(id);
+            }}
+            className="border p-2 rounded"
+          >
+            <option value="">Seleccione</option>
+            {racks.map(r => (
+              <option key={r.id} value={r.id}>{r.nombre}</option>
+            ))}
+          </select>
+        </div>
 
       </div>
 
-      {/* VISTA RACK */}
-      <div className="border rounded overflow-hidden">
+      {/* 🔹 RACK VISUAL */}
+      <div className="border rounded-lg overflow-hidden">
 
         {ruData.map(ru => (
           <div
             key={ru.id}
-            className={`flex border-b ${
-             ru.equipo
-  ? "bg-green-200"
-  : "bg-gray-100"
+            className={`flex items-center border-b ${
+              ru.equipo ? "bg-green-200" : "bg-gray-100"
             }`}
+            style={{ height: "28px" }}   // 🔥 altura compacta tipo rack
           >
 
             {/* NUMERO RU */}
-            <div className="w-16 bg-gray-800 text-white text-center p-2">
+            <div className="w-12 bg-gray-800 text-white text-center text-xs h-full flex items-center justify-center">
               {ru.numero_ru}
             </div>
 
             {/* INFO */}
-            <div className="flex-1 p-2">
+            <div className="flex-1 px-2 text-xs">
 
               {ru.equipo ? (
                 <>
-                  <div className="font-semibold">
+                  <span className="font-semibold">
                     {ru.equipo.tipos_equipo?.nombre}
-                  </div>
-                  <div>{ru.equipo.marca}</div>
-                  <div>{ru.equipo.modelo}</div>
-                  <div className="text-xs text-gray-600">
-                    {ru.equipo.serie}
-                  </div>
+                  </span>
+                  {" - "}
+                  {ru.equipo.modelo}
                 </>
               ) : (
                 <span className="text-gray-500">LIBRE</span>
@@ -157,7 +164,9 @@ function RacksView() {
       </div>
 
     </div>
-  );
+
+  </div>
+);
 }
 
 export default RacksView;
