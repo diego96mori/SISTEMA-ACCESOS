@@ -424,12 +424,20 @@ const payload = {
           <select
             className="form-control"
             value={equiposInstalacion[i]?.tipoEquipoId || ""}
-            onChange={(e) => {
-              actualizarInstalacion(i, "tipoEquipoId", Number(e.target.value));
-              actualizarInstalacion(i, "rackId", null);
-              actualizarInstalacion(i, "ruInicio", null);
-              actualizarInstalacion(i, "ruOptions", []);
-            }}
+         onChange={(e) => {
+  const tipoId = Number(e.target.value);
+
+  actualizarInstalacion(i, "tipoEquipoId", tipoId);
+
+  // 🔴 limpiar campos
+  actualizarInstalacion(i, "marca", "");
+  actualizarInstalacion(i, "modelo", "");
+  actualizarInstalacion(i, "serie", "");
+  actualizarInstalacion(i, "rackId", null);
+  actualizarInstalacion(i, "ruInicio", null);
+  actualizarInstalacion(i, "cantidadRu", 1);
+  actualizarInstalacion(i, "ruOptions", []);
+}}
           >
             <option value="">Seleccione Equipo</option>
             {tiposEquipo.map(t => (
@@ -439,46 +447,46 @@ const payload = {
         </div>
 
         {/* 🔹 MARCA */}
-        {equipoSeleccionado && (
-          <div className="form-row">
-            <label>Marca</label>
-            <input
-              className="form-control"
-              value={equiposInstalacion[i]?.marca || ""}
-              onChange={(e) =>
-                actualizarInstalacion(i, "marca", e.target.value)
-              }
-            />
-          </div>
-        )}
+        {equipoSeleccionado?.usa_marca && (
+  <div className="form-row">
+    <label>Marca</label>
+    <input
+      className="form-control"
+      value={equiposInstalacion[i]?.marca || ""}
+      onChange={(e) =>
+        actualizarInstalacion(i, "marca", e.target.value)
+      }
+    />
+  </div>
+)}
 
         {/* 🔹 MODELO */}
-        {equipoSeleccionado && (
-          <div className="form-row">
-            <label>Modelo</label>
-            <input
-              className="form-control"
-              value={equiposInstalacion[i]?.modelo || ""}
-              onChange={(e) =>
-                actualizarInstalacion(i, "modelo", e.target.value)
-              }
-            />
-          </div>
-        )}
+       {equipoSeleccionado?.usa_modelo && (
+  <div className="form-row">
+    <label>Modelo</label>
+    <input
+      className="form-control"
+      value={equiposInstalacion[i]?.modelo || ""}
+      onChange={(e) =>
+        actualizarInstalacion(i, "modelo", e.target.value)
+      }
+    />
+  </div>
+)}
 
         {/* 🔹 SERIE */}
-        {equipoSeleccionado && (
-          <div className="form-row">
-            <label>Serie</label>
-            <input
-              className="form-control"
-              value={equiposInstalacion[i]?.serie || ""}
-              onChange={(e) =>
-                actualizarInstalacion(i, "serie", e.target.value)
-              }
-            />
-          </div>
-        )}
+      {equipoSeleccionado?.usa_serie && (
+  <div className="form-row">
+    <label>Serie</label>
+    <input
+      className="form-control"
+      value={equiposInstalacion[i]?.serie || ""}
+      onChange={(e) =>
+        actualizarInstalacion(i, "serie", e.target.value)
+      }
+    />
+  </div>
+)}
 
         {/* 🔹 SI USA RACK */}
         {equipoSeleccionado?.usa_rack && (
@@ -606,6 +614,7 @@ const payload = {
   const equipo = equiposRetiro[i].listaEquipos.find(
     x => x.id == e.target.value
   );
+  
 
   // 🔴 VALIDAR DUPLICADO
   const idsSeleccionados = equiposRetiro.map(e => e?.equipoId);
@@ -832,12 +841,20 @@ const payload = {
           <select
             className="form-control"
             value={equiposInstalacion[i]?.tipoEquipoId || ""}
-            onChange={(e) => {
-              actualizarInstalacion(i, "tipoEquipoId", Number(e.target.value));
-              actualizarInstalacion(i, "rackId", null);
-              actualizarInstalacion(i, "ruInicio", null);
-              actualizarInstalacion(i, "ruOptions", []);
-            }}
+         onChange={(e) => {
+  const tipoId = Number(e.target.value);
+
+  actualizarInstalacion(i, "tipoEquipoId", tipoId);
+
+  // 🔴 limpiar TODO
+  actualizarInstalacion(i, "marca", "");
+  actualizarInstalacion(i, "modelo", "");
+  actualizarInstalacion(i, "serie", "");
+  actualizarInstalacion(i, "rackId", null);
+  actualizarInstalacion(i, "ruInicio", null);
+  actualizarInstalacion(i, "cantidadRu", 1);
+  actualizarInstalacion(i, "ruOptions", []);
+}}
           >
             <option value="">Seleccione Equipo</option>
             {tiposEquipo.map(t => (
@@ -846,43 +863,47 @@ const payload = {
           </select>
         </div>
 
-        {/* Marca / Modelo / Serie */}
-        {equipoInstalacion && (
-          <>
-            <div className="form-row">
-              <label>Marca</label>
-              <input
-                className="form-control"
-                value={equiposInstalacion[i]?.marca || ""}
-                onChange={(e) =>
-                  actualizarInstalacion(i, "marca", e.target.value)
-                }
-              />
-            </div>
+   {/* Marca */}
+{equipoInstalacion?.usa_marca && (
+  <div className="form-row">
+    <label>Marca</label>
+    <input
+      className="form-control"
+      value={equiposInstalacion[i]?.marca || ""}
+      onChange={(e) =>
+        actualizarInstalacion(i, "marca", e.target.value)
+      }
+    />
+  </div>
+)}
 
-            <div className="form-row">
-              <label>Modelo</label>
-              <input
-                className="form-control"
-                value={equiposInstalacion[i]?.modelo || ""}
-                onChange={(e) =>
-                  actualizarInstalacion(i, "modelo", e.target.value)
-                }
-              />
-            </div>
+{/* Modelo */}
+{equipoInstalacion?.usa_modelo && (
+  <div className="form-row">
+    <label>Modelo</label>
+    <input
+      className="form-control"
+      value={equiposInstalacion[i]?.modelo || ""}
+      onChange={(e) =>
+        actualizarInstalacion(i, "modelo", e.target.value)
+      }
+    />
+  </div>
+)}
 
-            <div className="form-row">
-              <label>Serie</label>
-              <input
-                className="form-control"
-                value={equiposInstalacion[i]?.serie || ""}
-                onChange={(e) =>
-                  actualizarInstalacion(i, "serie", e.target.value)
-                }
-              />
-            </div>
-          </>
-        )}
+{/* Serie */}
+{equipoInstalacion?.usa_serie && (
+  <div className="form-row">
+    <label>Serie</label>
+    <input
+      className="form-control"
+      value={equiposInstalacion[i]?.serie || ""}
+      onChange={(e) =>
+        actualizarInstalacion(i, "serie", e.target.value)
+      }
+    />
+  </div>
+)}
 
         {/* Si usa Rack → RU LIBRES + RU RETIRADAS */}
         {equipoInstalacion?.usa_rack && (
