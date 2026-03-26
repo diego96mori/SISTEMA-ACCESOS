@@ -214,7 +214,7 @@ if (tipoTrabajoId === 1) {
 
 if (tipoTrabajoId === 2) {
   for (let eq of equiposRetiro) {
-    if (!eq?.rackId || !eq?.ruInicio || !eq?.cantidadRu) {
+    if (!eq?.equipoId) {
       alert("Complete todos los datos de retiro");
       setSaving(false);
       return;
@@ -228,7 +228,7 @@ if (tipoTrabajoId === 3) {
     const ret = equiposRetiro[i];
     const inst = equiposInstalacion[i];
 
-    if (!ret?.rackId || !ret?.ruInicio || !ret?.cantidadRu) {
+    if (!ret?.equipoId) {
       alert("Complete datos de RETIRO en reemplazo");
       setSaving(false);
       return;
@@ -546,12 +546,12 @@ const payload = {
   })
 }
 
+{/* RETIRO DE EQUIPOS */}
+
+
+
 {tipoTrabajoId === 2 &&
   Array.from({ length: cantidadEquipos }).map((_, i) => {
-
-    const equipoSeleccionado = tiposEquipo.find(
-      t => Number(t.id) === Number(equiposRetiro[i]?.tipoEquipoId)
-    );
 
     return (
       <div key={i} className="equipo-box">
@@ -560,38 +560,88 @@ const payload = {
           🔴 Equipo a Retirar {i + 1}
         </h5>
 
-        {/* 🔹 SOLO SALE EQUIPO AL INICIO */}
+        {/* 🔹 SELECCIONAR RACK */}
         <div className="form-row">
-          <label>Equipo</label>
+          <label>Rack</label>
           <select
             className="form-control"
-            value={equiposRetiro[i]?.tipoEquipoId || ""}
-            onChange={(e) => {
-              actualizarRetiro(i, "tipoEquipoId", Number(e.target.value));
+            value={equiposRetiro[i]?.rackId || ""}
+            onChange={async (e) => {
+              const rackId = Number(e.target.value);
 
-              // limpiar campos cuando cambia equipo
-              actualizarRetiro(i, "rackId", null);
-              actualizarRetiro(i, "ruInicio", null);
+              actualizarRetiro(i, "rackId", rackId);
+              actualizarRetiro(i, "equipoId", null);
+
+              const { data } = await supabase
+                .from("equipos")
+                .select("*")
+                .eq("rack_id", rackId)
+                .eq("estado", "ACTIVO");
+
+              const nuevos = [...equiposRetiro];
+              nuevos[i] = {
+                ...nuevos[i],
+                listaEquipos: data || []
+              };
+
+              setEquiposRetiro(nuevos);
             }}
           >
-            <option value="">Seleccione Equipo</option>
-            {tiposEquipo.map(t => (
-              <option key={t.id} value={t.id}>{t.nombre}</option>
+            <option value="">Seleccione Rack</option>
+            {racks.map(r => (
+              <option key={r.id} value={r.id}>{r.nombre}</option>
             ))}
           </select>
         </div>
 
-        {/* 🔹 MARCA MODELO SERIE SIEMPRE */}
-        {equipoSeleccionado && (
+        {/* 🔹 SELECCIONAR EQUIPO REAL */}
+        {equiposRetiro[i]?.rackId && (
+          <div className="form-row">
+            <label>Equipo</label>
+            <select
+              className="form-control"
+              value={equiposRetiro[i]?.equipoId || ""}
+              onChange={(e) => {
+
+                const equipo = equiposRetiro[i].listaEquipos.find(
+                  x => x.id == e.target.value
+                );
+
+                const nuevos = [...equiposRetiro];
+
+                nuevos[i] = {
+                  ...nuevos[i],
+                  equipoId: equipo.id,
+                  marca: equipo.marca,
+                  modelo: equipo.modelo,
+                  serie: equipo.serie,
+                  ruInicio: equipo.ru_inicio,
+                  cantidadRu: equipo.cantidad_ru
+                };
+
+                setEquiposRetiro(nuevos);
+              }}
+            >
+              <option value="">Seleccione Equipo</option>
+
+              {equiposRetiro[i]?.listaEquipos?.map(eq => (
+                <option key={eq.id} value={eq.id}>
+                  {eq.marca} - {eq.modelo} - {eq.serie}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* 🔹 DATOS AUTOMÁTICOS */}
+        {equiposRetiro[i]?.equipoId && (
           <>
             <div className="form-row">
               <label>Marca</label>
               <input
                 className="form-control"
                 value={equiposRetiro[i]?.marca || ""}
-                onChange={(e) =>
-                  actualizarRetiro(i, "marca", e.target.value)
-                }
+                disabled
               />
             </div>
 
@@ -600,9 +650,7 @@ const payload = {
               <input
                 className="form-control"
                 value={equiposRetiro[i]?.modelo || ""}
-                onChange={(e) =>
-                  actualizarRetiro(i, "modelo", e.target.value)
-                }
+                disabled
               />
             </div>
 
@@ -611,69 +659,25 @@ const payload = {
               <input
                 className="form-control"
                 value={equiposRetiro[i]?.serie || ""}
-                onChange={(e) =>
-                  actualizarRetiro(i, "serie", e.target.value)
-                }
+                disabled
               />
             </div>
-          </>
-        )}
 
-        {/* 🔹 SI USA RACK */}
-        {equipoSeleccionado?.usa_rack && (
-          <div className="form-row">
-            <label>Rack</label>
-            <select
-              className="form-control"
-              value={equiposRetiro[i]?.rackId || ""}
-              onChange={async (e) => {
-                const rackId = Number(e.target.value);
-                actualizarRetiro(i, "rackId", rackId);
-                actualizarRetiro(i, "ruInicio", null);
-
-                const ruData = await cargarRURetiro(rackId);
-                actualizarRetiro(i, "ruOptions", ruData);
-              }}
-            >
-              <option value="">Seleccione Rack</option>
-              {racks.map(r => (
-                <option key={r.id} value={r.id}>{r.nombre}</option>
-              ))}
-            </select>
-          </div>
-        )}
-
-        {/* 🔹 SI USA RU */}
-        {equipoSeleccionado?.usa_ru && (
-          <>
             <div className="form-row">
               <label>RU inicial</label>
-              <select
+              <input
                 className="form-control"
                 value={equiposRetiro[i]?.ruInicio || ""}
-                onChange={(e) =>
-                  actualizarRetiro(i, "ruInicio", Number(e.target.value))
-                }
-              >
-                <option value="">Seleccione RU</option>
-                {equiposRetiro[i]?.ruOptions?.map(ru => (
-                  <option key={ru.id} value={ru.numero_ru}>
-                    RU {ru.numero_ru}
-                  </option>
-                ))}
-              </select>
+                disabled
+              />
             </div>
 
             <div className="form-row">
-              <label>Cantidad de RU</label>
+              <label>Cantidad RU</label>
               <input
-                type="number"
-                min="1"
                 className="form-control"
-                value={equiposRetiro[i]?.cantidadRu ?? 1}
-                onChange={(e) =>
-                  actualizarRetiro(i, "cantidadRu", Number(e.target.value))
-                }
+                value={equiposRetiro[i]?.cantidadRu || ""}
+                disabled
               />
             </div>
           </>
@@ -683,6 +687,10 @@ const payload = {
     );
   })
 }
+
+
+
+
 {/* 🟣 REEMPLAZO */}
 {tipoTrabajoId === 3 &&
   Array.from({ length: cantidadEquipos }).map((_, i) => {
@@ -698,127 +706,113 @@ const payload = {
     return (
       <div key={i} className="equipo-box">
 
-        {/* 🔴 EQUIPO A RETIRAR */}
-        <h5 style={{ color: "red" }}>🔴 Equipo a Retirar</h5>
 
-        {/* Selección Equipo */}
-        <div className="form-row">
-          <label>Equipo</label>
-          <select
-            className="form-control"
-            value={equiposRetiro[i]?.tipoEquipoId || ""}
-            onChange={(e) => {
-              actualizarRetiro(i, "tipoEquipoId", Number(e.target.value));
-              actualizarRetiro(i, "rackId", null);
-              actualizarRetiro(i, "ruInicio", null);
-              actualizarRetiro(i, "ruOptions", []);
-            }}
-          >
-            <option value="">Seleccione Equipo</option>
-            {tiposEquipo.map(t => (
-              <option key={t.id} value={t.id}>{t.nombre}</option>
-            ))}
-          </select>
-        </div>
+<h5 style={{ color: "red" }}>🔴 Equipo a Retirar</h5>
 
-        {/* Marca / Modelo / Serie */}
-        {equipoRetiro && (
-          <>
-            <div className="form-row">
-              <label>Marca</label>
-              <input
-                className="form-control"
-                value={equiposRetiro[i]?.marca || ""}
-                onChange={(e) =>
-                  actualizarRetiro(i, "marca", e.target.value)
-                }
-              />
-            </div>
+{/* 🔹 RACK */}
+<div className="form-row">
+  <label>Rack</label>
+  <select
+    className="form-control"
+    value={equiposRetiro[i]?.rackId || ""}
+    onChange={async (e) => {
+      const rackId = Number(e.target.value);
 
-            <div className="form-row">
-              <label>Modelo</label>
-              <input
-                className="form-control"
-                value={equiposRetiro[i]?.modelo || ""}
-                onChange={(e) =>
-                  actualizarRetiro(i, "modelo", e.target.value)
-                }
-              />
-            </div>
+      actualizarRetiro(i, "rackId", rackId);
+      actualizarRetiro(i, "equipoId", null);
 
-            <div className="form-row">
-              <label>Serie</label>
-              <input
-                className="form-control"
-                value={equiposRetiro[i]?.serie || ""}
-                onChange={(e) =>
-                  actualizarRetiro(i, "serie", e.target.value)
-                }
-              />
-            </div>
-          </>
-        )}
+      const { data } = await supabase
+        .from("equipos")
+        .select("*")
+        .eq("rack_id", rackId)
+        .eq("estado", "ACTIVO");
 
-        {/* Si usa Rack → RU OCUPADAS */}
-        {equipoRetiro?.usa_rack && (
-          <>
-            <div className="form-row">
-              <label>Rack</label>
-              <select
-                className="form-control"
-                value={equiposRetiro[i]?.rackId || ""}
-                onChange={async (e) => {
-                  const rackId = Number(e.target.value);
-                  actualizarRetiro(i, "rackId", rackId);
-                  actualizarRetiro(i, "ruInicio", null);
+      const nuevos = [...equiposRetiro];
+      nuevos[i] = {
+        ...nuevos[i],
+        listaEquipos: data || []
+      };
 
-                  const ruData = await cargarRURetiro(rackId);
-                  actualizarRetiro(i, "ruOptions", ruData);
-                }}
-              >
-                <option value="">Seleccione Rack</option>
-                {racks.map(r => (
-                  <option key={r.id} value={r.id}>{r.nombre}</option>
-                ))}
-              </select>
-            </div>
+      setEquiposRetiro(nuevos);
+    }}
+  >
+    <option value="">Seleccione Rack</option>
+    {racks.map(r => (
+      <option key={r.id} value={r.id}>{r.nombre}</option>
+    ))}
+  </select>
+</div>
 
-            {equipoRetiro.usa_ru && (
-              <>
-                <div className="form-row">
-                  <label>RU inicial</label>
-                  <select
-                    className="form-control"
-                    value={equiposRetiro[i]?.ruInicio || ""}
-                    onChange={(e) =>
-                      actualizarRetiro(i, "ruInicio", Number(e.target.value))
-                    }
-                  >
-                    <option value="">Seleccione RU</option>
-                    {equiposRetiro[i]?.ruOptions?.map(ru => (
-                      <option key={ru.id} value={ru.numero_ru}>
-                        RU {ru.numero_ru}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+{/* 🔹 EQUIPO */}
+{equiposRetiro[i]?.rackId && (
+  <div className="form-row">
+    <label>Equipo</label>
+    <select
+      className="form-control"
+      value={equiposRetiro[i]?.equipoId || ""}
+      onChange={(e) => {
 
-                <div className="form-row">
-                  <label>Cantidad de RU</label>
-                  <input
-                    type="number"
-                    min="1"
-                    className="form-control"
-                    value={equiposRetiro[i]?.cantidadRu ?? 1}
-                    onChange={(e) =>
-                      actualizarRetiro(i, "cantidadRu", Number(e.target.value))
-                    }
-                  />
-                </div>
-              </>
-            )}
-          </>
-        )}
+        const equipo = equiposRetiro[i].listaEquipos.find(
+          x => x.id == e.target.value
+        );
+
+        const nuevos = [...equiposRetiro];
+
+        nuevos[i] = {
+          ...nuevos[i],
+          equipoId: equipo.id,
+          marca: equipo.marca,
+          modelo: equipo.modelo,
+          serie: equipo.serie,
+          ruInicio: equipo.ru_inicio,
+          cantidadRu: equipo.cantidad_ru
+        };
+
+        setEquiposRetiro(nuevos);
+      }}
+    >
+      <option value="">Seleccione Equipo</option>
+
+      {equiposRetiro[i]?.listaEquipos?.map(eq => (
+        <option key={eq.id} value={eq.id}>
+          {eq.marca} - {eq.modelo} - {eq.serie}
+        </option>
+      ))}
+    </select>
+  </div>
+)}
+
+{/* 🔹 INFO AUTOMÁTICA */}
+{equiposRetiro[i]?.equipoId && (
+  <>
+    <div className="form-row">
+      <label>Marca</label>
+      <input value={equiposRetiro[i]?.marca || ""} disabled />
+    </div>
+
+    <div className="form-row">
+      <label>Modelo</label>
+      <input value={equiposRetiro[i]?.modelo || ""} disabled />
+    </div>
+
+    <div className="form-row">
+      <label>Serie</label>
+      <input value={equiposRetiro[i]?.serie || ""} disabled />
+    </div>
+
+    <div className="form-row">
+      <label>RU inicial</label>
+      <input value={equiposRetiro[i]?.ruInicio || ""} disabled />
+    </div>
+
+    <div className="form-row">
+      <label>Cantidad RU</label>
+      <input value={equiposRetiro[i]?.cantidadRu || ""} disabled />
+    </div>
+  </>
+)}
+
+       
 
         <hr />
 
