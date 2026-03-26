@@ -106,8 +106,10 @@ return (
 </aside>
 
     {/* CONTENEDOR PRINCIPAL */}
-    <div className="flex-1 p-8">
-  <div className="bg-white rounded-2xl shadow-lg p-6 max-w-[700px]"></div>
+    <div className="flex-1 p-6 flex justify-center">
+
+  <div className="bg-white rounded-2xl shadow-lg p-6 w-[500px]">
+  
 
       {/* 🔹 TÍTULO */}
       <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">
@@ -115,7 +117,7 @@ return (
       </h2>
 
       {/* 🔹 FILTROS */}
-      <div className="flex gap-4 mb-6">
+      <div className="flex gap-3 mb-4">
 
         <div className="flex flex-col w-1/2">
           <label className="text-sm font-semibold mb-1">Nodo</label>
@@ -128,13 +130,14 @@ return (
               setRackId("");
               setRuData([]);
             }}
-            className="border p-2 rounded"
+            className="border p-1 rounded text-sm"
           >
             <option value="">Seleccione</option>
             {nodos.map(n => (
               <option key={n.id} value={n.id}>{n.nombre}</option>
             ))}
           </select>
+        </div>
         </div>
 
         <div className="flex flex-col w-1/2">
@@ -146,7 +149,7 @@ return (
               setRackId(id);
               cargarRU(id);
             }}
-            className="border p-2 rounded"
+           className="border p-1 rounded text-sm"
           >
             <option value="">Seleccione</option>
             {racks.map(r => (
@@ -158,7 +161,7 @@ return (
       </div>
 
       {/* 🔹 RACK VISUAL */}
-      <div className="border rounded-lg overflow-hidden">
+     <div className="border rounded-lg overflow-hidden max-h-[600px] overflow-y-auto">
 
       {(() => {
   const bloques = [];
