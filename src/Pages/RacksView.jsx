@@ -126,8 +126,7 @@ return (
 
       {/* 🔹 RACK VISUAL */}
       <div className="border rounded-lg overflow-hidden">
-
-      {(() => {
+{(() => {
   const bloques = [];
   let i = 0;
 
@@ -152,24 +151,36 @@ return (
     const equipo = actual.equipo;
     const inicio = equipo.ru_inicio;
     const fin = equipo.ru_inicio + equipo.cantidad_ru - 1;
-    const altura = equipo.cantidad_ru * 28;
 
     bloques.push(
-      <div
-        key={equipo.id}
-        className="flex border-b bg-green-300"
-        style={{ height: `${altura}px` }}
-      >
-        <div className="w-12 bg-gray-800 text-white text-xs flex items-center justify-center">
-          {fin} - {inicio}
-        </div>
+      <div key={equipo.id} className="flex flex-col border-b">
 
-        <div className="flex-1 px-2 text-xs flex flex-col justify-center">
-          <span className="font-semibold">
-            {equipo.tipos_equipo?.nombre}
-          </span>
-          <span>{equipo.modelo}</span>
-        </div>
+        {/* 🔴 NUMEROS INDIVIDUALES */}
+        {Array.from({ length: equipo.cantidad_ru }).map((_, index) => (
+          <div key={index} className="flex">
+
+            <div className="w-12 bg-gray-800 text-white text-xs flex items-center justify-center h-[28px]">
+              {fin - index}
+            </div>
+
+            {/* SOLO EN LA PRIMERA FILA MUESTRA EL NOMBRE */}
+            {index === 0 ? (
+              <div
+                className="flex-1 bg-green-300 text-xs flex items-center px-2"
+                style={{ height: `${equipo.cantidad_ru * 28}px` }}
+              >
+                <div>
+                  <div className="font-semibold">
+                    {equipo.tipos_equipo?.nombre}
+                  </div>
+                  <div>{equipo.modelo}</div>
+                </div>
+              </div>
+            ) : null}
+
+          </div>
+        ))}
+
       </div>
     );
 
@@ -178,6 +189,7 @@ return (
 
   return bloques;
 })()}
+      
 
       </div>
 
