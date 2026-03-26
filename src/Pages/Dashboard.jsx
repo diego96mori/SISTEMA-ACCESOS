@@ -223,11 +223,11 @@ console.log("KEY:", supabaseAnonKey);
 </button>
 
   <button
-          className="w-full text-left px-4 py-2 rounded-lg bg-blue-600 text-white mt-2"
-        >
-          Gestión Equipos
-        </button>
-
+  onClick={() => navigate("/equipos")}
+  className="w-full text-left px-4 py-2 rounded-lg hover:bg-gray-200 mt-2"
+>
+  Vista de Racks
+</button>
 
       </aside>
 
