@@ -161,7 +161,7 @@ return (
       </div>
 
       {/* 🔹 RACK VISUAL */}
-     <div className="border rounded-lg overflow-hidden max-h-[600px] overflow-y-auto w-full">
+     <div className="border rounded-lg overflow-hidden h-[80vh] overflow-y-auto w-full shadow-inner">
 
       {(() => {
   const bloques = [];
