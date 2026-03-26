@@ -89,6 +89,15 @@ function Equipos() {
           Gestión Equipos
         </button>
 
+
+{/* 🔥 NUEVO BOTÓN AQUÍ */}
+<button
+  onClick={() => navigate("/racks")}
+  className="w-full text-left px-4 py-2 rounded-lg hover:bg-gray-200 mt-2"
+>
+  Vista de Racks
+</button>
+
       </aside>
 
       {/* MAIN */}
