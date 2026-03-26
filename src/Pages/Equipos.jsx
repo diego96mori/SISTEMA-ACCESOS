@@ -170,7 +170,7 @@ if (m.tipo_movimiento === "INSTALACION DE EQUIPOS") {
 </td>
 
           <td className="p-4">
-           {equipo.racks?.nombre || "-"}
+           {equipoReal?.racks?.nombre || "-"}
           </td>
 
           <td className="p-4">
@@ -221,7 +221,7 @@ if (m.tipo_movimiento === "RETIRO DE EQUIPOS") {
   </div>
 </td>
           <td className="p-4">
-            {equipo.racks?.nombre || "-"}
+            {equipoReal?.racks?.nombre || "-"}
           </td>
 
           <td className="p-4">
@@ -256,14 +256,17 @@ const ruFin = equipoReal?.ru_inicio
           <div className="text-red-600 font-semibold mb-1">
   RETIRO
 </div>
-          <div><b>EQUIPO:</b> {reemplazo?.equipo_retirado?.modelo}</div>
-<div><b>MARCA:</b> {reemplazo?.equipo_retirado?.marca}</div>
-<div><b>SERIE:</b> {reemplazo?.equipo_retirado?.serie}</div>
+          <div><b>EQUIPO:</b> {equipoReal?.tipos_equipo?.nombre || "-"}</div>
+<div><b>MARCA:</b> {equipoReal?.marca || "-"}</div>
+<div><b>MODELO:</b> {equipoReal?.modelo || "-"}</div>
+{equipoReal?.serie && (
+  <div><b>SERIE:</b> {equipoReal.serie}</div>
+)}
         </div>
       </td>
 
  <td className="p-4 font-semibold text-gray-700">
-  {equipo.racks?.nombre || "-"}
+{equipoReal?.racks?.nombre || "-"}
 </td>
 
 <td className="p-4">
@@ -356,7 +359,7 @@ if (m.tipo_movimiento === "INGRESO_FO") {
         </td>
 
         <td className="p-4">
-          {equipo.racks?.nombre || "-"}
+        {equipoReal?.racks?.nombre || "-"}
         </td>
 
         <td className="p-4">
