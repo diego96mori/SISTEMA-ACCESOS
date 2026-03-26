@@ -601,26 +601,34 @@ const payload = {
             <select
               className="form-control"
               value={equiposRetiro[i]?.equipoId || ""}
-              onChange={(e) => {
+             onChange={(e) => {
 
-                const equipo = equiposRetiro[i].listaEquipos.find(
-                  x => x.id == e.target.value
-                );
+  const equipo = equiposRetiro[i].listaEquipos.find(
+    x => x.id == e.target.value
+  );
 
-                const nuevos = [...equiposRetiro];
+  // 🔴 VALIDAR DUPLICADO
+  const idsSeleccionados = equiposRetiro.map(e => e?.equipoId);
 
-                nuevos[i] = {
-                  ...nuevos[i],
-                  equipoId: equipo.id,
-                  marca: equipo.marca,
-                  modelo: equipo.modelo,
-                  serie: equipo.serie,
-                  ruInicio: equipo.ru_inicio,
-                  cantidadRu: equipo.cantidad_ru
-                };
+  if (idsSeleccionados.includes(equipo.id)) {
+    alert("No puedes seleccionar el mismo equipo dos veces");
+    return;
+  }
 
-                setEquiposRetiro(nuevos);
-              }}
+  const nuevos = [...equiposRetiro];
+
+  nuevos[i] = {
+    ...nuevos[i],
+    equipoId: equipo.id,
+    marca: equipo.marca,
+    modelo: equipo.modelo,
+    serie: equipo.serie,
+    ruInicio: equipo.ru_inicio,
+    cantidadRu: equipo.cantidad_ru
+  };
+
+  setEquiposRetiro(nuevos);
+}}
             >
               <option value="">Seleccione Equipo</option>
 
