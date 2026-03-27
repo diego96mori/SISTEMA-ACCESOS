@@ -24,7 +24,6 @@ function Instalaciones() {
 
   /* ============================== */
   /* USE EFFECT */
-  /* ============================== */
 
   useEffect(() => {
     validarAcceso();
@@ -581,8 +580,12 @@ const payload = {
               actualizarRetiro(i, "equipoId", null);
 
               const { data } = await supabase
-                .from("equipos")
-                .select("*")
+  .from("equipos")
+  .select(`
+    *,
+    tipos_equipo ( nombre )
+  `)
+              
                 .eq("rack_id", rackId)
                 .eq("estado", "ACTIVO");
 
@@ -611,18 +614,19 @@ const payload = {
               value={equiposRetiro[i]?.equipoId || ""}
              onChange={(e) => {
 
-  const equipo = equiposRetiro[i].listaEquipos.find(
-    x => x.id == e.target.value
-  );
-  
+const equipo = equiposRetiro[i].listaEquipos.find(
+  x => x.id === Number(e.target.value)
+);
 
   // 🔴 VALIDAR DUPLICADO
-  const idsSeleccionados = equiposRetiro.map(e => e?.equipoId);
+const idsSeleccionados = equiposRetiro
+  .filter((_, idx) => idx !== i)
+  .map(e => e?.equipoId);
 
-  if (idsSeleccionados.includes(equipo.id)) {
-    alert("No puedes seleccionar el mismo equipo dos veces");
-    return;
-  }
+if (idsSeleccionados.includes(equipo.id)) {
+  alert("No puedes seleccionar el mismo equipo dos veces");
+  return;
+}
 
   const nuevos = [...equiposRetiro];
 
@@ -641,11 +645,19 @@ const payload = {
             >
               <option value="">Seleccione Equipo</option>
 
-              {equiposRetiro[i]?.listaEquipos?.map(eq => (
-                <option key={eq.id} value={eq.id}>
-                  {eq.marca} - {eq.modelo} - {eq.serie}
-                </option>
-              ))}
+{equiposRetiro[i]?.listaEquipos?.map(eq => {
+  const nombre = eq.tipos_equipo?.nombre || "EQUIPO";
+  const detalle = [eq.marca, eq.modelo, eq.serie]
+    .filter(v => v && v !== "-")
+    .join(" - ");
+  const label = detalle ? `${nombre} - ${detalle}` : nombre;
+  
+  return (
+    <option key={eq.id} value={eq.id}>
+      {label}
+    </option>
+  );
+})}
             </select>
           </div>
         )}
@@ -739,10 +751,13 @@ const payload = {
       actualizarRetiro(i, "equipoId", null);
 
       const { data } = await supabase
-        .from("equipos")
-        .select("*")
-        .eq("rack_id", rackId)
-        .eq("estado", "ACTIVO");
+  .from("equipos")
+  .select(`
+    *,
+    tipos_equipo ( nombre )
+  `)
+  .eq("rack_id", rackId)
+  .eq("estado", "ACTIVO");
 
       const nuevos = [...equiposRetiro];
       nuevos[i] = {
@@ -769,10 +784,9 @@ const payload = {
       value={equiposRetiro[i]?.equipoId || ""}
       onChange={(e) => {
 
-        const equipo = equiposRetiro[i].listaEquipos.find(
-          x => x.id == e.target.value
-        );
-
+      const equipo = equiposRetiro[i].listaEquipos.find(
+  x => x.id === Number(e.target.value)
+);
         const nuevos = [...equiposRetiro];
 
         nuevos[i] = {
@@ -790,11 +804,21 @@ const payload = {
     >
       <option value="">Seleccione Equipo</option>
 
-      {equiposRetiro[i]?.listaEquipos?.map(eq => (
-        <option key={eq.id} value={eq.id}>
-          {eq.marca} - {eq.modelo} - {eq.serie}
-        </option>
-      ))}
+{equiposRetiro[i]?.listaEquipos?.map(eq => {
+  const nombre = eq.tipos_equipo?.nombre || "EQUIPO";
+
+  const detalle = [eq.marca, eq.modelo, eq.serie]
+    .filter(v => v && v !== "-")
+    .join(" - ");
+
+  const label = detalle ? `${nombre} - ${detalle}` : nombre;
+
+  return (
+    <option key={eq.id} value={eq.id}>
+      {label}
+    </option>
+  );
+})}
     </select>
   </div>
 )}
