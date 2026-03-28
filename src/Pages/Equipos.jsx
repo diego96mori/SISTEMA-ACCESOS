@@ -239,17 +239,17 @@ if (m.tipo_movimiento === "RETIRO DE EQUIPOS") {
 }
 
     
-    // 🟣 REEMPLAZO
+   // 🟣 REEMPLAZO
 if (m.tipo_movimiento === "REEMPLAZO DE EQUIPOS") {
 
   const equipoReal = m.equipos?.find(e => e.movimiento_id === m.id);
-const ruFin = equipoReal?.ru_inicio
-  ? equipoReal.ru_inicio + equipoReal.cantidad_ru - 1
-  : null;
 
-  return [
+  const ruFin = equipoReal?.ru_inicio
+    ? equipoReal.ru_inicio + equipoReal.cantidad_ru - 1
+    : null;
 
-    // 🔴 FILA RETIRO
+  // 🔴 RETIRO
+  const filaRetiro = (
     <tr key={`${m.id}-retira`} className="border-b">
       <td className="p-4">{m.accesos?.id}</td>
       <td className="p-4">{m.accesos?.nodos?.nombre}</td>
@@ -259,27 +259,31 @@ const ruFin = equipoReal?.ru_inicio
       <td className="p-4">
         <div className="bg-purple-50 border rounded-lg p-2 text-xs inline-block w-fit">
           <div className="text-red-600 font-semibold mb-1">
-  RETIRO
-</div>
+            RETIRO
+          </div>
+
           <div><b>EQUIPO:</b> {equipoReal?.tipos_equipo?.nombre || "-"}</div>
-<div><b>MARCA:</b> {equipoReal?.marca || "-"}</div>
-<div><b>MODELO:</b> {equipoReal?.modelo || "-"}</div>
-{equipoReal?.serie && (
-  <div><b>SERIE:</b> {equipoReal.serie}</div>
-)}
+          <div><b>MARCA:</b> {equipoReal?.marca || "-"}</div>
+          <div><b>MODELO:</b> {equipoReal?.modelo || "-"}</div>
+
+          {equipoReal?.serie && (
+            <div><b>SERIE:</b> {equipoReal.serie}</div>
+          )}
         </div>
       </td>
 
- <td className="p-4 font-semibold text-gray-700">
-{equipoReal?.racks?.nombre || "-"}
-</td>
+      <td className="p-4">
+        {equipoReal?.racks?.nombre || "-"}
+      </td>
 
-<td className="p-4">
-  {equipoReal?.ru_inicio ? `${equipoReal.ru_inicio}-${ruFin}` : "-"}
-</td>
-    </tr>,
+      <td className="p-4">
+        {equipoReal?.ru_inicio ? `${equipoReal.ru_inicio}-${ruFin}` : "-"}
+      </td>
+    </tr>
+  );
 
-    // 🟢 FILA INSTALACION
+  // 🟢 INSTALACION
+  const filaInstalacion = (
     <tr key={`${m.id}-instala`} className="border-b">
       <td className="p-4">{m.accesos?.id}</td>
       <td className="p-4">{m.accesos?.nodos?.nombre}</td>
@@ -288,26 +292,29 @@ const ruFin = equipoReal?.ru_inicio
 
       <td className="p-4">
         <div className="bg-purple-50 border rounded-lg p-2 text-xs inline-block w-fit">
-         <div className="text-green-600 font-semibold mb-1">
-  INSTALACION
-</div>
-  <div><b>EQUIPO:</b> {reemplazo?.equipo_nuevo?.tipos_equipo?.nombre || "-"}</div>
-<div><b>MARCA:</b> {reemplazo?.equipo_nuevo?.marca || "-"}</div>
-<div><b>MODELO:</b> {reemplazo?.equipo_nuevo?.modelo || "-"}</div>
-<div><b>SERIE:</b> {reemplazo?.equipo_nuevo?.serie || "-"}</div>
+          <div className="text-green-600 font-semibold mb-1">
+            INSTALACION
+          </div>
+
+          <div><b>EQUIPO:</b> {reemplazo?.equipo_nuevo?.tipos_equipo?.nombre || "-"}</div>
+          <div><b>MARCA:</b> {reemplazo?.equipo_nuevo?.marca || "-"}</div>
+          <div><b>MODELO:</b> {reemplazo?.equipo_nuevo?.modelo || "-"}</div>
+          <div><b>SERIE:</b> {reemplazo?.equipo_nuevo?.serie || "-"}</div>
         </div>
       </td>
 
-     <td className="p-4">
-{equipoReal?.racks?.nombre || "-"}
-</td>
+      <td className="p-4">
+        {equipoReal?.racks?.nombre || "-"}
+      </td>
 
-<td className="p-4">
-  {equipoReal?.ru_inicio ? `${equipoReal.ru_inicio}-${ruFin}` : "-"}
-</td>
+      <td className="p-4">
+        {equipoReal?.ru_inicio ? `${equipoReal.ru_inicio}-${ruFin}` : "-"}
+      </td>
     </tr>
+  );
 
-  ];
+  // 🔥 ORDEN CORRECTO
+  return [filaRetiro, filaInstalacion];
 }
 
 
