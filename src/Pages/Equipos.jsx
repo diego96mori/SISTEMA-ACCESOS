@@ -175,9 +175,9 @@ if (m.tipo_movimiento === "INSTALACION DE EQUIPOS") {
   </div>
 </td>
 
-          <td className="p-4">
-           {equipo?.racks?.nombre || "-"}
-          </td>
+       <td className="p-4">
+ {equipo?.racks?.nombre || "-"}
+</td>
 
           <td className="p-4">
             {equipo.ru_inicio}-{ruFin}
@@ -227,9 +227,8 @@ if (m.tipo_movimiento === "RETIRO DE EQUIPOS") {
   </div>
 </td>
           <td className="p-4">
-          {equipo?.racks?.nombre || "-"}
-          </td>
-
+ {equipo?.racks?.nombre || "-"}
+</td>
           <td className="p-4">
             {equipo.ru_inicio}-{ruFin}
           </td>
@@ -239,7 +238,7 @@ if (m.tipo_movimiento === "RETIRO DE EQUIPOS") {
     });
 }
 
-    // 🟣 REEMPLAZO
+    
     // 🟣 REEMPLAZO
 if (m.tipo_movimiento === "REEMPLAZO DE EQUIPOS") {
 
@@ -272,7 +271,7 @@ const ruFin = equipoReal?.ru_inicio
       </td>
 
  <td className="p-4 font-semibold text-gray-700">
-{equipo?.racks?.nombre || "-"}
+{equipoReal?.racks?.nombre || "-"}
 </td>
 
 <td className="p-4">
@@ -300,7 +299,7 @@ const ruFin = equipoReal?.ru_inicio
       </td>
 
      <td className="p-4">
- {equipo?.racks?.nombre || "-"}
+{equipoReal?.racks?.nombre || "-"}
 </td>
 
 <td className="p-4">
@@ -365,10 +364,9 @@ if (m.tipo_movimiento === "INGRESO_FO") {
           </div>
         </td>
 
-        <td className="p-4">
-        {equipo?.racks?.nombre || "-"}
-        </td>
-
+    <td className="p-4">
+ {equipo?.racks?.nombre || "-"}
+</td>
         <td className="p-4">
           {equipo.ru_inicio ? `${equipo.ru_inicio}-${ruFin}` : "-"}
         </td>
