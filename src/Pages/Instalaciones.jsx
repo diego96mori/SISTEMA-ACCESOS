@@ -203,8 +203,15 @@ const handleSubmit = async (e) => {
 
 if (tipoTrabajoId === 1) {
   for (let eq of equiposInstalacion) {
-    if (!eq?.rackId || !eq?.ruInicio || !eq?.tipoEquipoId) {
-      alert("Complete todos los datos de instalación");
+
+    if (!eq?.tipoEquipoId) {
+      alert("Debe seleccionar el equipo");
+      setSaving(false);
+      return;
+    }
+
+    if (!eq?.rackId || !eq?.ruInicio) {
+      alert("Seleccione rack y RU");
       setSaving(false);
       return;
     }
