@@ -117,7 +117,7 @@ const cargarRUInstalacion = async (rackId) => {
     .from("rack_ru")
     .select("*")
     .eq("rack_id", rackId)
-    .eq("estado", "LIBRE")
+    .is("equipo_id", null)
     .order("numero_ru");
 
   return data || [];
@@ -128,7 +128,7 @@ const cargarRURetiro = async (rackId) => {
     .from("rack_ru")
     .select("*")
     .eq("rack_id", rackId)
-    .eq("estado", "OCUPADO")
+    .not("equipo_id", "is", null)
     .order("numero_ru");
 
   if (error) {
