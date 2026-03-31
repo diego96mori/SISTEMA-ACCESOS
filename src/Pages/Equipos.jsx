@@ -234,7 +234,15 @@ const equipoRetirado = movimientos
 
     
    // 🟣 REEMPLAZO
+   
 if (m.tipo_movimiento === "REEMPLAZO DE EQUIPOS") {
+
+  const reemplazo = m.reemplazos?.[0];
+
+  if (!reemplazo) return [];
+
+  const equipoRetirado = reemplazo.equipo_retirado;
+  const equipoNuevo = reemplazo.equipo_nuevo;
 
   const equipoReal = m.equipos?.find(e => e.movimiento_id === m.id);
 
@@ -242,7 +250,7 @@ if (m.tipo_movimiento === "REEMPLAZO DE EQUIPOS") {
     ? equipoReal.ru_inicio + equipoReal.cantidad_ru - 1
     : null;
 
-  // 🔴 RETIRO
+  // 🔴 RETIRO (USA equipo_retirado)
   const filaRetiro = (
     <tr key={`${m.id}-retira`} className="border-b">
       <td className="p-4">{m.accesos?.id}</td>
@@ -256,13 +264,10 @@ if (m.tipo_movimiento === "REEMPLAZO DE EQUIPOS") {
             RETIRO
           </div>
 
-          <div><b>EQUIPO:</b> {equipoReal?.tipos_equipo?.nombre || "-"}</div>
-          <div><b>MARCA:</b> {equipoReal?.marca || "-"}</div>
-          <div><b>MODELO:</b> {equipoReal?.modelo || "-"}</div>
-
-          {equipoReal?.serie && (
-            <div><b>SERIE:</b> {equipoReal.serie}</div>
-          )}
+          <div><b>EQUIPO:</b> {equipoRetirado?.tipos_equipo?.nombre || "-"}</div>
+          <div><b>MARCA:</b> {equipoRetirado?.marca || "-"}</div>
+          <div><b>MODELO:</b> {equipoRetirado?.modelo || "-"}</div>
+          <div><b>SERIE:</b> {equipoRetirado?.serie || "-"}</div>
         </div>
       </td>
 
@@ -276,7 +281,7 @@ if (m.tipo_movimiento === "REEMPLAZO DE EQUIPOS") {
     </tr>
   );
 
-  // 🟢 INSTALACION
+  // 🟢 INSTALACION (USA equipo_nuevo)
   const filaInstalacion = (
     <tr key={`${m.id}-instala`} className="border-b">
       <td className="p-4">{m.accesos?.id}</td>
@@ -290,10 +295,10 @@ if (m.tipo_movimiento === "REEMPLAZO DE EQUIPOS") {
             INSTALACION
           </div>
 
-          <div><b>EQUIPO:</b> {reemplazo?.equipo_nuevo?.tipos_equipo?.nombre || "-"}</div>
-          <div><b>MARCA:</b> {reemplazo?.equipo_nuevo?.marca || "-"}</div>
-          <div><b>MODELO:</b> {reemplazo?.equipo_nuevo?.modelo || "-"}</div>
-          <div><b>SERIE:</b> {reemplazo?.equipo_nuevo?.serie || "-"}</div>
+          <div><b>EQUIPO:</b> {equipoNuevo?.tipos_equipo?.nombre || "-"}</div>
+          <div><b>MARCA:</b> {equipoNuevo?.marca || "-"}</div>
+          <div><b>MODELO:</b> {equipoNuevo?.modelo || "-"}</div>
+          <div><b>SERIE:</b> {equipoNuevo?.serie || "-"}</div>
         </div>
       </td>
 
@@ -307,10 +312,9 @@ if (m.tipo_movimiento === "REEMPLAZO DE EQUIPOS") {
     </tr>
   );
 
-  // 🔥 ORDEN CORRECTO
   return [filaRetiro, filaInstalacion];
 }
-
+  // 🔵 FILA FIBRA ......................
 
 if (m.tipo_movimiento === "INGRESO_FO") {
 
