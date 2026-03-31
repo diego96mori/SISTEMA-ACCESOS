@@ -234,12 +234,24 @@ const equipoRetirado = movimientos
 
     
    // 🟣 REEMPLAZO
-   
+
 if (m.tipo_movimiento === "REEMPLAZO DE EQUIPOS") {
 
   const reemplazo = m.reemplazos?.[0];
 
-  if (!reemplazo) return [];
+ if (!reemplazo) {
+  return [
+    <tr key={`${m.id}-error`} className="border-b">
+      <td className="p-4">{m.accesos?.id}</td>
+      <td className="p-4">{m.accesos?.nodos?.nombre}</td>
+      <td className="p-4">{m.accesos?.fecha_ingreso}</td>
+      <td className="p-4 text-red-500">ERROR REEMPLAZO</td>
+      <td className="p-4">No hay datos en reemplazos</td>
+      <td className="p-4">-</td>
+      <td className="p-4">-</td>
+    </tr>
+  ];
+}
 
   const equipoRetirado = reemplazo.equipo_retirado;
   const equipoNuevo = reemplazo.equipo_nuevo;
