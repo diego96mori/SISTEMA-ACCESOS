@@ -212,7 +212,7 @@ const equipoRetirado = movimientos
       <td className="p-4 text-red-600">{m.tipo_movimiento}</td>
 
       <td className="p-4">
-        <div className="bg-gray-50 border rounded-lg p-2 text-xs">
+        <div className="bg-gray-50 border rounded-lg p-2 text-xs inline-block">
           <div className="text-red-600 font-semibold mb-1">RETIRO</div>
 
           <div><b>EQUIPO:</b> {equipoRetirado.tipos_equipo?.nombre}</div>
@@ -332,7 +332,13 @@ const filaInstalacion = (
 if (m.tipo_movimiento === "INGRESO_FO") {
 
   let filas = [];
-  const fibra = m.equipos?.find(e => e.cantidad_hilos);
+ const equiposFiltrados = (m.equipos || []).filter(e => e.movimiento_id === m.id);
+
+const fibra = equiposFiltrados.find(e => e.cantidad_hilos);
+
+const patchPanels = equiposFiltrados.filter(eq =>
+  eq.tipos_equipo?.nombre === "PATCH PANEL"
+);
 
   // 🔵 FILA FIBRA
   filas.push(
@@ -343,7 +349,7 @@ if (m.tipo_movimiento === "INGRESO_FO") {
       <td className="p-4 text-blue-600">INGRESO FO</td>
 
       <td className="p-4">
-        <div className="bg-blue-50 border rounded-lg p-2 text-xs">
+        <div className="bg-gray-50 border rounded-lg p-2 text-xs inline-block">
           
           <div><b>FIBRA:</b> {fibra?.cantidad_hilos || "?"} hilos</div>
         </div>
@@ -356,12 +362,7 @@ if (m.tipo_movimiento === "INGRESO_FO") {
   );
 
   // 🟢 PATCHPANEL (si existen equipos)
-  (m.equipos || [])
-  .filter(eq =>
-    eq.movimiento_id === m.id &&
-    eq.tipos_equipo?.nombre === "PATCH PANEL"
-  )
-  .forEach((equipo, i) => {
+  patchPanels.forEach((equipo, i) => {
 
     const ruFin = equipo.ru_inicio + equipo.cantidad_ru - 1;
 
