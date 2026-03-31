@@ -192,7 +192,7 @@ if (m.tipo_movimiento === "INSTALACION DE EQUIPOS") {
 // 🔴 RETIRO
 if (m.tipo_movimiento === "RETIRO DE EQUIPOS") {
   return (m.equipos || [])
-    .filter(eq => eq.estado === "RETIRADO") // 🔥 CLAVE
+   .filter(eq => eq.movimiento_id === m.id)
     .map((equipo, i) => {
 
       const ruFin = equipo.ru_inicio + equipo.cantidad_ru - 1;
