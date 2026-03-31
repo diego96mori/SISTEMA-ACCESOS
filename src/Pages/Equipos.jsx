@@ -191,51 +191,40 @@ if (m.tipo_movimiento === "INSTALACION DE EQUIPOS") {
 
 // 🔴 RETIRO
 if (m.tipo_movimiento === "RETIRO DE EQUIPOS") {
-  return (m.equipos || [])
-   .filter(eq => eq.movimiento_id === m.id)
-    .map((equipo, i) => {
 
-      const ruFin = equipo.ru_inicio + equipo.cantidad_ru - 1;
+  const equipoRetirado = m.equipos?.find(e => e.estado === "RETIRADO");
 
-      return (
-        <tr key={`${m.id}-${i}`} className="border-b">
+  if (!equipoRetirado) return [];
 
-          <td className="p-4">{m.accesos?.id}</td>
-          <td className="p-4">{m.accesos?.nodos?.nombre}</td>
-          <td className="p-4">{m.accesos?.fecha_ingreso}</td>
-          <td className="p-4 text-red-600">{m.tipo_movimiento}</td>
+  const ruFin = equipoRetirado.ru_inicio + equipoRetirado.cantidad_ru - 1;
 
-<td className="p-4">
-  <div className="bg-gray-50 border rounded-lg p-2 text-xs inline-block ">
+  return [
+    <tr key={m.id} className="border-b">
 
-    
-      <div className="text-purple-600 font-semibold mb-1">
-        RETIRO
-      </div>
-    
+      <td className="p-4">{m.accesos?.id}</td>
+      <td className="p-4">{m.accesos?.nodos?.nombre}</td>
+      <td className="p-4">{m.accesos?.fecha_ingreso}</td>
+      <td className="p-4 text-red-600">{m.tipo_movimiento}</td>
 
+      <td className="p-4">
+        <div className="bg-gray-50 border rounded-lg p-2 text-xs">
+          <div className="text-red-600 font-semibold mb-1">RETIRO</div>
 
-    <div><b>EQUIPO:</b> {equipo.tipos_equipo?.nombre || "-"}</div>
-    <div><b>MARCA:</b> {equipo.marca || "-"}</div>
-    <div><b>MODELO:</b> {equipo.modelo || "-"}</div>
+          <div><b>EQUIPO:</b> {equipoRetirado.tipos_equipo?.nombre}</div>
+          <div><b>MARCA:</b> {equipoRetirado.marca}</div>
+          <div><b>MODELO:</b> {equipoRetirado.modelo}</div>
+          <div><b>SERIE:</b> {equipoRetirado.serie}</div>
+        </div>
+      </td>
 
-    {equipo.serie && (
-      <div><b>SERIE:</b> {equipo.serie}</div>
-    )}
+      <td className="p-4">{equipoRetirado?.racks?.nombre}</td>
 
- 
-  </div>
-</td>
-          <td className="p-4">
- {equipo?.racks?.nombre || "-"}
-</td>
-          <td className="p-4">
-            {equipo.ru_inicio}-{ruFin}
-          </td>
+      <td className="p-4">
+        {equipoRetirado.ru_inicio}-{ruFin}
+      </td>
 
-        </tr>
-      );
-    });
+    </tr>
+  ];
 }
 
     
