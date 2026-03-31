@@ -192,7 +192,12 @@ if (m.tipo_movimiento === "INSTALACION DE EQUIPOS") {
 // 🔴 RETIRO
 if (m.tipo_movimiento === "RETIRO DE EQUIPOS") {
 
-  const equipoRetirado = m.equipos?.find(e => e.estado === "RETIRADO");
+const equipoRetirado = movimientos
+  .flatMap(x => x.equipos || [])
+  .find(e => 
+    e.estado === "RETIRADO" &&
+    e.movimiento_id !== m.id
+  );
 
   if (!equipoRetirado) return [];
 
