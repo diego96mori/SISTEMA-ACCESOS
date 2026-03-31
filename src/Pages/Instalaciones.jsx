@@ -278,6 +278,9 @@ if (tipoTrabajoId === 4) {
 
 
 let instalacionesFinal = equiposInstalacion;
+const retirosFinal = equiposRetiro.map(r => ({
+  equipoId: r.equipoId
+}));
 
 if (tipoTrabajoId === 4) {
 
@@ -333,7 +336,7 @@ const payload = {
   acceso_id: Number(id),
   tipo_trabajo_id: tipoTrabajoId,
   instalaciones: instalacionesFinal,
-  retiros: equiposRetiro
+  retiros: retirosFinal
 };
 
     const { error } = await supabase
