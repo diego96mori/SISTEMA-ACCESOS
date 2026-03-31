@@ -256,74 +256,75 @@ if (m.tipo_movimiento === "REEMPLAZO DE EQUIPOS") {
   const equipoRetirado = reemplazo.equipo_retirado;
   const equipoNuevo = reemplazo.equipo_nuevo;
 
-  const equipoReal = m.equipos?.find(e => e.movimiento_id === m.id);
+  const equipoNuevoDB = m.equipos?.find(e => e.movimiento_id === m.id);
 
-  const ruFin = equipoReal?.ru_inicio
-    ? equipoReal.ru_inicio + equipoReal.cantidad_ru - 1
+  const ruFin = equipoNuevoDB?.ru_inicio
+    ? equipoNuevoDB.ru_inicio + equipoNuevoDB.cantidad_ru - 1
     : null;
 
   // 🔴 RETIRO (USA equipo_retirado)
-  const filaRetiro = (
-    <tr key={`${m.id}-retira`} className="border-b">
-      <td className="p-4">{m.accesos?.id}</td>
-      <td className="p-4">{m.accesos?.nodos?.nombre}</td>
-      <td className="p-4">{m.accesos?.fecha_ingreso}</td>
-      <td className="p-4 text-purple-600">REEMPLAZO DE EQUIPOS</td>
+const filaRetiro = (
+  <tr key={`${m.id}-retira`} className="border-b">
 
-      <td className="p-4">
-        <div className="bg-purple-50 border rounded-lg p-2 text-xs inline-block w-fit">
-          <div className="text-red-600 font-semibold mb-1">
-            RETIRO
-          </div>
+    <td className="p-4">{m.accesos?.id}</td>
+    <td className="p-4">{m.accesos?.nodos?.nombre}</td>
+    <td className="p-4">{m.accesos?.fecha_ingreso}</td>
+    <td className="p-4 text-purple-600">REEMPLAZO DE EQUIPOS</td>
 
-          <div><b>EQUIPO:</b> {equipoRetirado?.tipos_equipo?.nombre || "-"}</div>
-          <div><b>MARCA:</b> {equipoRetirado?.marca || "-"}</div>
-          <div><b>MODELO:</b> {equipoRetirado?.modelo || "-"}</div>
-          <div><b>SERIE:</b> {equipoRetirado?.serie || "-"}</div>
-        </div>
-      </td>
+    <td className="p-4">
+      <div className="bg-purple-50 border rounded-lg p-2 text-xs">
 
-      <td className="p-4">
-        {equipoReal?.racks?.nombre || "-"}
-      </td>
+        <div className="text-red-600 font-semibold mb-1">RETIRO</div>
 
-      <td className="p-4">
-        {equipoReal?.ru_inicio ? `${equipoReal.ru_inicio}-${ruFin}` : "-"}
-      </td>
-    </tr>
-  );
+        <div><b>EQUIPO:</b> {equipoRetirado?.tipos_equipo?.nombre}</div>
+        <div><b>MARCA:</b> {equipoRetirado?.marca}</div>
+        <div><b>MODELO:</b> {equipoRetirado?.modelo}</div>
+        <div><b>SERIE:</b> {equipoRetirado?.serie}</div>
 
+      </div>
+    </td>
+
+    <td className="p-4">-</td>
+    <td className="p-4">-</td>
+
+  </tr>
+);
   // 🟢 INSTALACION (USA equipo_nuevo)
-  const filaInstalacion = (
-    <tr key={`${m.id}-instala`} className="border-b">
-      <td className="p-4">{m.accesos?.id}</td>
-      <td className="p-4">{m.accesos?.nodos?.nombre}</td>
-      <td className="p-4">{m.accesos?.fecha_ingreso}</td>
-      <td className="p-4 text-purple-600">REEMPLAZO DE EQUIPOS</td>
+const ruFinNuevo = equipoNuevoDB?.ru_inicio
+  ? equipoNuevoDB.ru_inicio + equipoNuevoDB.cantidad_ru - 1
+  : null;
 
-      <td className="p-4">
-        <div className="bg-purple-50 border rounded-lg p-2 text-xs inline-block w-fit">
-          <div className="text-green-600 font-semibold mb-1">
-            INSTALACION
-          </div>
+const filaInstalacion = (
+  <tr key={`${m.id}-instala`} className="border-b">
 
-          <div><b>EQUIPO:</b> {equipoNuevo?.tipos_equipo?.nombre || "-"}</div>
-          <div><b>MARCA:</b> {equipoNuevo?.marca || "-"}</div>
-          <div><b>MODELO:</b> {equipoNuevo?.modelo || "-"}</div>
-          <div><b>SERIE:</b> {equipoNuevo?.serie || "-"}</div>
-        </div>
-      </td>
+    <td className="p-4">{m.accesos?.id}</td>
+    <td className="p-4">{m.accesos?.nodos?.nombre}</td>
+    <td className="p-4">{m.accesos?.fecha_ingreso}</td>
+    <td className="p-4 text-purple-600">REEMPLAZO DE EQUIPOS</td>
 
-      <td className="p-4">
-        {equipoReal?.racks?.nombre || "-"}
-      </td>
+    <td className="p-4">
+      <div className="bg-purple-50 border rounded-lg p-2 text-xs">
 
-      <td className="p-4">
-        {equipoReal?.ru_inicio ? `${equipoReal.ru_inicio}-${ruFin}` : "-"}
-      </td>
-    </tr>
-  );
+        <div className="text-green-600 font-semibold mb-1">INSTALACION</div>
 
+        <div><b>EQUIPO:</b> {equipoNuevo?.tipos_equipo?.nombre}</div>
+        <div><b>MARCA:</b> {equipoNuevo?.marca}</div>
+        <div><b>MODELO:</b> {equipoNuevo?.modelo}</div>
+        <div><b>SERIE:</b> {equipoNuevo?.serie}</div>
+
+      </div>
+    </td>
+
+    <td className="p-4">
+      {equipoNuevoDB?.racks?.nombre || "-"}
+    </td>
+
+    <td className="p-4">
+      {equipoNuevoDB?.ru_inicio ? `${equipoNuevoDB.ru_inicio}-${ruFinNuevo}` : "-"}
+    </td>
+
+  </tr>
+);
   return [filaRetiro, filaInstalacion];
 }
   // 🔵 FILA FIBRA ......................
