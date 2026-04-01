@@ -81,22 +81,30 @@ const [archivo, setArchivo] = useState([]);
     setTiposTrabajo(tiposTrabajo || []);
   };
 
-  const handleChange = (e)=>{
-    const { name,value } = e.target;
+const handleChange = (e)=>{
+  const { name,value } = e.target;
 
-    if(name === "numero_personal"){
-      const cantidad = parseInt(value);
-      setForm({...form, numero_personal:cantidad});
+  if(name === "numero_personal"){
+    const cantidad = parseInt(value);
 
-      const nuevo = Array.from({length:cantidad},()=>({
-        nombre:"", ap_paterno:"", ap_materno:"", tipo_doc_id:"", num_doc:"", telefono:""
-      }));
-      setPersonal(nuevo);
-      return;
-    }
+    setForm(prev => ({
+      ...prev,
+      numero_personal: cantidad
+    }));
 
-    setForm({...form,[name]:value});
-  };
+    const nuevo = Array.from({length:cantidad},()=>({
+      nombre:"", ap_paterno:"", ap_materno:"", tipo_doc_id:"", num_doc:"", telefono:""
+    }));
+
+    setPersonal(nuevo);
+    return;
+  }
+
+  setForm(prev => ({
+    ...prev,
+    [name]: value
+  }));
+};
 
   const handlePersonalChange = (index,e)=>{
     const { name,value } = e.target;
@@ -150,12 +158,19 @@ const [archivo, setArchivo] = useState([]);
       await supabase
         .from("accesos")
         .insert([{
-          ...form,
-          nombre_contrata: form.trabajo_contrata ? form.nombre_contrata : null,
-          sctr_path: sctrPaths,
-          sctr_filename: sctrFileNames,
-          sctr_size: sctrSizes
-        }])
+  ...form,
+
+  trabajo_contrata: form.trabajo_contrata === "SI",
+
+  nombre_contrata:
+    form.trabajo_contrata === "SI"
+      ? form.nombre_contrata
+      : null,
+
+  sctr_path: sctrPaths,
+  sctr_filename: sctrFileNames,
+  sctr_size: sctrSizes
+}])
         .select()
         .single();
 
@@ -397,12 +412,12 @@ const [archivo, setArchivo] = useState([]);
           const usuario = e.target.value;
           setCorreoUser(usuario);
 
-          setForm({
-            ...form,
-            solicitante_correo: correoDominio
-              ? `${usuario}${correoDominio}`
-              : usuario
-          });
+          setForm(prev => ({
+  ...prev,
+  solicitante_correo: correoDominio
+    ? `${usuario}${correoDominio}`
+    : usuario
+}));
         }}
         required
       />
@@ -414,12 +429,12 @@ const [archivo, setArchivo] = useState([]);
           const dominio = e.target.value;
           setCorreoDominio(dominio);
 
-          setForm({
-            ...form,
-            solicitante_correo: correoUser
-              ? `${correoUser}${dominio}`
-              : ""
-          });
+          setForm(prev => ({
+  ...prev,
+  solicitante_correo: correoUser
+    ? `${correoUser}${dominio}`
+    : ""
+}));
         }}
         required
       >
@@ -519,11 +534,11 @@ const [archivo, setArchivo] = useState([]);
       name="trabajo_contrata"
       value={form.trabajo_contrata}
       onChange={(e) =>
-        setForm({
-          ...form,
-          trabajo_contrata: e.target.value
-        })
-      }
+  setForm(prev => ({
+    ...prev,
+    trabajo_contrata: e.target.value
+  }))
+}
       required
     >
       <option value="">Trabajo por contrata</option>
