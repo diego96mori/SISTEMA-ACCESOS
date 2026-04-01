@@ -434,97 +434,129 @@ const [archivo, setArchivo] = useState([]);
 </div>
 
             {/* ================= TRABAJO ================= */}
-            <h5 className="section-title mt-4">Trabajo a realizar</h5>
-            <hr />
+         <h5 className="section-title mt-4">Trabajo a realizar</h5>
+<hr />
 
-            <div className="row g-3">
+<div className="row g-3">
 
-              <div className="col-md-3">
-                <select className="form-select" name="nivel_acceso_id" value={form.nivel_acceso_id} onChange={handleChange} required>
-                  <option value="">Nivel acceso</option>
-                  {niveles.map(n => (
-                    <option key={n.id} value={n.id}>{n.nombre}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="col-md-3">
-                <select className="form-select" name="empresa_id" value={form.empresa_id} onChange={handleChange} required>
-                  <option value="">Empresa</option>
-                  {empresas.map(e => (
-                    <option key={e.id} value={e.id}>{e.nombre}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="col-md-3">
-                <select className="form-select" name="area_responsable_id" value={form.area_responsable_id} onChange={handleChange} required>
-                  <option value="">Área responsable</option>
-                  {areas.map(a => (
-                    <option key={a.id} value={a.id}>{a.nombre}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="col-md-3">
-                <select className="form-select" name="area_apoyo_id" value={form.area_apoyo_id} onChange={handleChange}>
-                  <option value="">Área apoyo</option>
-                  {areas.map(a => (
-                    <option key={a.id} value={a.id}>{a.nombre}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="col-md-3">
-                <select className="form-select" name="tipo_trabajo_id" value={form.tipo_trabajo_id} onChange={handleChange} required>
-                  <option value="">Tipo trabajo</option>
-                  {tiposTrabajo.map(t => (
-                    <option key={t.id} value={t.id}>{t.nombre}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="col-md-3">
-                <select
-  className="form-select"
-  name="trabajo_contrata"
-  value={form.trabajo_contrata}
-  onChange={(e) =>
-    setForm({
-      ...form,
-      trabajo_contrata: e.target.value === "SI"
-    })
-  }
-  required
->
-  <option value="">Trabajo por contrata</option>
-  <option value="NO">NO</option>
-  <option value="SI">SI</option>
-</select>
-              </div>
-
-              {form.trabajo_contrata && (
   <div className="col-md-3">
-    <input
-      className="form-control"
-      placeholder="Nombre contrata"
-      name="nombre_contrata"
-      value={form.nombre_contrata}
+    <select
+      className="form-select"
+      name="nivel_acceso_id"
+      value={form.nivel_acceso_id}
       onChange={handleChange}
       required
+    >
+      <option value="">Nivel acceso</option>
+      {niveles.map(n => (
+        <option key={n.id} value={n.id}>{n.nombre}</option>
+      ))}
+    </select>
+  </div>
+
+  <div className="col-md-3">
+    <select
+      className="form-select"
+      name="empresa_id"
+      value={form.empresa_id}
+      onChange={handleChange}
+      required
+    >
+      <option value="">Empresa</option>
+      {empresas.map(e => (
+        <option key={e.id} value={e.id}>{e.nombre}</option>
+      ))}
+    </select>
+  </div>
+
+  <div className="col-md-3">
+    <select
+      className="form-select"
+      name="area_responsable_id"
+      value={form.area_responsable_id}
+      onChange={handleChange}
+      required
+    >
+      <option value="">Área responsable</option>
+      {areas.map(a => (
+        <option key={a.id} value={a.id}>{a.nombre}</option>
+      ))}
+    </select>
+  </div>
+
+  <div className="col-md-3">
+    <select
+      className="form-select"
+      name="area_apoyo_id"
+      value={form.area_apoyo_id}
+      onChange={handleChange}
+    >
+      <option value="">Área apoyo</option>
+      {areas.map(a => (
+        <option key={a.id} value={a.id}>{a.nombre}</option>
+      ))}
+    </select>
+  </div>
+
+  <div className="col-md-3">
+    <select
+      className="form-select"
+      name="tipo_trabajo_id"
+      value={form.tipo_trabajo_id}
+      onChange={handleChange}
+      required
+    >
+      <option value="">Tipo trabajo</option>
+      {tiposTrabajo.map(t => (
+        <option key={t.id} value={t.id}>{t.nombre}</option>
+      ))}
+    </select>
+  </div>
+
+  <div className="col-md-3">
+    <select
+      className="form-select"
+      name="trabajo_contrata"
+      value={form.trabajo_contrata}
+      onChange={(e) =>
+        setForm({
+          ...form,
+          trabajo_contrata: e.target.value
+        })
+      }
+      required
+    >
+      <option value="">Trabajo por contrata</option>
+      <option value="NO">NO</option>
+      <option value="SI">SI</option>
+    </select>
+  </div>
+
+  {/* 👇 SOLO aparece si es SI */}
+  {form.trabajo_contrata === "SI" && (
+    <div className="col-md-3">
+      <input
+        className="form-control"
+        placeholder="Nombre contrata"
+        name="nombre_contrata"
+        value={form.nombre_contrata}
+        onChange={handleChange}
+        required
+      />
+    </div>
+  )}
+
+  <div className="col-md-6">
+    <textarea
+      className="form-control"
+      placeholder="Detalle del trabajo"
+      name="detalle_trabajo"
+      value={form.detalle_trabajo}
+      onChange={handleChange}
     />
-                </div>
-              )}
+  </div>
 
-              <div className="col-md-6">
-                <textarea
-  name="detalle_trabajo"
-  value={form.detalle_trabajo}
-  onChange={handleChange}
-/>
-              </div>
-
-            </div>
+</div>
 
             {/* ================= SCTR ================= */}
 <h5 className="section-title mt-3">SCTR</h5>
