@@ -310,97 +310,128 @@ const [archivo, setArchivo] = useState([]);
             </LocalizationProvider>
 
             {/* ================= SOLICITANTE ================= */}
-            <h5 className="section-title mt-4">Solicitante encargado</h5>
-            <hr />
+          <h5 className="section-title mt-4">Solicitante encargado</h5>
+<hr />
 
-            <div className="row g-3">
+<div className="row g-3">
 
-              <input
-  className="form-control"
-  name="solicitante_nombre"
-  value={form.solicitante_nombre}
-  onChange={handleChange}
-/>
+  <div className="col-md-3">
+    <input
+      className="form-control"
+      placeholder="Nombres"
+      name="solicitante_nombre"
+      value={form.solicitante_nombre}
+      onChange={handleChange}
+      required
+    />
+  </div>
 
-           <input
-  name="solicitante_ap_paterno"
-  value={form.solicitante_ap_paterno}
-  onChange={handleChange}
-/>
-              <input
-  name="solicitante_ap_materno"
-  value={form.solicitante_ap_materno}
-  onChange={handleChange}
-/>
-<input
-  name="solicitante_telefono"
-  value={form.solicitante_telefono}
-  onChange={handleChange}
-/>
+  <div className="col-md-3">
+    <input
+      className="form-control"
+      placeholder="Ap. paterno"
+      name="solicitante_ap_paterno"
+      value={form.solicitante_ap_paterno}
+      onChange={handleChange}
+      required
+    />
+  </div>
 
-              <div className="col-md-4">
-                <select
-  name="solicitante_tipo_doc_id"
-  value={form.solicitante_tipo_doc_id}
-  onChange={handleChange}
->
-                  <option value="">Tipo documento</option>
-                  {tiposDoc.map(t => (
-                    <option key={t.id} value={t.id}>{t.nombre}</option>
-                  ))}
-                </select>
-              </div>
+  <div className="col-md-3">
+    <input
+      className="form-control"
+      placeholder="Ap. materno"
+      name="solicitante_ap_materno"
+      value={form.solicitante_ap_materno}
+      onChange={handleChange}
+      required
+    />
+  </div>
 
-              <input
-  name="solicitante_num_doc"
-  value={form.solicitante_num_doc}
-  onChange={handleChange}
-/>
-              <div className="col-md-4">
+  <div className="col-md-3">
+    <input
+      className="form-control"
+      placeholder="Teléfono"
+      name="solicitante_telefono"
+      value={form.solicitante_telefono}
+      onChange={handleChange}
+      required
+    />
+  </div>
 
-
-  <div className="correo-group">
-
- <input
-  type="text"
-  value={correoUser}
-  onChange={(e) => {
-    const usuario = e.target.value;
-    setCorreoUser(usuario);
-
-    setForm({
-      ...form,
-      solicitante_correo: correoDominio
-        ? `${usuario}${correoDominio}`
-        : usuario
-    });
-  }}
-/>
-<select
-  className="form-select correo-domain"
-  onChange={(e) => {
-    const dominio = e.target.value;
-
-    setCorreoDominio(dominio);
-
-    setForm({
-      ...form,
-      solicitante_correo: correoUser
-        ? `${correoUser}${dominio}`
-        : ""
-    });
-  }}
+  <div className="col-md-4">
+    <select
+      className="form-select"
+      name="solicitante_tipo_doc_id"
+      value={form.solicitante_tipo_doc_id}
+      onChange={handleChange}
       required
     >
-      <option value="">— Dominio —</option>
-      <option value="@win.pe">@win.pe</option>
-      <option value="@on.pe">@on.pe</option>
+      <option value="">Tipo documento</option>
+      {tiposDoc.map(t => (
+        <option key={t.id} value={t.id}>{t.nombre}</option>
+      ))}
     </select>
-
   </div>
-</div>
 
-            </div>
+  <div className="col-md-4">
+    <input
+      className="form-control"
+      placeholder="N° documento"
+      name="solicitante_num_doc"
+      value={form.solicitante_num_doc}
+      onChange={handleChange}
+      required
+    />
+  </div>
+
+  <div className="col-md-4">
+    <div className="correo-group">
+
+      <input
+        type="text"
+        className="form-control correo-user"
+        placeholder="USUARIO"
+        value={correoUser}
+        onChange={(e) => {
+          const usuario = e.target.value;
+          setCorreoUser(usuario);
+
+          setForm({
+            ...form,
+            solicitante_correo: correoDominio
+              ? `${usuario}${correoDominio}`
+              : usuario
+          });
+        }}
+        required
+      />
+
+      <select
+        className="form-select correo-domain"
+        value={correoDominio}
+        onChange={(e) => {
+          const dominio = e.target.value;
+          setCorreoDominio(dominio);
+
+          setForm({
+            ...form,
+            solicitante_correo: correoUser
+              ? `${correoUser}${dominio}`
+              : ""
+          });
+        }}
+        required
+      >
+        <option value="">— Dominio —</option>
+        <option value="@win.pe">@win.pe</option>
+        <option value="@on.pe">@on.pe</option>
+      </select>
+
+    </div>
+  </div>
+
+</div>
 
             {/* ================= TRABAJO ================= */}
             <h5 className="section-title mt-4">Trabajo a realizar</h5>
