@@ -38,6 +38,8 @@ function Acceso() {
   const [viewIngreso, setViewIngreso] = useState("hours");
   const [viewSalida, setViewSalida] = useState("hours");
 
+  const [correoUser, setCorreoUser] = useState("");
+
 
   const [showModal, setShowModal] = useState(false);
 const [sending, setSending] = useState(false);
@@ -229,7 +231,7 @@ const [archivo, setArchivo] = useState([]);
 
                 <div className="col-md-4">
                   <label>Nodo</label>
-                  <select className="form-select" name="nodo_id" onChange={handleChange} required>
+                  <select className="form-select" name="nodo_id" value={form.nodo_id} onChange={handleChange} required>
                     <option value="">Seleccionar</option>
                     {nodos.map(n => (
                       <option key={n.id} value={n.id}>{n.nombre}</option>
@@ -313,34 +315,35 @@ const [archivo, setArchivo] = useState([]);
 
             <div className="row g-3">
 
-              <div className="col-md-3">
-                <input className="form-control" placeholder="Nombres"
-                  name="solicitante_nombre"
-                  onChange={handleChange} required />
-              </div>
+              <input
+  className="form-control"
+  name="solicitante_nombre"
+  value={form.solicitante_nombre}
+  onChange={handleChange}
+/>
 
-              <div className="col-md-3">
-                <input className="form-control" placeholder="Ap. paterno"
-                  name="solicitante_ap_paterno"
-                  onChange={handleChange} required />
-              </div>
-
-              <div className="col-md-3">
-                <input className="form-control" placeholder="Ap. materno"
-                  name="solicitante_ap_materno"
-                  onChange={handleChange} required />
-              </div>
-
-              <div className="col-md-3">
-                <input className="form-control" placeholder="Teléfono"
-                  name="solicitante_telefono"
-                  onChange={handleChange} required />
-              </div>
+           <input
+  name="solicitante_ap_paterno"
+  value={form.solicitante_ap_paterno}
+  onChange={handleChange}
+/>
+              <input
+  name="solicitante_ap_materno"
+  value={form.solicitante_ap_materno}
+  onChange={handleChange}
+/>
+<input
+  name="solicitante_telefono"
+  value={form.solicitante_telefono}
+  onChange={handleChange}
+/>
 
               <div className="col-md-4">
-                <select className="form-select"
-                  name="solicitante_tipo_doc_id"
-                  onChange={handleChange} required>
+                <select
+  name="solicitante_tipo_doc_id"
+  value={form.solicitante_tipo_doc_id}
+  onChange={handleChange}
+>
                   <option value="">Tipo documento</option>
                   {tiposDoc.map(t => (
                     <option key={t.id} value={t.id}>{t.nombre}</option>
@@ -348,47 +351,45 @@ const [archivo, setArchivo] = useState([]);
                 </select>
               </div>
 
-              <div className="col-md-4">
-                <input className="form-control"
-                  placeholder="N° documento"
-                  name="solicitante_num_doc"
-                  onChange={handleChange} required />
-              </div>
-
+              <input
+  name="solicitante_num_doc"
+  value={form.solicitante_num_doc}
+  onChange={handleChange}
+/>
               <div className="col-md-4">
 
 
   <div className="correo-group">
 
-    <input
-      type="text"
-      className="form-control correo-user"
-      placeholder="USUARIO"
-      onChange={(e) => {
-        const usuario = e.target.value;
-        setForm({
-          ...form,
-          solicitante_correo: correoDominio
-            ? `${usuario}${correoDominio}`
-            : usuario
-        });
-      }}
-      required
-    />
+ <input
+  type="text"
+  value={correoUser}
+  onChange={(e) => {
+    const usuario = e.target.value;
+    setCorreoUser(usuario);
 
-    <select
-      className="form-select correo-domain"
-      onChange={(e) => {
-        const dominio = e.target.value;
-        setCorreoDominio(dominio);
+    setForm({
+      ...form,
+      solicitante_correo: correoDominio
+        ? `${usuario}${correoDominio}`
+        : usuario
+    });
+  }}
+/>
+<select
+  className="form-select correo-domain"
+  onChange={(e) => {
+    const dominio = e.target.value;
 
-        const usuario = form.solicitante_correo.split("@")[0];
+    setCorreoDominio(dominio);
 
-        setForm({
-          ...form,
-          solicitante_correo: `${usuario}${dominio}`
-        });
-      }}
+    setForm({
+      ...form,
+      solicitante_correo: correoUser
+        ? `${correoUser}${dominio}`
+        : ""
+    });
+  }}
       required
     >
       <option value="">— Dominio —</option>
@@ -408,7 +409,7 @@ const [archivo, setArchivo] = useState([]);
             <div className="row g-3">
 
               <div className="col-md-3">
-                <select className="form-select" name="nivel_acceso_id" onChange={handleChange} required>
+                <select className="form-select" name="nivel_acceso_id" value={form.nivel_acceso_id} onChange={handleChange} required>
                   <option value="">Nivel acceso</option>
                   {niveles.map(n => (
                     <option key={n.id} value={n.id}>{n.nombre}</option>
@@ -417,7 +418,7 @@ const [archivo, setArchivo] = useState([]);
               </div>
 
               <div className="col-md-3">
-                <select className="form-select" name="empresa_id" onChange={handleChange} required>
+                <select className="form-select" name="empresa_id" value={form.empresa_id} onChange={handleChange} required>
                   <option value="">Empresa</option>
                   {empresas.map(e => (
                     <option key={e.id} value={e.id}>{e.nombre}</option>
@@ -426,7 +427,7 @@ const [archivo, setArchivo] = useState([]);
               </div>
 
               <div className="col-md-3">
-                <select className="form-select" name="area_responsable_id" onChange={handleChange} required>
+                <select className="form-select" name="area_responsable_id" value={form.area_responsable_id} onChange={handleChange} required>
                   <option value="">Área responsable</option>
                   {areas.map(a => (
                     <option key={a.id} value={a.id}>{a.nombre}</option>
@@ -435,7 +436,7 @@ const [archivo, setArchivo] = useState([]);
               </div>
 
               <div className="col-md-3">
-                <select className="form-select" name="area_apoyo_id" onChange={handleChange}>
+                <select className="form-select" name="area_apoyo_id" value={form.area_apoyo_id} onChange={handleChange}>
                   <option value="">Área apoyo</option>
                   {areas.map(a => (
                     <option key={a.id} value={a.id}>{a.nombre}</option>
@@ -444,7 +445,7 @@ const [archivo, setArchivo] = useState([]);
               </div>
 
               <div className="col-md-3">
-                <select className="form-select" name="tipo_trabajo_id" onChange={handleChange} required>
+                <select className="form-select" name="tipo_trabajo_id" value={form.tipo_trabajo_id} onChange={handleChange} required>
                   <option value="">Tipo trabajo</option>
                   {tiposTrabajo.map(t => (
                     <option key={t.id} value={t.id}>{t.nombre}</option>
@@ -456,6 +457,7 @@ const [archivo, setArchivo] = useState([]);
                 <select
   className="form-select"
   name="trabajo_contrata"
+  value={form.trabajo_contrata}
   onChange={(e) =>
     setForm({
       ...form,
@@ -476,6 +478,7 @@ const [archivo, setArchivo] = useState([]);
       className="form-control"
       placeholder="Nombre contrata"
       name="nombre_contrata"
+      value={form.nombre_contrata}
       onChange={handleChange}
       required
     />
@@ -483,11 +486,11 @@ const [archivo, setArchivo] = useState([]);
               )}
 
               <div className="col-md-6">
-                <textarea className="form-control"
-                  placeholder="Detalle del trabajo"
-                  name="detalle_trabajo"
-                  maxLength="200"
-                  onChange={handleChange} />
+                <textarea
+  name="detalle_trabajo"
+  value={form.detalle_trabajo}
+  onChange={handleChange}
+/>
               </div>
 
             </div>
@@ -589,6 +592,7 @@ const [archivo, setArchivo] = useState([]);
                     <input className="form-control"
                       placeholder="Nombres"
                       name="nombre"
+                      value={p.nombre}
                       onChange={(e) => handlePersonalChange(index, e)}
                       required />
                   </div>
@@ -597,6 +601,7 @@ const [archivo, setArchivo] = useState([]);
                     <input className="form-control"
                       placeholder="Ap. paterno"
                       name="ap_paterno"
+                      value={p.ap_paterno}
                       onChange={(e) => handlePersonalChange(index, e)}
                       required />
                   </div>
@@ -605,6 +610,7 @@ const [archivo, setArchivo] = useState([]);
                     <input className="form-control"
                       placeholder="Ap. materno"
                       name="ap_materno"
+                      value={p.ap_materno}
                       onChange={(e) => handlePersonalChange(index, e)}
                       required />
                   </div>
@@ -612,6 +618,7 @@ const [archivo, setArchivo] = useState([]);
                   <div className="col-md-3">
                     <select className="form-select"
                       name="tipo_doc_id"
+                      value={p.tipo_doc_id}
                       onChange={(e) => handlePersonalChange(index, e)}
                       required>
                       <option value="">Tipo doc</option>
@@ -625,6 +632,7 @@ const [archivo, setArchivo] = useState([]);
                     <input className="form-control"
                       placeholder="N° documento"
                       name="num_doc"
+                      value={p.num_doc}
                       onChange={(e) => handlePersonalChange(index, e)}
                       required />
                   </div>
@@ -632,6 +640,7 @@ const [archivo, setArchivo] = useState([]);
                   <div className="col-md-6">
                     <input className="form-control"
                       placeholder="Teléfono"
+                       value={p.telefono}
                       name="telefono"
                       onChange={(e) => handlePersonalChange(index, e)}
                       required />
