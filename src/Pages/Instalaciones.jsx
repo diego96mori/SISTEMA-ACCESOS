@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
-import { netboxGet } from "../api/netbox";
+import { netboxGet } from "../Netbox";
 import "./Instalaciones.css";
 
 function Instalaciones() {
