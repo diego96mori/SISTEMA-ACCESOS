@@ -24,9 +24,7 @@ function Instalaciones() {
   }, []);
 
   useEffect(() => {
-    if (siteId) {
-      cargarRacks();
-    }
+    if (siteId) cargarRacks();
   }, [siteId]);
 
   /* ============================= */
@@ -47,7 +45,6 @@ function Instalaciones() {
       .from("accesos")
       .select(`
         nodo_id,
-        tipo_trabajo_id,
         nodos ( nombre, netbox_site_id ),
         tipos_trabajo ( nombre )
       `)
@@ -67,32 +64,19 @@ function Instalaciones() {
 
   const cargarRacks = async () => {
     const data = await netboxGet(`/dcim/racks/?site_id=${siteId}`);
-    setRacks(data.results);
+    setRacks(data.results || []);
   };
 
   const cargarEquiposPorRack = async (rackId) => {
     const data = await netboxGet(`/dcim/devices/?rack_id=${rackId}`);
-    return data.results;
+    return data.results || [];
   };
-
-  /* ============================= */
-  /* ACTUALIZAR */
-  /* ============================= */
-
-  const actualizarRetiro = (index, campo, valor) => {
-    const nuevos = [...equiposRetiro];
-    if (!nuevos[index]) nuevos[index] = {};
-    nuevos[index][campo] = valor;
-    setEquiposRetiro(nuevos);
-  };
-
-  if (loading) {
-    return <h3>Validando acceso...</h3>;
-  }
 
   /* ============================= */
   /* UI */
   /* ============================= */
+
+  if (loading) return <h3>Validando acceso...</h3>;
 
   return (
     <div className="home-container">
@@ -128,7 +112,7 @@ function Instalaciones() {
           </select>
         </div>
 
-        {/* DINÁMICO */}
+        {/* BLOQUES DINÁMICOS */}
         {Array.from({ length: cantidadEquipos }).map((_, i) => (
 
           <div key={i} className="equipo-box">
@@ -147,21 +131,21 @@ function Instalaciones() {
 
                   const rackId = Number(e.target.value);
 
-                  actualizarRetiro(i, "rackId", rackId);
-                  actualizarRetiro(i, "equipoId", null);
-
-                  const equipos = await cargarEquiposPorRack(rackId);
+                  const listaEquipos = await cargarEquiposPorRack(rackId);
 
                   const nuevos = [...equiposRetiro];
+
                   nuevos[i] = {
-                    ...nuevos[i],
-                    listaEquipos: equipos
+                    rackId,
+                    listaEquipos,
+                    equipoId: null
                   };
 
                   setEquiposRetiro(nuevos);
                 }}
               >
                 <option value="">Seleccione Rack</option>
+
                 {racks.map(r => (
                   <option key={r.id} value={r.id}>
                     {r.name}
@@ -207,14 +191,14 @@ function Instalaciones() {
               </div>
             )}
 
-            {/* DATOS */}
+            {/* RU */}
             {equiposRetiro[i]?.equipoId && (
               <>
                 <div className="form-row">
                   <label>RU inicial</label>
                   <input
                     className="form-control"
-                    value={equiposRetiro[i]?.ruInicio}
+                    value={equiposRetiro[i]?.ruInicio || ""}
                     disabled
                   />
                 </div>
@@ -223,7 +207,7 @@ function Instalaciones() {
                   <label>Cantidad RU</label>
                   <input
                     className="form-control"
-                    value={equiposRetiro[i]?.cantidadRu}
+                    value={equiposRetiro[i]?.cantidadRu || ""}
                     disabled
                   />
                 </div>
