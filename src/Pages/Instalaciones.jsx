@@ -72,6 +72,11 @@ function Instalaciones() {
     return data.results || [];
   };
 
+  const obtenerAltura = async (deviceTypeId) => {
+    const tipo = await netboxGet(`/dcim/device-types/${deviceTypeId}/`);
+    return tipo.u_height || 1;
+  };
+
   /* ============================= */
   /* UI */
   /* ============================= */
@@ -130,7 +135,6 @@ function Instalaciones() {
                 onChange={async (e) => {
 
                   const rackId = Number(e.target.value);
-
                   const listaEquipos = await cargarEquiposPorRack(rackId);
 
                   const nuevos = [...equiposRetiro];
@@ -161,11 +165,17 @@ function Instalaciones() {
                 <select
                   className="form-control"
                   value={equiposRetiro[i]?.equipoId || ""}
-                  onChange={(e) => {
+                  onChange={async (e) => {
 
                     const equipo = equiposRetiro[i].listaEquipos.find(
                       x => x.id === Number(e.target.value)
                     );
+
+                    // 🔥 CONSULTA REAL A NETBOX
+                    const altura = await obtenerAltura(equipo.device_type.id);
+
+                    const ruInicio = equipo.position || 0;
+                    const ruFin = ruInicio + altura - 1;
 
                     const nuevos = [...equiposRetiro];
 
@@ -173,8 +183,8 @@ function Instalaciones() {
                       ...nuevos[i],
                       equipoId: equipo.id,
                       nombre: equipo.name,
-                      ruInicio: equipo.position,
-                      cantidadRu: equipo.device_type?.u_height || 1
+                      ruInicio: ruInicio,
+                      cantidadRu: `${ruInicio} - ${ruFin}`
                     };
 
                     setEquiposRetiro(nuevos);
