@@ -2,14 +2,17 @@ import { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
 import { netboxGet } from "../Netbox";
 
+const NETBOX_URL = "http://172.16.29.91:8484/api";
+const TOKEN = "bs49ckrnuP1pzzVekkpo16irphqLE1YiSDyZSQB";
+
 function RacksView() {
   const [nodos, setNodos] = useState([]);
   const [nodoSeleccionado, setNodoSeleccionado] = useState("");
   const [racks, setRacks] = useState([]);
-  const [rackSeleccionado, setRackSeleccionado] = useState("");
+  const [rackSeleccionado, setRackSeleccionado] = useState(null);
   const [rackImage, setRackImage] = useState("");
 
-  // 🔹 cargar nodos desde tu BD
+  // 🔹 cargar nodos
   useEffect(() => {
     const cargarNodos = async () => {
       const { data } = await supabase
@@ -22,7 +25,7 @@ function RacksView() {
     cargarNodos();
   }, []);
 
-  // 🔹 cuando cambia nodo → traer racks desde NetBox
+  // 🔹 cargar racks
   useEffect(() => {
     if (!nodoSeleccionado) return;
 
@@ -32,6 +35,9 @@ function RacksView() {
         if (!nodo?.netbox_site_id) return;
 
         const res = await netboxGet(`/dcim/racks/?site_id=${nodo.netbox_site_id}`);
+
+        console.log("RACKS NETBOX:", res);
+
         setRacks(res.results || []);
       } catch (err) {
         console.error("Error racks:", err);
@@ -39,27 +45,40 @@ function RacksView() {
     };
 
     cargarRacks();
-    setRackSeleccionado("");
+    setRackSeleccionado(null);
     setRackImage("");
   }, [nodoSeleccionado]);
 
-  // 🔹 cuando cambia rack → traer imagen SVG
+  // 🔹 cargar SVG del rack
   useEffect(() => {
     if (!rackSeleccionado) return;
 
     const cargarImagenRack = async () => {
       try {
+        console.log("ID RACK SELECCIONADO:", rackSeleccionado);
+
         const res = await fetch(
-          `http://172.16.29.91:8484/api/dcim/racks/${rackSeleccionado}/elevation/?face=front`,
+          `${NETBOX_URL}/dcim/racks/${rackSeleccionado}/elevation/?face=front`,
           {
             headers: {
-              Authorization: "Token bs49ckrnuP1pzzVekkpo16irphqLE1YiSDyZSQB"
+              Authorization: `Token ${TOKEN}`,
+              Accept: "application/json"
             }
           }
         );
 
-        const svg = await res.text();
-        setRackImage(svg);
+        const text = await res.text();
+
+        console.log("RESPUESTA NETBOX:", text);
+
+        // 🔴 si devuelve error JSON
+        if (text.includes("detail")) {
+          setRackImage("");
+          console.error("ERROR NETBOX:", text);
+          return;
+        }
+
+        setRackImage(text);
       } catch (err) {
         console.error("Error imagen rack:", err);
       }
@@ -71,13 +90,13 @@ function RacksView() {
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
 
-      {/* 🔹 SIDEBAR */}
+      {/* SIDEBAR */}
       <div style={{
         width: "220px",
         background: "#f4f4f4",
         padding: "20px"
       }}>
-        <h3 style={{ marginBottom: "20px" }}>WI-NET</h3>
+        <h3>WI-NET</h3>
 
         <p>Lista de Accesos</p>
         <p>Gestión Equipos</p>
@@ -92,7 +111,7 @@ function RacksView() {
         </p>
       </div>
 
-      {/* 🔹 CONTENIDO */}
+      {/* CONTENIDO */}
       <div style={{ flex: 1, padding: "40px" }}>
 
         <div style={{
@@ -104,11 +123,11 @@ function RacksView() {
           boxShadow: "0 10px 25px rgba(0,0,0,0.1)"
         }}>
 
-          <h2 style={{ textAlign: "center", marginBottom: "25px" }}>
+          <h2 style={{ textAlign: "center" }}>
             Vista de Rack
           </h2>
 
-          {/* 🔹 FILTROS */}
+          {/* FILTROS */}
           <div style={{
             display: "flex",
             gap: "20px",
@@ -120,7 +139,7 @@ function RacksView() {
               <label>Nodo</label>
               <select
                 value={nodoSeleccionado}
-                onChange={(e) => setNodoSeleccionado(e.target.value)}
+                onChange={(e) => setNodoSeleccionado(Number(e.target.value))}
                 style={{ width: "100%", padding: "8px" }}
               >
                 <option value="">Seleccione</option>
@@ -136,8 +155,8 @@ function RacksView() {
             <div style={{ flex: 1 }}>
               <label>Rack</label>
               <select
-                value={rackSeleccionado}
-                onChange={(e) => setRackSeleccionado(e.target.value)}
+                value={rackSeleccionado || ""}
+                onChange={(e) => setRackSeleccionado(Number(e.target.value))}
                 style={{ width: "100%", padding: "8px" }}
               >
                 <option value="">Seleccione</option>
@@ -151,7 +170,7 @@ function RacksView() {
 
           </div>
 
-          {/* 🔹 VISOR RACK */}
+          {/* VISOR */}
           <div style={{
             border: "1px solid #ddd",
             borderRadius: "10px",
@@ -169,15 +188,12 @@ function RacksView() {
                 style={{
                   background: "#fff",
                   padding: "10px",
-                  borderRadius: "8px",
-                  boxShadow: "0 4px 10px rgba(0,0,0,0.1)"
+                  borderRadius: "8px"
                 }}
                 dangerouslySetInnerHTML={{ __html: rackImage }}
               />
             ) : (
-              <p style={{ color: "#999" }}>
-                Seleccione un rack
-              </p>
+              <p>Seleccione un rack</p>
             )}
 
           </div>
