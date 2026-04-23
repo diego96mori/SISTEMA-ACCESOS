@@ -10,7 +10,7 @@ function RacksView() {
   const [nodoSeleccionado, setNodoSeleccionado] = useState("");
   const [racks, setRacks] = useState([]);
   const [rackSeleccionado, setRackSeleccionado] = useState(null);
-  const [rackImage, setRackImage] = useState("");
+  const [rackData, setRackData] = useState([]);
 
   // 🔹 cargar nodos
   useEffect(() => {
@@ -36,7 +36,7 @@ function RacksView() {
 
         const res = await netboxGet(`/dcim/racks/?site_id=${nodo.netbox_site_id}`);
 
-        console.log("RACKS NETBOX:", res);
+        console.log("RACKS:", res);
 
         setRacks(res.results || []);
       } catch (err) {
@@ -46,16 +46,16 @@ function RacksView() {
 
     cargarRacks();
     setRackSeleccionado(null);
-    setRackImage("");
+    setRackData([]);
   }, [nodoSeleccionado]);
 
-  // 🔹 cargar SVG del rack
+  // 🔹 cargar datos del rack (JSON)
   useEffect(() => {
     if (!rackSeleccionado) return;
 
-    const cargarImagenRack = async () => {
+    const cargarRack = async () => {
       try {
-        console.log("ID RACK SELECCIONADO:", rackSeleccionado);
+        console.log("RACK ID:", rackSeleccionado);
 
         const res = await fetch(
           `${NETBOX_URL}/dcim/racks/${rackSeleccionado}/elevation/?face=front`,
@@ -67,24 +67,17 @@ function RacksView() {
           }
         );
 
-        const text = await res.text();
+        const data = await res.json();
 
-        console.log("RESPUESTA NETBOX:", text);
+        console.log("DATA RACK:", data);
 
-        // 🔴 si devuelve error JSON
-        if (text.includes("detail")) {
-          setRackImage("");
-          console.error("ERROR NETBOX:", text);
-          return;
-        }
-
-        setRackImage(text);
+        setRackData(data.results || []);
       } catch (err) {
-        console.error("Error imagen rack:", err);
+        console.error("Error rack:", err);
       }
     };
 
-    cargarImagenRack();
+    cargarRack();
   }, [rackSeleccionado]);
 
   return (
@@ -170,30 +163,51 @@ function RacksView() {
 
           </div>
 
-          {/* VISOR */}
+          {/* VISOR REAL */}
           <div style={{
             border: "1px solid #ddd",
             borderRadius: "10px",
             height: "600px",
             overflow: "auto",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "flex-start",
             padding: "20px",
-            background: "#f9f9f9"
+            background: "#111827",
+            display: "flex",
+            justifyContent: "center"
           }}>
 
-            {rackImage ? (
-              <div
-                style={{
-                  background: "#fff",
-                  padding: "10px",
-                  borderRadius: "8px"
-                }}
-                dangerouslySetInnerHTML={{ __html: rackImage }}
-              />
+            {rackData.length > 0 ? (
+              <div style={{ width: "140px" }}>
+
+                {[...rackData]
+                  .sort((a, b) => b.id - a.id)
+                  .map((ru, index) => {
+
+                    const ocupado = ru.occupied;
+                    const nombre = ru.device?.name || "";
+
+                    return (
+                      <div
+                        key={index}
+                        style={{
+                          height: "18px",
+                          border: "1px solid #333",
+                          background: ocupado ? "#9333ea" : "#1f2937",
+                          color: "white",
+                          fontSize: "10px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center"
+                        }}
+                      >
+                        {ocupado ? nombre : ""}
+                      </div>
+                    );
+                  })
+                }
+
+              </div>
             ) : (
-              <p>Seleccione un rack</p>
+              <p style={{ color: "#999" }}>Seleccione un rack</p>
             )}
 
           </div>
