@@ -13,64 +13,129 @@ function Equipos() {
     cargarMovimientos();
   }, []);
 
+  /* ===================================== */
+  /* CARGAR MOVIMIENTOS */
+  /* ===================================== */
+
   const cargarMovimientos = async () => {
 
     const { data, error } = await supabase
-  .from("movimientos")
-  .select(`
-    id,
-    tipo_movimiento,
-    created_at,
-    
+      .from("movimientos")
+      .select(`
+        id,
+        acceso_id,
+        tipo_movimiento,
+        estado,
+        aprobado_por,
+        fecha_aprobacion,
+        created_at,
 
-    accesos!inner (
-      id,
-      fecha_ingreso,
-      nodos ( nombre )
-    ),
+        accesos (
+          id,
+          fecha_ingreso,
+          nodos (
+            nombre
+          )
+        ),
 
-  equipos (
-  id,
-  marca,
-  modelo,
-  serie,
-
-  ru_inicio,
-  cantidad_ru,
-  cantidad_hilos,
-  estado,
-  movimiento_id,
-
-   racks ( nombre ),
-
-  tipos_equipo (
-    nombre
-  )
-),
-
-    reemplazos (
-     equipo_retirado:equipo_retirado_id (
-  marca,
-  modelo,
-  serie,
-  tipos_equipo ( nombre )
-),
-equipo_nuevo:equipo_nuevo_id (
-  marca,
-  modelo,
-  serie,
-  tipos_equipo ( nombre )
-)
-    )
-  `)
-  .order("id", { ascending: false });
+        movimiento_detalle (
+          id,
+          accion,
+          rack_name,
+          rack_netbox_id,
+          equipo_name,
+          equipo_netbox_id,
+          ru_inicio,
+          ru_fin
+        )
+      `)
+      .order("id", { ascending: false });
 
     if (error) {
-      console.log(error.message);
+      console.log(error);
     }
 
     setMovimientos(data || []);
+
     setLoading(false);
+  };
+
+  /* ===================================== */
+  /* APROBAR */
+  /* ===================================== */
+
+  const aprobarMovimiento = async (movimientoId) => {
+
+    try {
+
+      const {
+        data: { user }
+      } = await supabase.auth.getUser();
+
+      const { error } = await supabase
+        .from("movimientos")
+        .update({
+          estado: "APROBADO",
+          aprobado_por: user.email,
+          fecha_aprobacion: new Date()
+        })
+        .eq("id", movimientoId);
+
+      if (error) {
+        console.log(error);
+        alert("Error aprobando");
+        return;
+      }
+
+      alert("Solicitud aprobada");
+
+      cargarMovimientos();
+
+    } catch (err) {
+
+      console.log(err);
+
+      alert("Error general");
+    }
+  };
+
+  /* ===================================== */
+  /* DENEGAR */
+  /* ===================================== */
+
+  const denegarMovimiento = async (movimientoId) => {
+
+    try {
+
+      const {
+        data: { user }
+      } = await supabase.auth.getUser();
+
+      const { error } = await supabase
+        .from("movimientos")
+        .update({
+          estado: "DENEGADO",
+          aprobado_por: user.email,
+          fecha_aprobacion: new Date()
+        })
+        .eq("id", movimientoId);
+
+      if (error) {
+        console.log(error);
+        alert("Error denegando");
+        return;
+      }
+
+      alert("Solicitud denegada");
+
+      cargarMovimientos();
+
+    } catch (err) {
+
+      console.log(err);
+
+      alert("Error general");
+    }
   };
 
   return (
@@ -80,7 +145,9 @@ equipo_nuevo:equipo_nuevo_id (
       {/* SIDEBAR */}
       <aside className="w-64 bg-white shadow-lg p-6">
 
-        <h2 className="text-xl font-bold mb-6">WI-NET</h2>
+        <h2 className="text-xl font-bold mb-6">
+          WI-NET
+        </h2>
 
         <button
           onClick={() => navigate("/dashboard")}
@@ -95,14 +162,12 @@ equipo_nuevo:equipo_nuevo_id (
           Gestión Equipos
         </button>
 
-
-{/* 🔥 NUEVO BOTÓN AQUÍ */}
-<button
-  onClick={() => navigate("/racks")}
-  className="w-full text-left px-4 py-2 rounded-lg hover:bg-gray-200 mt-2"
->
-  Vista de Racks
-</button>
+        <button
+          onClick={() => navigate("/racks")}
+          className="w-full text-left px-4 py-2 rounded-lg hover:bg-gray-200 mt-2"
+        >
+          Vista de Racks
+        </button>
 
       </aside>
 
@@ -116,290 +181,206 @@ equipo_nuevo:equipo_nuevo_id (
         <div className="bg-white rounded-xl shadow overflow-x-auto">
 
           {loading ? (
-            <p className="p-6">Cargando...</p>
+
+            <p className="p-6">
+              Cargando...
+            </p>
+
           ) : (
 
             <table className="min-w-full text-sm">
 
               <thead className="bg-gray-100 text-xs uppercase">
+
                 <tr>
-                  <th className="p-4 w-[80px]">ID Solicitud</th>
-                  <th className="p-4 w-[150px]">Nodo</th>
-                  <th className="p-4 w-[120px]">Fecha</th>
-                  <th className="p-4 w-[180px]">Movimiento</th>
-                 <th className="p-4 w-[200px]">Equipo</th>
-                 <th className="p-4 w-[120px]">Rack</th>
-                  <th className="p-4 w-[100px]">RU</th>
+
+                  <th className="p-4">
+                    ID
+                  </th>
+
+                  <th className="p-4">
+                    Nodo
+                  </th>
+
+                  <th className="p-4">
+                    Fecha
+                  </th>
+
+                  <th className="p-4">
+                    Tipo
+                  </th>
+
+                  <th className="p-4">
+                    Rack
+                  </th>
+
+                  <th className="p-4">
+                    Equipo
+                  </th>
+
+                  <th className="p-4">
+                    RU
+                  </th>
+
+                  <th className="p-4">
+                    Estado
+                  </th>
+
+                  <th className="p-4">
+                    Aprobación
+                  </th>
+
                 </tr>
+
               </thead>
 
-       <tbody>
-  {movimientos.flatMap((m) => {
+              <tbody>
 
-    let reemplazo = m.reemplazos?.[0];
+                {movimientos.flatMap((m) =>
 
-    
-   // 🔵 INSTALACION
-if (m.tipo_movimiento === "INSTALACION DE EQUIPOS") {
-  return (m.equipos || [])
-.filter(eq => eq.movimiento_id === m.id)
-.map((equipo, i) => {
+                  (m.movimiento_detalle || []).map((d, i) => (
 
-      const ruFin = equipo.ru_inicio + equipo.cantidad_ru - 1;
+                    <tr
+                      key={`${m.id}-${i}`}
+                      className="border-b"
+                    >
 
-      return (
-        <tr key={`${m.id}-${i}`} className="border-b">
+                      {/* ID */}
+                      <td className="p-4">
+                        {m.accesos?.id}
+                      </td>
 
-          <td className="p-4">{m.accesos?.id}</td>
-          <td className="p-4">{m.accesos?.nodos?.nombre}</td>
-          <td className="p-4">{m.accesos?.fecha_ingreso}</td>
-          <td className="p-4 text-green-600">{m.tipo_movimiento}</td>
-
- <td className="p-4">
-  <div className="bg-gray-50 border rounded-lg p-2 text-xs inline-block">
+                      {/* NODO */}
+                      <td className="p-4">
+                        {m.accesos?.nodos?.nombre}
+                      </td>
 
-   
-      <div className="text-green-600 font-semibold mb-1">
-        INSTALACION
-      </div>
-  
+                      {/* FECHA */}
+                      <td className="p-4">
+                        {m.accesos?.fecha_ingreso}
+                      </td>
+
+                      {/* MOVIMIENTO */}
+                      <td className="p-4">
 
-    <div><b>EQUIPO:</b> {equipo.tipos_equipo?.nombre || "-"}</div>
-    <div><b>MARCA:</b> {equipo.marca || "-"}</div>
-    <div><b>MODELO:</b> {equipo.modelo || "-"}</div>
+                        <div className="font-semibold text-red-600">
+                          {m.tipo_movimiento}
+                        </div>
 
-    {equipo.serie && (
-      <div><b>SERIE:</b> {equipo.serie}</div>
-    )}
+                        <div className="text-xs text-gray-500">
+                          {d.accion}
+                        </div>
 
-  </div>
-</td>
+                      </td>
 
-       <td className="p-4">
- {equipo?.racks?.nombre || "-"}
-</td>
+                      {/* RACK */}
+                      <td className="p-4">
+                        {d.rack_name || "-"}
+                      </td>
 
-          <td className="p-4">
-            {equipo.ru_inicio}-{ruFin}
-          </td>
+                      {/* EQUIPO */}
+                      <td className="p-4">
 
-        </tr>
-      );
-    });
-}
+                        <div className="bg-gray-50 border rounded-lg p-2 text-xs inline-block">
 
+                          <div>
+                            <b>EQUIPO:</b>
+                            {" "}
+                            {d.equipo_name}
+                          </div>
 
-// 🔴 RETIRO
-if (m.tipo_movimiento === "RETIRO DE EQUIPOS") {
+                          <div>
+                            <b>NETBOX ID:</b>
+                            {" "}
+                            {d.equipo_netbox_id}
+                          </div>
 
-const equipoRetirado = movimientos
-  .flatMap(x => x.equipos || [])
-  .find(e => 
-    e.estado === "RETIRADO" &&
-    e.movimiento_id !== m.id
-  );
+                        </div>
 
-  if (!equipoRetirado) return [];
+                      </td>
 
-  const ruFin = equipoRetirado.ru_inicio + equipoRetirado.cantidad_ru - 1;
+                      {/* RU */}
+                      <td className="p-4">
 
-  return [
-    <tr key={m.id} className="border-b">
+                        {d.ru_inicio}
+                        {" - "}
+                        {d.ru_fin}
 
-      <td className="p-4">{m.accesos?.id}</td>
-      <td className="p-4">{m.accesos?.nodos?.nombre}</td>
-      <td className="p-4">{m.accesos?.fecha_ingreso}</td>
-      <td className="p-4 text-red-600">{m.tipo_movimiento}</td>
+                      </td>
 
-      <td className="p-4">
-        <div className="bg-gray-50 border rounded-lg p-2 text-xs inline-block">
-          <div className="text-red-600 font-semibold mb-1">RETIRO</div>
+                      {/* ESTADO */}
+                      <td className="p-4">
 
-          <div><b>EQUIPO:</b> {equipoRetirado.tipos_equipo?.nombre}</div>
-          <div><b>MARCA:</b> {equipoRetirado.marca}</div>
-          <div><b>MODELO:</b> {equipoRetirado.modelo}</div>
-          <div><b>SERIE:</b> {equipoRetirado.serie}</div>
-        </div>
-      </td>
+                        {m.estado === "PENDIENTE" && (
+                          <span className="text-yellow-600 font-semibold">
+                            PENDIENTE
+                          </span>
+                        )}
 
-      <td className="p-4">{equipoRetirado?.racks?.nombre}</td>
+                        {m.estado === "APROBADO" && (
+                          <span className="text-green-600 font-semibold">
+                            APROBADO
+                          </span>
+                        )}
 
-      <td className="p-4">
-        {equipoRetirado.ru_inicio}-{ruFin}
-      </td>
+                        {m.estado === "DENEGADO" && (
+                          <span className="text-red-600 font-semibold">
+                            DENEGADO
+                          </span>
+                        )}
 
-    </tr>
-  ];
-}
+                        {m.aprobado_por && (
+                          <div className="text-xs text-gray-500 mt-1">
+                            {m.aprobado_por}
+                          </div>
+                        )}
 
-    
-   // 🟣 REEMPLAZO
+                      </td>
 
-if (m.tipo_movimiento === "REEMPLAZO DE EQUIPOS") {
+                      {/* BOTONES */}
+                      <td className="p-4">
 
-  const reemplazo = m.reemplazos?.[0];
-
- if (!reemplazo) {
-  return [
-    <tr key={`${m.id}-error`} className="border-b">
-      <td className="p-4">{m.accesos?.id}</td>
-      <td className="p-4">{m.accesos?.nodos?.nombre}</td>
-      <td className="p-4">{m.accesos?.fecha_ingreso}</td>
-      <td className="p-4 text-red-500">ERROR REEMPLAZO</td>
-      <td className="p-4">No hay datos en reemplazos</td>
-      <td className="p-4">-</td>
-      <td className="p-4">-</td>
-    </tr>
-  ];
-}
-
-  const equipoRetirado = reemplazo.equipo_retirado;
-  const equipoNuevo = reemplazo.equipo_nuevo;
-
-  const equipoNuevoDB = m.equipos?.find(e => e.movimiento_id === m.id);
-
-  const ruFin = equipoNuevoDB?.ru_inicio
-    ? equipoNuevoDB.ru_inicio + equipoNuevoDB.cantidad_ru - 1
-    : null;
-
-  // 🔴 RETIRO (USA equipo_retirado)
-const filaRetiro = (
-  <tr key={`${m.id}-retira`} className="border-b">
-
-    <td className="p-4">{m.accesos?.id}</td>
-    <td className="p-4">{m.accesos?.nodos?.nombre}</td>
-    <td className="p-4">{m.accesos?.fecha_ingreso}</td>
-    <td className="p-4 text-purple-600">REEMPLAZO DE EQUIPOS</td>
-
-    <td className="p-4">
-      <div className="bg-purple-50 border rounded-lg p-2 text-xs">
-
-        <div className="text-red-600 font-semibold mb-1">RETIRO</div>
-
-        <div><b>EQUIPO:</b> {equipoRetirado?.tipos_equipo?.nombre}</div>
-        <div><b>MARCA:</b> {equipoRetirado?.marca}</div>
-        <div><b>MODELO:</b> {equipoRetirado?.modelo}</div>
-        <div><b>SERIE:</b> {equipoRetirado?.serie}</div>
-
-      </div>
-    </td>
-
-    <td className="p-4">-</td>
-    <td className="p-4">-</td>
-
-  </tr>
-);
-  // 🟢 INSTALACION (USA equipo_nuevo)
-const ruFinNuevo = equipoNuevoDB?.ru_inicio
-  ? equipoNuevoDB.ru_inicio + equipoNuevoDB.cantidad_ru - 1
-  : null;
-
-const filaInstalacion = (
-  <tr key={`${m.id}-instala`} className="border-b">
-
-    <td className="p-4">{m.accesos?.id}</td>
-    <td className="p-4">{m.accesos?.nodos?.nombre}</td>
-    <td className="p-4">{m.accesos?.fecha_ingreso}</td>
-    <td className="p-4 text-purple-600">REEMPLAZO DE EQUIPOS</td>
-
-    <td className="p-4">
-      <div className="bg-purple-50 border rounded-lg p-2 text-xs">
-
-        <div className="text-green-600 font-semibold mb-1">INSTALACION</div>
-
-        <div><b>EQUIPO:</b> {equipoNuevo?.tipos_equipo?.nombre}</div>
-        <div><b>MARCA:</b> {equipoNuevo?.marca}</div>
-        <div><b>MODELO:</b> {equipoNuevo?.modelo}</div>
-        <div><b>SERIE:</b> {equipoNuevo?.serie}</div>
-
-      </div>
-    </td>
-
-    <td className="p-4">
-      {equipoNuevoDB?.racks?.nombre || "-"}
-    </td>
-
-    <td className="p-4">
-      {equipoNuevoDB?.ru_inicio ? `${equipoNuevoDB.ru_inicio}-${ruFinNuevo}` : "-"}
-    </td>
-
-  </tr>
-);
-  return [filaRetiro, filaInstalacion];
-}
-  // 🔵 FILA FIBRA ......................
-
-if (m.tipo_movimiento === "INGRESO_FO") {
-
-  let filas = [];
-  const fibra = m.equipos?.find(e => e.cantidad_hilos);
-
-  // 🔵 FILA FIBRA
-  filas.push(
-    <tr key={`${m.id}-fibra`} className="border-b">
-      <td className="p-4">{m.accesos?.id}</td>
-      <td className="p-4">{m.accesos?.nodos?.nombre}</td>
-      <td className="p-4">{m.accesos?.fecha_ingreso}</td>
-      <td className="p-4 text-blue-600">INGRESO FO</td>
-
-      <td className="p-4">
-        <div className="bg-blue-50 border rounded-lg p-2 text-xs">
-          
-          <div><b>FIBRA:</b> {fibra?.cantidad_hilos || "?"} hilos</div>
-        </div>
-      </td>
-
-
-      <td className="p-4">-</td>
-      <td className="p-4">-</td>
-    </tr>
-  );
-
-  // 🟢 PATCHPANEL (si existen equipos)
-  (m.equipos || [])
-  .filter(eq =>
-    eq.movimiento_id === m.id &&
-    eq.tipos_equipo?.nombre === "PATCH PANEL"
-  )
-  .forEach((equipo, i) => {
-
-    const ruFin = equipo.ru_inicio + equipo.cantidad_ru - 1;
-
-    filas.push(
-      <tr key={`${m.id}-pp-${i}`} className="border-b">
-
-        <td className="p-4">{m.accesos?.id}</td>
-        <td className="p-4">{m.accesos?.nodos?.nombre}</td>
-        <td className="p-4">{m.accesos?.fecha_ingreso}</td>
-        <td className="p-4 text-blue-600">INGRESO FO</td>
-
-        <td className="p-4">
-          <div className="bg-blue-50 border rounded-lg p-2 text-xs inline-block max-w-[160px]">
-
-         
-            <div><b>EQUIPO:</b> PATCH PANEL</div>
-
-          </div>
-        </td>
-
-    <td className="p-4">
- {equipo?.racks?.nombre || "-"}
-</td>
-        <td className="p-4">
-          {equipo.ru_inicio ? `${equipo.ru_inicio}-${ruFin}` : "-"}
-        </td>
-
-      </tr>
-    );
-  });
-
-  return filas;
-}
-
-  })}
-</tbody>
+                        {m.estado === "PENDIENTE" ? (
+
+                          <div className="flex gap-2">
+
+                            <button
+                              className="bg-green-600 text-white px-3 py-1 rounded"
+                              onClick={() =>
+                                aprobarMovimiento(m.id)
+                              }
+                            >
+                              PROCEDER
+                            </button>
+
+                            <button
+                              className="bg-red-600 text-white px-3 py-1 rounded"
+                              onClick={() =>
+                                denegarMovimiento(m.id)
+                              }
+                            >
+                              DENEGAR
+                            </button>
+
+                          </div>
+
+                        ) : (
+
+                          <span className="text-gray-500 text-xs">
+                            Solicitud finalizada
+                          </span>
+
+                        )}
+
+                      </td>
+
+                    </tr>
+                  ))
+                )}
+
+              </tbody>
+
             </table>
-
           )}
 
         </div>
@@ -407,9 +388,7 @@ if (m.tipo_movimiento === "INGRESO_FO") {
       </div>
 
     </div>
-
   );
-
 }
 
 export default Equipos;
