@@ -12,10 +12,17 @@ function Instalaciones() {
   const [nodo, setNodo] = useState("");
   const [siteId, setSiteId] = useState(null);
   const [tipoTrabajo, setTipoTrabajo] = useState("");
-  const [racks, setRacks] = useState([]);
 
   const [cantidadEquipos, setCantidadEquipos] = useState(0);
-  const [equiposRetiro, setEquiposRetiro] = useState([]);
+
+  const [equiposSite, setEquiposSite] = useState([]);
+
+  const [tipoEquipo, setTipoEquipo] = useState("");
+
+  const [equiposFiltrados, setEquiposFiltrados] = useState([]);
+
+  const [equipoSeleccionado, setEquipoSeleccionado] =
+    useState(null);
 
   const [loading, setLoading] = useState(true);
 
@@ -24,20 +31,29 @@ function Instalaciones() {
   }, []);
 
   useEffect(() => {
-    if (siteId) cargarRacks();
+
+    if (siteId) {
+      cargarEquiposSite();
+    }
+
   }, [siteId]);
 
-  /* ============================= */
+  /* ===================================== */
   /* VALIDAR ACCESO */
-  /* ============================= */
+  /* ===================================== */
 
   const validarAcceso = async () => {
 
     const { data } = await supabase
-      .rpc("validar_acceso_instalaciones", { p_id: Number(id) });
+      .rpc(
+        "validar_acceso_instalaciones",
+        { p_id: Number(id) }
+      );
 
     if (data !== "AUTORIZADO") {
+
       navigate("/");
+
       return;
     }
 
@@ -45,62 +61,192 @@ function Instalaciones() {
       .from("accesos")
       .select(`
         nodo_id,
-        nodos ( nombre, netbox_site_id ),
-        tipos_trabajo ( nombre )
+        nodos (
+          nombre,
+          netbox_site_id
+        ),
+        tipos_trabajo (
+          nombre
+        )
       `)
       .eq("id", id)
       .single();
 
     setNodo(accesoData.nodos.nombre);
-    setSiteId(accesoData.nodos.netbox_site_id);
-    setTipoTrabajo(accesoData.tipos_trabajo.nombre);
+
+    setSiteId(
+      accesoData.nodos.netbox_site_id
+    );
+
+    setTipoTrabajo(
+      accesoData.tipos_trabajo.nombre
+    );
 
     setLoading(false);
   };
 
-  /* ============================= */
-  /* NETBOX */
-  /* ============================= */
+  /* ===================================== */
+  /* CARGAR EQUIPOS NETBOX */
+  /* ===================================== */
 
-  const cargarRacks = async () => {
+  const cargarEquiposSite = async () => {
 
-    const data = await netboxGet(`/dcim/racks/?site_id=${siteId}`);
+    try {
 
-    setRacks(data.results || []);
+      const data = await netboxGet(
+        `/dcim/devices/?site_id=${siteId}`
+      );
+
+      const equipos = data.results || [];
+
+      setEquiposSite(equipos);
+
+      setCantidadEquipos(equipos.length);
+
+    } catch (err) {
+
+      console.log(err);
+
+      alert("Error cargando equipos");
+    }
   };
 
-  const cargarEquiposPorRack = async (rackId) => {
+  /* ===================================== */
+  /* OBTENER ALTURA */
+  /* ===================================== */
 
-    const data = await netboxGet(`/dcim/devices/?rack_id=${rackId}`);
+  const obtenerAltura = async (
+    deviceTypeId
+  ) => {
 
-    const equipos = data.results || [];
+    try {
 
-    setCantidadEquipos(equipos.length);
+      const tipo = await netboxGet(
+        `/dcim/device-types/${deviceTypeId}/`
+      );
 
-    return equipos;
+      return tipo.u_height || 1;
+
+    } catch {
+
+      return 1;
+    }
   };
 
-  const obtenerAltura = async (deviceTypeId) => {
+  /* ===================================== */
+  /* CAMBIO TIPO EQUIPO */
+  /* ===================================== */
 
-    const tipo = await netboxGet(`/dcim/device-types/${deviceTypeId}/`);
+  const handleTipoEquipo = (valor) => {
 
-    return tipo.u_height || 1;
+    setTipoEquipo(valor);
+
+    setEquipoSeleccionado(null);
+
+    let filtrados = [];
+
+    /* ========================= */
+    /* RACKEABLE */
+    /* ========================= */
+
+    if (valor === "RACKEABLE") {
+
+      filtrados = equiposSite.filter(
+        eq => eq.rack !== null
+      );
+
+    } else {
+
+      /* ========================= */
+      /* NO RACKEABLE */
+      /* ========================= */
+
+      filtrados = equiposSite.filter(
+        eq => eq.rack === null
+      );
+    }
+
+    setEquiposFiltrados(filtrados);
   };
 
-  /* ============================= */
+  /* ===================================== */
+  /* SELECCIONAR EQUIPO */
+  /* ===================================== */
+
+  const handleEquipo = async (
+    equipoId
+  ) => {
+
+    const equipo = equiposFiltrados.find(
+      eq => eq.id === Number(equipoId)
+    );
+
+    if (!equipo) return;
+
+    let ruInicio = "-";
+    let ruFin = "-";
+    let cantidadRu = "-";
+
+    /* ========================= */
+    /* SI ES RACKEABLE */
+    /* ========================= */
+
+    if (equipo.rack) {
+
+      const altura = await obtenerAltura(
+        equipo.device_type.id
+      );
+
+      ruInicio = equipo.position || 0;
+
+      ruFin =
+        ruInicio + altura - 1;
+
+      cantidadRu =
+        ruInicio === ruFin
+          ? `${ruInicio}`
+          : `${ruInicio} - ${ruFin}`;
+    }
+
+    setEquipoSeleccionado({
+
+      equipoId: equipo.id,
+
+      nombre: equipo.name,
+
+      fabricante:
+        equipo.device_type?.manufacturer?.name ||
+        "-",
+
+      modelo:
+        equipo.device_type?.model ||
+        "-",
+
+      rack:
+        equipo.rack?.name || "NO RACKEABLE",
+
+      ruInicio,
+
+      ruFin,
+
+      cantidadRu
+    });
+  };
+
+  /* ===================================== */
   /* ENVIAR SOLICITUD */
-  /* ============================= */
+  /* ===================================== */
 
   const enviarSolicitud = async () => {
 
     try {
 
-      /* ========================= */
-      /* VALIDAR */
-      /* ========================= */
+      if (!equipoSeleccionado) {
 
-      if (equiposRetiro.length === 0) {
-        alert("Debe seleccionar equipos");
+        alert(
+          "Debe seleccionar un equipo"
+        );
+
         return;
       }
 
@@ -108,65 +254,83 @@ function Instalaciones() {
       /* CREAR MOVIMIENTO */
       /* ========================= */
 
-      const { data: movimiento, error: movError } = await supabase
+      const {
+        data: movimiento,
+        error: movError
+      } = await supabase
         .from("movimientos")
         .insert({
+
           acceso_id: Number(id),
-          tipo_movimiento: tipoTrabajo,
+
+          tipo_movimiento:
+            tipoTrabajo,
+
           estado: "PENDIENTE"
         })
         .select()
         .single();
 
       if (movError) {
+
         console.log(movError);
-        alert("Error creando movimiento");
+
+        alert(
+          "Error creando movimiento"
+        );
+
         return;
       }
 
       /* ========================= */
-      /* CREAR DETALLES */
+      /* DETALLE */
       /* ========================= */
 
-      const detalles = equiposRetiro.map(eq => {
+      const {
+        error: detalleError
+      } = await supabase
+        .from("movimiento_detalle")
+        .insert({
 
-        const partes = eq.cantidadRu.split("-");
-
-        return {
-
-          movimiento_id: movimiento.id,
+          movimiento_id:
+            movimiento.id,
 
           accion: "RETIRO",
 
+          equipo_name:
+            equipoSeleccionado.nombre,
+
+          equipo_netbox_id:
+            equipoSeleccionado.equipoId,
+
           rack_name:
-            racks.find(r => r.id === eq.rackId)?.name || "",
+            equipoSeleccionado.rack,
 
-          rack_netbox_id: eq.rackId,
+          ru_inicio:
+            equipoSeleccionado.ruInicio === "-"
+              ? null
+              : equipoSeleccionado.ruInicio,
 
-          equipo_name: eq.nombre,
-
-          equipo_netbox_id: eq.equipoId,
-
-          ru_inicio: Number(partes[0]?.trim()),
-
-          ru_fin: Number(partes[1]?.trim())
-        };
-      });
-
-      const { error: detalleError } = await supabase
-        .from("movimiento_detalle")
-        .insert(detalles);
+          ru_fin:
+            equipoSeleccionado.ruFin === "-"
+              ? null
+              : equipoSeleccionado.ruFin
+        });
 
       if (detalleError) {
 
         console.log(detalleError);
 
-        alert("Error guardando detalle");
+        alert(
+          "Error guardando detalle"
+        );
 
         return;
       }
 
-      alert("Solicitud enviada correctamente");
+      alert(
+        "Solicitud enviada correctamente"
+      );
 
       navigate("/equipos");
 
@@ -178,210 +342,290 @@ function Instalaciones() {
     }
   };
 
-  /* ============================= */
-  /* UI */
-  /* ============================= */
+  /* ===================================== */
+  /* LOADING */
+  /* ===================================== */
 
-  if (loading) return <h3>Validando acceso...</h3>;
+  if (loading) {
+
+    return (
+      <h3>
+        Validando acceso...
+      </h3>
+    );
+  }
+
+  /* ===================================== */
+  /* UI */
+  /* ===================================== */
 
   return (
+
     <div className="home-container">
+
       <div className="home-card">
 
-        <h2>Gestion de Equipos</h2>
+        <h2>
+          Gestion de Equipos
+        </h2>
 
         <p>
-          ID de Acceso: <strong>{id}</strong>
+          ID de Acceso:
+          <strong> {id}</strong>
         </p>
 
+        {/* ========================= */}
         {/* NODO */}
+        {/* ========================= */}
+
         <div className="form-row">
-          <label>Nodo</label>
+
+          <label>
+            Nodo
+          </label>
 
           <input
             value={nodo}
             className="form-control"
             disabled
           />
+
         </div>
 
+        {/* ========================= */}
         {/* TIPO */}
+        {/* ========================= */}
+
         <div className="form-row">
-          <label>Tipo de trabajo</label>
+
+          <label>
+            Tipo de trabajo
+          </label>
 
           <input
             value={tipoTrabajo}
             className="form-control"
             disabled
           />
+
         </div>
 
+        {/* ========================= */}
         {/* CANTIDAD */}
+        {/* ========================= */}
+
         <div className="form-row">
 
-          <label>Equipos disponibles</label>
+          <label>
+            Equipos disponibles
+          </label>
 
           <input
             className="form-control"
             value={cantidadEquipos}
             disabled
           />
+
         </div>
 
-        {/* BLOQUES DINÁMICOS */}
-        {Array.from({
-          length: cantidadEquipos
-        }).map((_, i) => (
+        {/* ========================= */}
+        {/* TIPO EQUIPO */}
+        {/* ========================= */}
 
-          <div key={i} className="equipo-box">
+        <div className="form-row">
 
-            <h5 style={{ color: "red" }}>
-              🔴 Equipo a Retirar {i + 1}
-            </h5>
+          <label>
+            Tipo de equipo
+          </label>
 
-            {/* RACK */}
-            <div className="form-row">
+          <select
+            className="form-control"
+            value={tipoEquipo}
+            onChange={(e) =>
+              handleTipoEquipo(
+                e.target.value
+              )
+            }
+          >
 
-              <label>Rack</label>
+            <option value="">
+              Seleccione
+            </option>
 
-              <select
-                className="form-control"
-                value={equiposRetiro[i]?.rackId || ""}
-                onChange={async (e) => {
+            <option value="RACKEABLE">
+              Rackeable
+            </option>
 
-                  const rackId = Number(e.target.value);
+            <option value="NO_RACKEABLE">
+              No Rackeable
+            </option>
 
-                  const listaEquipos =
-                    await cargarEquiposPorRack(rackId);
+          </select>
 
-                  const nuevos = [...equiposRetiro];
+        </div>
 
-                  nuevos[i] = {
-                    rackId,
-                    listaEquipos,
-                    equipoId: null
-                  };
+        {/* ========================= */}
+        {/* EQUIPO */}
+        {/* ========================= */}
 
-                  setEquiposRetiro(nuevos);
-                }}
-              >
-                <option value="">
-                  Seleccione Rack
+        {tipoEquipo && (
+
+          <div className="form-row">
+
+            <label>
+              Equipo
+            </label>
+
+            <select
+              className="form-control"
+              onChange={(e) =>
+                handleEquipo(
+                  e.target.value
+                )
+              }
+            >
+
+              <option value="">
+                Seleccione Equipo
+              </option>
+
+              {equiposFiltrados.map(eq => (
+
+                <option
+                  key={eq.id}
+                  value={eq.id}
+                >
+                  {eq.name}
                 </option>
 
-                {racks.map(r => (
-                  <option
-                    key={r.id}
-                    value={r.id}
-                  >
-                    {r.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+              ))}
 
-            {/* EQUIPO */}
-            {equiposRetiro[i]?.rackId && (
+            </select>
+
+          </div>
+        )}
+
+        {/* ========================= */}
+        {/* DETALLE */}
+        {/* ========================= */}
+
+        {equipoSeleccionado && (
+
+          <>
+
+            <div className="equipo-box">
+
+              <h5
+                style={{
+                  color: "red"
+                }}
+              >
+                🔴 Equipo Seleccionado
+              </h5>
+
+              {/* FABRICANTE */}
 
               <div className="form-row">
 
-                <label>Equipo</label>
+                <label>
+                  Fabricante
+                </label>
 
-                <select
+                <input
                   className="form-control"
-                  value={equiposRetiro[i]?.equipoId || ""}
-                  onChange={async (e) => {
+                  value={
+                    equipoSeleccionado.fabricante
+                  }
+                  disabled
+                />
 
-                    const equipo =
-                      equiposRetiro[i].listaEquipos.find(
-                        x => x.id === Number(e.target.value)
-                      );
-
-                    const altura =
-                      await obtenerAltura(
-                        equipo.device_type.id
-                      );
-
-                    const ruInicio =
-                      equipo.position || 0;
-
-                    const ruFin =
-                      ruInicio + altura - 1;
-
-                    const nuevos = [...equiposRetiro];
-
-                    nuevos[i] = {
-
-                      ...nuevos[i],
-
-                      equipoId: equipo.id,
-
-                      nombre: equipo.name,
-
-                      ruInicio: ruInicio,
-
-                      cantidadRu:
-                        `${ruInicio} - ${ruFin}`
-                    };
-
-                    setEquiposRetiro(nuevos);
-                  }}
-                >
-                  <option value="">
-                    Seleccione Equipo
-                  </option>
-
-                  {equiposRetiro[i]
-                    ?.listaEquipos
-                    ?.map(eq => (
-
-                    <option
-                      key={eq.id}
-                      value={eq.id}
-                    >
-                      {eq.name}
-                    </option>
-
-                  ))}
-                </select>
               </div>
-            )}
 
-            {/* RU */}
-            {equiposRetiro[i]?.equipoId && (
-              <>
-                <div className="form-row">
+              {/* MODELO */}
 
-                  <label>RU inicial</label>
+              <div className="form-row">
 
-                  <input
-                    className="form-control"
-                    value={
-                      equiposRetiro[i]?.ruInicio || ""
-                    }
-                    disabled
-                  />
-                </div>
+                <label>
+                  Modelo
+                </label>
 
-                <div className="form-row">
+                <input
+                  className="form-control"
+                  value={
+                    equipoSeleccionado.modelo
+                  }
+                  disabled
+                />
 
-                  <label>Cantidad RU</label>
+              </div>
 
-                  <input
-                    className="form-control"
-                    value={
-                      equiposRetiro[i]?.cantidadRu || ""
-                    }
-                    disabled
-                  />
-                </div>
-              </>
-            )}
+              {/* RACK */}
 
-          </div>
-        ))}
+              <div className="form-row">
 
+                <label>
+                  Rack
+                </label>
+
+                <input
+                  className="form-control"
+                  value={
+                    equipoSeleccionado.rack
+                  }
+                  disabled
+                />
+
+              </div>
+
+              {/* RU */}
+
+              {tipoEquipo ===
+                "RACKEABLE" && (
+
+                <>
+                  <div className="form-row">
+
+                    <label>
+                      RU Inicial
+                    </label>
+
+                    <input
+                      className="form-control"
+                      value={
+                        equipoSeleccionado.ruInicio
+                      }
+                      disabled
+                    />
+
+                  </div>
+
+                  <div className="form-row">
+
+                    <label>
+                      Cantidad RU
+                    </label>
+
+                    <input
+                      className="form-control"
+                      value={
+                        equipoSeleccionado.cantidadRu
+                      }
+                      disabled
+                    />
+
+                  </div>
+                </>
+              )}
+
+            </div>
+
+          </>
+        )}
+
+        {/* ========================= */}
         {/* BOTON */}
+        {/* ========================= */}
+
         <button
           className="btn btn-success mt-3"
           onClick={enviarSolicitud}
@@ -390,6 +634,7 @@ function Instalaciones() {
         </button>
 
       </div>
+
     </div>
   );
 }
