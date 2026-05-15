@@ -126,28 +126,6 @@ function Instalaciones() {
     };
 
   /* ===================================== */
-  /* ALTURA */
-  /* ===================================== */
-
-  const obtenerAltura =
-    async (deviceTypeId) => {
-
-      try {
-
-        const tipo =
-          await netboxGet(
-            `/dcim/device-types/${deviceTypeId}/`
-          );
-
-        return tipo.u_height || 1;
-
-      } catch {
-
-        return 1;
-      }
-    };
-
-  /* ===================================== */
   /* CANTIDAD */
   /* ===================================== */
 
@@ -182,6 +160,8 @@ function Instalaciones() {
 
           rack: "",
 
+          rackNetboxId: null,
+
           ruInicio: "",
 
           cantidadRu: ""
@@ -213,10 +193,6 @@ function Instalaciones() {
 
       let filtrados = [];
 
-      /* ========================= */
-      /* RACKEABLE */
-      /* ========================= */
-
       if (valor === "RACKEABLE") {
 
         filtrados =
@@ -226,19 +202,11 @@ function Instalaciones() {
 
       } else {
 
-        /* ========================= */
-        /* NO RACKEABLE */
-        /* ========================= */
-
         filtrados =
           equiposSite.filter(eq =>
             eq.rack === null
           );
       }
-
-      /* ========================= */
-      /* QUITAR REPETIDOS */
-      /* ========================= */
 
       filtrados =
         filtrados.filter(
@@ -279,16 +247,13 @@ function Instalaciones() {
 
       let cantidadRu = "-";
 
-      /* ========================= */
-      /* RACKEABLE */
-      /* ========================= */
+      /* ===================================== */
+      /* SI ES RACKEABLE */
+      /* ===================================== */
 
       if (equipo.rack) {
 
-        const altura =
-          await obtenerAltura(
-            equipo.device_type.id
-          );
+        const altura = 1;
 
         ruInicio =
           equipo.position || 0;
@@ -322,6 +287,9 @@ function Instalaciones() {
 
         rack:
           equipo.rack?.name || "",
+
+        rackNetboxId:
+          equipo.rack?.id || null,
 
         ruInicio,
 
@@ -365,9 +333,9 @@ function Instalaciones() {
           return;
         }
 
-        /* ========================= */
+        /* ===================================== */
         /* MOVIMIENTO */
-        /* ========================= */
+        /* ===================================== */
 
         const {
           data: movimiento,
@@ -399,9 +367,9 @@ function Instalaciones() {
           return;
         }
 
-        /* ========================= */
+        /* ===================================== */
         /* DETALLES */
-        /* ========================= */
+        /* ===================================== */
 
         const detalles =
           equiposRetiro.map(eq => ({
@@ -420,6 +388,9 @@ function Instalaciones() {
 
             rack_name:
               eq.rack || null,
+
+            rack_netbox_id:
+              eq.rackNetboxId,
 
             ru_inicio:
 
@@ -450,6 +421,8 @@ function Instalaciones() {
                   )
           }));
 
+        console.log(detalles);
+
         const {
           error: detalleError
         } = await supabase
@@ -463,7 +436,7 @@ function Instalaciones() {
           );
 
           alert(
-            "Error guardando detalle"
+            detalleError.message
           );
 
           return;
@@ -483,10 +456,6 @@ function Instalaciones() {
       }
     };
 
-  /* ===================================== */
-  /* LOADING */
-  /* ===================================== */
-
   if (loading) {
 
     return (
@@ -495,10 +464,6 @@ function Instalaciones() {
       </h3>
     );
   }
-
-  /* ===================================== */
-  /* UI */
-  /* ===================================== */
 
   return (
 
@@ -688,13 +653,11 @@ function Instalaciones() {
               </div>
             )}
 
-            {/* DETALLE */}
+            {/* DETALLES */}
 
             {item.equipoId && (
 
               <>
-
-                {/* FABRICANTE */}
 
                 <div className="form-row">
 
@@ -711,8 +674,6 @@ function Instalaciones() {
                   />
 
                 </div>
-
-                {/* MODELO */}
 
                 <div className="form-row">
 
@@ -736,7 +697,6 @@ function Instalaciones() {
                   "RACKEABLE" && (
 
                   <>
-                    {/* RACK */}
 
                     <div className="form-row">
 
@@ -753,8 +713,6 @@ function Instalaciones() {
                       />
 
                     </div>
-
-                    {/* RU */}
 
                     <div className="form-row">
 
@@ -787,10 +745,12 @@ function Instalaciones() {
                       />
 
                     </div>
+
                   </>
                 )}
 
               </>
+
             )}
 
           </div>
