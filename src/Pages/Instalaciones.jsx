@@ -148,7 +148,7 @@ function Instalaciones() {
     };
 
   /* ===================================== */
-  /* CAMBIO CANTIDAD */
+  /* CANTIDAD */
   /* ===================================== */
 
   const handleCantidad =
@@ -192,7 +192,7 @@ function Instalaciones() {
     };
 
   /* ===================================== */
-  /* CAMBIO TIPO EQUIPO */
+  /* TIPO EQUIPO */
   /* ===================================== */
 
   const handleTipoEquipo =
@@ -205,10 +205,6 @@ function Instalaciones() {
         valor;
 
       nuevos[index].equipoId = "";
-
-      /* ========================= */
-      /* EQUIPOS YA USADOS */
-      /* ========================= */
 
       const usados =
         nuevos
@@ -257,7 +253,7 @@ function Instalaciones() {
     };
 
   /* ===================================== */
-  /* SELECCIONAR EQUIPO */
+  /* EQUIPO */
   /* ===================================== */
 
   const handleEquipo =
@@ -284,7 +280,7 @@ function Instalaciones() {
       let cantidadRu = "-";
 
       /* ========================= */
-      /* SI ES RACKEABLE */
+      /* RACKEABLE */
       /* ========================= */
 
       if (equipo.rack) {
@@ -310,7 +306,8 @@ function Instalaciones() {
 
         ...nuevos[index],
 
-        equipoId: equipo.id,
+        equipoId:
+          equipo.id,
 
         equipoNombre:
           equipo.name,
@@ -324,8 +321,7 @@ function Instalaciones() {
             ?.model || "-",
 
         rack:
-          equipo.rack?.name ||
-          "NO RACKEABLE",
+          equipo.rack?.name || "",
 
         ruInicio,
 
@@ -354,10 +350,6 @@ function Instalaciones() {
 
           return;
         }
-
-        /* ========================= */
-        /* VALIDAR */
-        /* ========================= */
 
         const incompletos =
           equiposRetiro.some(
@@ -427,22 +419,35 @@ function Instalaciones() {
               eq.equipoId,
 
             rack_name:
-              eq.rack,
+              eq.rack || null,
 
             ru_inicio:
-              eq.ruInicio === "-"
+
+              eq.ruInicio === "-" ||
+              eq.ruInicio === "" ||
+              eq.ruInicio === null
+
                 ? null
-                : eq.ruInicio,
+
+                : Number(eq.ruInicio),
 
             ru_fin:
-              eq.cantidadRu
-                ?.includes("-")
+
+              typeof eq.cantidadRu ===
+              "string" &&
+              eq.cantidadRu.includes("-")
+
                 ? Number(
                     eq.cantidadRu
                       .split("-")[1]
                       .trim()
                   )
-                : eq.ruInicio
+
+                : (
+                    eq.ruInicio === "-"
+                      ? null
+                      : eq.ruInicio
+                  )
           }));
 
         const {
@@ -689,6 +694,8 @@ function Instalaciones() {
 
               <>
 
+                {/* FABRICANTE */}
+
                 <div className="form-row">
 
                   <label>
@@ -704,6 +711,8 @@ function Instalaciones() {
                   />
 
                 </div>
+
+                {/* MODELO */}
 
                 <div className="form-row">
 
@@ -721,26 +730,32 @@ function Instalaciones() {
 
                 </div>
 
-                <div className="form-row">
-
-                  <label>
-                    Rack
-                  </label>
-
-                  <input
-                    className="form-control"
-                    value={
-                      item.rack
-                    }
-                    disabled
-                  />
-
-                </div>
+                {/* SOLO SI ES RACKEABLE */}
 
                 {item.tipoEquipo ===
                   "RACKEABLE" && (
 
                   <>
+                    {/* RACK */}
+
+                    <div className="form-row">
+
+                      <label>
+                        Rack
+                      </label>
+
+                      <input
+                        className="form-control"
+                        value={
+                          item.rack
+                        }
+                        disabled
+                      />
+
+                    </div>
+
+                    {/* RU */}
+
                     <div className="form-row">
 
                       <label>
