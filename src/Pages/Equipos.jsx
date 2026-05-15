@@ -266,11 +266,7 @@ function Equipos() {
                         <div className="font-semibold text-red-600">
                           {m.tipo_movimiento}
                         </div>
-
-                        <div className="text-xs text-gray-500">
-                          {d.accion}
-                        </div>
-
+              
                       </td>
 
                       {/* RACK */}
