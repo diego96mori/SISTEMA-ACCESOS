@@ -30,6 +30,14 @@ function Instalaciones() {
   const [loading, setLoading] =
     useState(true);
 
+  const [movimientoExistente,
+    setMovimientoExistente] =
+    useState(null);
+
+  const [modoLectura,
+    setModoLectura] =
+    useState(false);
+
   useEffect(() => {
     validarAcceso();
   }, []);
@@ -88,6 +96,83 @@ function Instalaciones() {
     setTipoTrabajo(
       accesoData.tipos_trabajo.nombre
     );
+
+    /* ===================================== */
+    /* VERIFICAR SI YA EXISTE */
+    /* ===================================== */
+
+    const {
+      data: movimientoData
+    } = await supabase
+      .from("movimientos")
+      .select(`
+        *,
+        movimiento_detalle (*)
+      `)
+      .eq("acceso_id", Number(id))
+      .single();
+
+    if (movimientoData) {
+
+      setMovimientoExistente(
+        movimientoData
+      );
+
+      setModoLectura(true);
+
+      setCantidadSeleccionada(
+        movimientoData
+          .movimiento_detalle
+          .length
+      );
+
+      const equipos =
+        movimientoData
+          .movimiento_detalle
+          .map(det => ({
+
+            tipoEquipo:
+              det.rack_name
+                ? "RACKEABLE"
+                : "NO_RACKEABLE",
+
+            listaEquipos: [],
+
+            equipoId:
+              det.equipo_netbox_id,
+
+            equipoNombre:
+              det.equipo_name,
+
+            fabricante: "",
+
+            modelo: "",
+
+            rack:
+              det.rack_name || "",
+
+            rackNetboxId:
+              det.rack_netbox_id,
+
+            ruInicio:
+              det.ru_inicio || "",
+
+            cantidadRu:
+
+              det.ru_inicio &&
+              det.ru_fin
+
+                ? det.ru_inicio === det.ru_fin
+
+                  ? `${det.ru_inicio}`
+
+                  : `${det.ru_inicio} - ${det.ru_fin}`
+
+                : ""
+          }));
+
+      setEquiposRetiro(equipos);
+    }
 
     setLoading(false);
   };
@@ -248,12 +333,14 @@ function Instalaciones() {
       let cantidadRu = "-";
 
       /* ===================================== */
-      /* SI ES RACKEABLE */
+      /* RACKEABLE */
       /* ===================================== */
 
       if (equipo.rack) {
 
-        const altura = 1;
+        const altura =
+          equipo.device_type
+            ?.u_height || 1;
 
         ruInicio =
           equipo.position || 0;
@@ -333,10 +420,6 @@ function Instalaciones() {
           return;
         }
 
-        /* ===================================== */
-        /* MOVIMIENTO */
-        /* ===================================== */
-
         const {
           data: movimiento,
           error: movError
@@ -366,10 +449,6 @@ function Instalaciones() {
 
           return;
         }
-
-        /* ===================================== */
-        /* DETALLES */
-        /* ===================================== */
 
         const detalles =
           equiposRetiro.map(eq => ({
@@ -421,8 +500,6 @@ function Instalaciones() {
                   )
           }));
 
-        console.log(detalles);
-
         const {
           error: detalleError
         } = await supabase
@@ -446,7 +523,7 @@ function Instalaciones() {
           "Solicitud enviada correctamente"
         );
 
-        navigate("/equipos");
+        window.location.reload();
 
       } catch (err) {
 
@@ -525,6 +602,7 @@ function Instalaciones() {
             value={
               cantidadSeleccionada
             }
+            disabled={modoLectura}
             onChange={(e) =>
               handleCantidad(
                 e.target.value
@@ -585,6 +663,7 @@ function Instalaciones() {
                 value={
                   item.tipoEquipo
                 }
+                disabled={modoLectura}
                 onChange={(e) =>
                   handleTipoEquipo(
                     index,
@@ -624,6 +703,7 @@ function Instalaciones() {
                   value={
                     item.equipoId
                   }
+                  disabled={modoLectura}
                   onChange={(e) =>
                     handleEquipo(
                       index,
@@ -636,17 +716,26 @@ function Instalaciones() {
                     Seleccione Equipo
                   </option>
 
-                  {item.listaEquipos
-                    .map(eq => (
+                  {modoLectura ? (
 
-                    <option
-                      key={eq.id}
-                      value={eq.id}
-                    >
-                      {eq.name}
+                    <option value={item.equipoId}>
+                      {item.equipoNombre}
                     </option>
 
-                  ))}
+                  ) : (
+
+                    item.listaEquipos
+                      .map(eq => (
+
+                      <option
+                        key={eq.id}
+                        value={eq.id}
+                      >
+                        {eq.name}
+                      </option>
+
+                    ))
+                  )}
 
                 </select>
 
@@ -691,7 +780,7 @@ function Instalaciones() {
 
                 </div>
 
-                {/* SOLO SI ES RACKEABLE */}
+                {/* SOLO SI RACKEABLE */}
 
                 {item.tipoEquipo ===
                   "RACKEABLE" && (
@@ -758,12 +847,44 @@ function Instalaciones() {
 
         {/* BOTON */}
 
-        <button
-          className="btn btn-success mt-3"
-          onClick={enviarSolicitud}
-        >
-          ENVIAR SOLICITUD
-        </button>
+        {!modoLectura ? (
+
+          <button
+            className="btn btn-success mt-3"
+            onClick={enviarSolicitud}
+          >
+            ENVIAR SOLICITUD
+          </button>
+
+        ) : (
+
+          <div
+            style={{
+              marginTop: "20px",
+              fontWeight: "bold",
+              color:
+
+                movimientoExistente
+                  ?.estado === "APROBADO"
+
+                    ? "green"
+
+                    : movimientoExistente
+                      ?.estado === "DENEGADO"
+
+                        ? "red"
+
+                        : "orange"
+            }}
+          >
+
+            SOLICITUD {
+              movimientoExistente
+                ?.estado
+            }
+
+          </div>
+        )}
 
       </div>
 
