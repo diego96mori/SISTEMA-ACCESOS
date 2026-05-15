@@ -361,9 +361,10 @@ const aprobarMovimiento = async (movimientoId) => {
                       {/* RU */}
                       <td className="p-4">
 
-                        {d.ru_inicio}
-                        {" - "}
-                        {d.ru_fin}
+                        {d.ru_inicio && d.ru_fin
+                        ? `${d.ru_inicio} - ${d.ru_fin}`
+                        : "-"}
+
 
                       </td>
 
