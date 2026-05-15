@@ -62,3 +62,35 @@ export async function netboxPatch(
 
   return response.json();
 }
+
+/* ===================================== */
+/* DELETE */
+/* ===================================== */
+
+export async function netboxDelete(
+  endpoint
+) {
+
+  const response = await fetch(
+
+    `${NETBOX_URL}${endpoint}`,
+
+    {
+      method: "DELETE",
+
+      headers: {
+        "Authorization":
+          `Token ${TOKEN}`
+      }
+    }
+  );
+
+  if (!response.ok) {
+
+    throw new Error(
+      "Error DELETE NetBox"
+    );
+  }
+
+  return true;
+}

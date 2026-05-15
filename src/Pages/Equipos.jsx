@@ -4,6 +4,9 @@ import { useNavigate } from "react-router-dom";
 import {
   netboxPatch
 } from "../Netbox";
+import {
+  netboxDelete
+} from "../Netbox";
 
 function Equipos() {
 
@@ -109,16 +112,10 @@ const aprobarMovimiento = async (movimientoId) => {
 
       if (item.accion === "RETIRO") {
 
-        await netboxPatch(
+        await netboxDelete(
 
-          `/dcim/devices/${item.equipo_netbox_id}/`,
-
-          {
-            rack: null,
-            face: null,
-            position: null
-          }
-        );
+  `/dcim/devices/${item.equipo_netbox_id}/`
+);
       }
     }
 
