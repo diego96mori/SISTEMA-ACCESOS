@@ -144,10 +144,11 @@ function Instalaciones() {
             equipoNombre:
               det.equipo_name,
 
-            fabricante: "",
+            fabricante:
+            det.fabricante || "",
 
-            modelo: "",
-
+            modelo:
+              det.modelo || "",
             rack:
               det.rack_name || "",
 
@@ -474,6 +475,12 @@ if (equipo.rack) {
 
             equipo_name:
               eq.equipoNombre,
+              
+            fabricante:
+              eq.fabricante,
+
+            modelo:
+              eq.modelo,
 
             equipo_netbox_id:
               eq.equipoId,
