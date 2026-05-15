@@ -3,6 +3,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import { netboxGet } from "../Netbox";
 import "./Instalaciones.css";
+import {
+  netboxPatch
+} from "../Netbox";
 
 function Instalaciones() {
 
@@ -17,6 +20,7 @@ function Instalaciones() {
     useState(0);
 
   const [cantidadSeleccionada,
+
     setCantidadSeleccionada] =
     useState("");
 

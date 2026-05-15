@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
 import { useNavigate } from "react-router-dom";
+import {
+  netboxPatch
+} from "../Netbox";
 
 function Equipos() {
 
@@ -63,41 +66,104 @@ function Equipos() {
   /* ===================================== */
   /* APROBAR */
   /* ===================================== */
+const aprobarMovimiento = async (movimientoId) => {
 
-  const aprobarMovimiento = async (movimientoId) => {
+  try {
 
-    try {
+    const {
+      data: { user }
+    } = await supabase.auth.getUser();
 
-      const {
-        data: { user }
-      } = await supabase.auth.getUser();
+    /* ===================================== */
+    /* DETALLE */
+    /* ===================================== */
 
-      const { error } = await supabase
-        .from("movimientos")
-        .update({
-          estado: "APROBADO",
-          aprobado_por: user.email,
-          fecha_aprobacion: new Date()
-        })
-        .eq("id", movimientoId);
+    const {
+      data: detalles,
+      error: detalleError
+    } = await supabase
+      .from("movimiento_detalle")
+      .select("*")
+      .eq("movimiento_id", movimientoId);
 
-      if (error) {
-        console.log(error);
-        alert("Error aprobando");
-        return;
-      }
+    if (detalleError) {
 
-      alert("Solicitud aprobada");
+      console.log(detalleError);
 
-      cargarMovimientos();
+      alert(
+        "Error obteniendo detalle"
+      );
 
-    } catch (err) {
-
-      console.log(err);
-
-      alert("Error general");
+      return;
     }
-  };
+
+    /* ===================================== */
+    /* RECORRER */
+    /* ===================================== */
+
+    for (const item of detalles) {
+
+      /* ===================================== */
+      /* RETIRO */
+      /* ===================================== */
+
+      if (item.accion === "RETIRO") {
+
+        await netboxPatch(
+
+          `/dcim/devices/${item.equipo_netbox_id}/`,
+
+          {
+            rack: null,
+            face: null,
+            position: null
+          }
+        );
+      }
+    }
+
+    /* ===================================== */
+    /* APROBAR */
+    /* ===================================== */
+
+    const { error } = await supabase
+      .from("movimientos")
+      .update({
+
+        estado: "APROBADO",
+
+        aprobado_por:
+          user.email,
+
+        fecha_aprobacion:
+          new Date()
+      })
+      .eq("id", movimientoId);
+
+    if (error) {
+
+      console.log(error);
+
+      alert("Error aprobando");
+
+      return;
+    }
+
+    alert(
+      "Solicitud aprobada y sincronizada con NetBox"
+    );
+
+    cargarMovimientos();
+
+  } catch (err) {
+
+    console.log(err);
+
+    alert(
+      "Error sincronizando NetBox"
+    );
+  }
+};
 
   /* ===================================== */
   /* DENEGAR */
