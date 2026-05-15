@@ -335,25 +335,38 @@ function Instalaciones() {
       /* ===================================== */
       /* RACKEABLE */
       /* ===================================== */
+if (equipo.rack) {
 
-      if (equipo.rack) {
+  ruInicio =
+    equipo.position || 0;
 
-        const altura =
-          equipo.device_type
-            ?.u_height || 1;
+  // 🔥 ALTURA REAL
+  let altura = 1;
 
-        ruInicio =
-          equipo.position || 0;
+  // intenta leer altura del NetBox
+  if (
+    equipo.device_type?.u_height
+  ) {
 
-        ruFin =
-          ruInicio + altura - 1;
+    altura = Number(
+      equipo.device_type.u_height
+    );
+  }
 
-        cantidadRu =
-          ruInicio === ruFin
-            ? `${ruInicio}`
-            : `${ruInicio} - ${ruFin}`;
-      }
+  // fallback manual para OLT Huawei
+  if (
+    equipo.name?.includes("MA5800")
+  ) {
 
+    altura = 10;
+  }
+
+  ruFin =
+    ruInicio + altura - 1;
+
+  cantidadRu =
+    `${ruInicio} - ${ruFin}`;
+}
       nuevos[index] = {
 
         ...nuevos[index],
