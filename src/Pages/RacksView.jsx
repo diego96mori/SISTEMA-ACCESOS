@@ -1,209 +1,127 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
-import { netboxGet } from "../Netbox";
+import {
+  consultarElevacionRackAdmin,
+  consultarRacksAdmin,
+} from "../services/equipos";
 
 function RacksView() {
+  const navigate = useNavigate();
   const [nodos, setNodos] = useState([]);
   const [nodoSeleccionado, setNodoSeleccionado] = useState("");
   const [racks, setRacks] = useState([]);
-  const [rackSeleccionado, setRackSeleccionado] = useState(null);
+  const [rackSeleccionado, setRackSeleccionado] = useState("");
   const [rackData, setRackData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  // 🔹 cargar nodos
   useEffect(() => {
+    let active = true;
     const cargarNodos = async () => {
-      const { data } = await supabase
+      const { data, error: queryError } = await supabase
         .from("nodos")
-        .select("id, nombre, netbox_site_id");
-
-      setNodos(data || []);
+        .select("id, nombre, netbox_site_id")
+        .order("nombre");
+      if (!active) return;
+      if (queryError) setError(queryError.message);
+      else setNodos(data || []);
     };
-
     cargarNodos();
+    return () => {
+      active = false;
+    };
   }, []);
 
-  // 🔹 cargar racks
-  useEffect(() => {
-    if (!nodoSeleccionado) return;
-
-    const cargarRacks = async () => {
-      try {
-        const nodo = nodos.find(n => n.id == nodoSeleccionado);
-        if (!nodo?.netbox_site_id) return;
-
-        const res = await netboxGet(`/dcim/racks/?site_id=${nodo.netbox_site_id}`);
-
-        console.log("RACKS:", res);
-
-        setRacks(res.results || []);
-      } catch (err) {
-        console.error("Error racks:", err);
-      }
-    };
-
-    cargarRacks();
-    setRackSeleccionado(null);
+  const seleccionarNodo = async (value) => {
+    const nodeId = Number(value) || "";
+    setNodoSeleccionado(nodeId);
+    setRackSeleccionado("");
     setRackData([]);
-  }, [nodoSeleccionado]);
+    setRacks([]);
+    setError("");
+    if (!nodeId) return;
 
-  // 🔹 cargar datos del rack (JSON)
-  useEffect(() => {
-    if (!rackSeleccionado) return;
+    try {
+      setLoading(true);
+      setRacks(await consultarRacksAdmin(nodeId));
+    } catch (loadError) {
+      setError(loadError.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const cargarRack = async () => {
-      try {
-        console.log("RACK ID:", rackSeleccionado);
+  const seleccionarRack = async (value) => {
+    const rackId = Number(value) || "";
+    setRackSeleccionado(rackId);
+    setRackData([]);
+    setError("");
+    if (!rackId || !nodoSeleccionado) return;
 
-        const data = await netboxGet(
-          `/dcim/racks/${rackSeleccionado}/elevation/?face=front`,
-        );
-
-        console.log("DATA RACK:", data);
-
-        setRackData(data.results || []);
-      } catch (err) {
-        console.error("Error rack:", err);
-      }
-    };
-
-    cargarRack();
-  }, [rackSeleccionado]);
+    try {
+      setLoading(true);
+      setRackData(await consultarElevacionRackAdmin(nodoSeleccionado, rackId));
+    } catch (loadError) {
+      setError(loadError.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh" }}>
-
-      {/* SIDEBAR */}
-      <div style={{
-        width: "220px",
-        background: "#f4f4f4",
-        padding: "20px"
-      }}>
-        <h3>WI-NET</h3>
-
-        <p>Lista de Accesos</p>
-        <p>Gestión Equipos</p>
-
-        <p style={{
-          background: "#2563eb",
-          color: "white",
-          padding: "8px",
-          borderRadius: "6px"
-        }}>
+    <div className="flex min-h-screen bg-gray-100">
+      <aside className="w-64 bg-white shadow-lg p-6">
+        <h2 className="text-xl font-bold mb-6">WI-NET</h2>
+        <button onClick={() => navigate("/dashboard")} className="w-full text-left px-4 py-2 rounded-lg hover:bg-gray-200">
+          Lista de Accesos
+        </button>
+        <button onClick={() => navigate("/equipos")} className="w-full text-left px-4 py-2 rounded-lg hover:bg-gray-200 mt-2">
+          Gestion Equipos
+        </button>
+        <button className="w-full text-left px-4 py-2 rounded-lg bg-blue-600 text-white mt-2">
           Vista de Racks
-        </p>
-      </div>
+        </button>
+      </aside>
 
-      {/* CONTENIDO */}
-      <div style={{ flex: 1, padding: "40px" }}>
+      <main className="flex-1 p-8">
+        <div className="bg-white rounded-xl shadow p-6 max-w-5xl mx-auto">
+          <h1 className="text-2xl font-semibold text-center mb-6">Vista de Rack</h1>
+          {error && <div className="p-3 mb-4 bg-red-100 text-red-800 rounded">{error}</div>}
 
-        <div style={{
-          background: "#fff",
-          borderRadius: "12px",
-          padding: "30px",
-          maxWidth: "800px",
-          margin: "0 auto",
-          boxShadow: "0 10px 25px rgba(0,0,0,0.1)"
-        }}>
-
-          <h2 style={{ textAlign: "center" }}>
-            Vista de Rack
-          </h2>
-
-          {/* FILTROS */}
-          <div style={{
-            display: "flex",
-            gap: "20px",
-            marginBottom: "20px"
-          }}>
-
-            {/* Nodo */}
-            <div style={{ flex: 1 }}>
-              <label>Nodo</label>
-              <select
-                value={nodoSeleccionado}
-                onChange={(e) => setNodoSeleccionado(Number(e.target.value))}
-                style={{ width: "100%", padding: "8px" }}
-              >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <label>
+              Nodo
+              <select className="border rounded p-2 w-full" value={nodoSeleccionado} onChange={(event) => seleccionarNodo(event.target.value)}>
                 <option value="">Seleccione</option>
-                {nodos.map(n => (
-                  <option key={n.id} value={n.id}>
-                    {n.nombre}
-                  </option>
-                ))}
+                {nodos.map((node) => <option key={node.id} value={node.id}>{node.nombre}</option>)}
               </select>
-            </div>
-
-            {/* Rack */}
-            <div style={{ flex: 1 }}>
-              <label>Rack</label>
-              <select
-                value={rackSeleccionado || ""}
-                onChange={(e) => setRackSeleccionado(Number(e.target.value))}
-                style={{ width: "100%", padding: "8px" }}
-              >
+            </label>
+            <label>
+              Rack
+              <select className="border rounded p-2 w-full" value={rackSeleccionado} disabled={!nodoSeleccionado || loading} onChange={(event) => seleccionarRack(event.target.value)}>
                 <option value="">Seleccione</option>
-                {racks.map(r => (
-                  <option key={r.id} value={r.id}>
-                    {r.name}
-                  </option>
-                ))}
+                {racks.map((rack) => <option key={rack.id} value={rack.id}>{rack.name}</option>)}
               </select>
-            </div>
-
+            </label>
           </div>
 
-          {/* VISOR REAL */}
-          <div style={{
-            border: "1px solid #ddd",
-            borderRadius: "10px",
-            height: "600px",
-            overflow: "auto",
-            padding: "20px",
-            background: "#111827",
-            display: "flex",
-            justifyContent: "center"
-          }}>
-
-            {rackData.length > 0 ? (
-              <div style={{ width: "140px" }}>
-
-                {[...rackData]
-                  .sort((a, b) => b.id - a.id)
-                  .map((ru, index) => {
-
-                    const ocupado = ru.occupied;
-                    const nombre = ru.device?.name || "";
-
-                    return (
-                      <div
-                        key={index}
-                        style={{
-                          height: "18px",
-                          border: "1px solid #333",
-                          background: ocupado ? "#9333ea" : "#1f2937",
-                          color: "white",
-                          fontSize: "10px",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center"
-                        }}
-                      >
-                        {ocupado ? nombre : ""}
-                      </div>
-                    );
-                  })
-                }
-
+          <div className="border rounded-xl min-h-[600px] overflow-auto p-5 bg-gray-900 flex justify-center">
+            {loading ? <p className="text-gray-300">Consultando NetBox...</p> : rackData.length > 0 ? (
+              <div className="w-72">
+                {[...rackData].sort((a, b) => Number(b.id) - Number(a.id)).map((unit) => {
+                  const occupied = Boolean(unit.occupied || unit.device);
+                  return (
+                    <div key={unit.id} className={`h-7 border border-gray-600 text-white text-xs flex items-center justify-center ${occupied ? "bg-purple-700" : "bg-gray-800"}`}>
+                      U{unit.id} {occupied ? `- ${unit.device?.name || "OCUPADO"}` : "- LIBRE"}
+                    </div>
+                  );
+                })}
               </div>
-            ) : (
-              <p style={{ color: "#999" }}>Seleccione un rack</p>
-            )}
-
+            ) : <p className="text-gray-400">Seleccione un rack</p>}
           </div>
-
         </div>
-
-      </div>
+      </main>
     </div>
   );
 }

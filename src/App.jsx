@@ -17,9 +17,18 @@ function App() {
         <Route path="/instalaciones/:codigo" element={<Instalaciones />} />
         <Route path="/llaves/:codigo" element={<Llaves />} />
         <Route path="/admin" element={<AdminLogin />} />
-        <Route path="/dashboard" element={<ProtectedRoute> <Dashboard /></ProtectedRoute>} />
-        <Route path="/equipos" element={<Equipos />} />
-        <Route path="/racks" element={<RacksView />} />
+        <Route
+          path="/dashboard"
+          element={<ProtectedRoute><Dashboard /></ProtectedRoute>}
+        />
+        <Route
+          path="/equipos"
+          element={<ProtectedRoute><Equipos /></ProtectedRoute>}
+        />
+        <Route
+          path="/racks"
+          element={<ProtectedRoute><RacksView /></ProtectedRoute>}
+        />
       </Routes>
     </BrowserRouter>
   );
