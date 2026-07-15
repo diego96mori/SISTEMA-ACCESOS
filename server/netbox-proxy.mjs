@@ -10,9 +10,13 @@ const allowedOrigins = String(process.env.ALLOWED_ORIGINS || "")
   .map((value) => value.trim())
   .filter(Boolean);
 
-if (!netboxUrl || !netboxToken || !supabaseUrl || !supabaseKey) {
+const hasPlaceholder = [netboxToken, supabaseKey].some((value) =>
+  /REEMPLAZAR|PEGA_AQUI/i.test(value),
+);
+
+if (!netboxUrl || !netboxToken || !supabaseUrl || !supabaseKey || hasPlaceholder) {
   console.error(
-    "Faltan NETBOX_URL, NETBOX_TOKEN, SUPABASE_URL o SUPABASE_PUBLISHABLE_KEY",
+    "Falta completar .env.netbox.local con NETBOX_TOKEN y SUPABASE_PUBLISHABLE_KEY reales",
   );
   process.exit(1);
 }
