@@ -2,9 +2,6 @@ import { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
 import { netboxGet } from "../Netbox";
 
-const NETBOX_URL = "http://172.16.29.91:8484/api";
-const TOKEN = "bs49ckrnuP1pzzVekkpo16irphqLE1YiSDyZSQB";
-
 function RacksView() {
   const [nodos, setNodos] = useState([]);
   const [nodoSeleccionado, setNodoSeleccionado] = useState("");
@@ -57,17 +54,9 @@ function RacksView() {
       try {
         console.log("RACK ID:", rackSeleccionado);
 
-        const res = await fetch(
-          `${NETBOX_URL}/dcim/racks/${rackSeleccionado}/elevation/?face=front`,
-          {
-            headers: {
-              Authorization: `Token ${TOKEN}`,
-              Accept: "application/json"
-            }
-          }
+        const data = await netboxGet(
+          `/dcim/racks/${rackSeleccionado}/elevation/?face=front`,
         );
-
-        const data = await res.json();
 
         console.log("DATA RACK:", data);
 

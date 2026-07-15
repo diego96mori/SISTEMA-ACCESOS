@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
+import { obtenerAdministradorActivo } from "../services/auth";
 import { useNavigate } from "react-router-dom";
 import "./login.css";
 
@@ -11,25 +12,40 @@ function AdminLogin() {
   useEffect(() => {
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession();
-      if (data.session) {
+      const admin = await obtenerAdministradorActivo(data.session?.user?.id);
+      if (data.session && admin) {
         navigate("/dashboard");
       }
     };
     checkSession();
-  }, []);
+  }, [navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
     if (error) {
       alert("Credenciales incorrectas");
-    } else {
+      return;
+    }
+
+    try {
+      const admin = await obtenerAdministradorActivo(data.user?.id);
+      if (!admin) {
+        await supabase.auth.signOut();
+        alert("El usuario no tiene permisos de administrador");
+        return;
+      }
+
       navigate("/dashboard");
+    } catch (validationError) {
+      console.error(validationError);
+      await supabase.auth.signOut();
+      alert("No se pudo validar el perfil administrador");
     }
   };
 

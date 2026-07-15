@@ -1,25 +1,39 @@
 import { useEffect, useState } from "react";
-import { supabase } from "../supabaseClient";
 import { Navigate } from "react-router-dom";
+import { supabase } from "../supabaseClient";
+import { obtenerAdministradorActivo } from "../services/auth";
 
 function ProtectedRoute({ children }) {
-  const [session, setSession] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [authorized, setAuthorized] = useState(null);
 
   useEffect(() => {
-    const getSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      setSession(data.session);
-      setLoading(false);
+    let active = true;
+
+    const verify = async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        const user = data.session?.user;
+        const admin = await obtenerAdministradorActivo(user?.id);
+
+        if (active) setAuthorized(Boolean(user && admin));
+      } catch (error) {
+        console.error(error);
+        if (active) setAuthorized(false);
+      }
     };
 
-    getSession();
+    verify();
+    return () => {
+      active = false;
+    };
   }, []);
 
-  if (loading) return null;
+  if (authorized === null) {
+    return <p style={{ padding: "2rem" }}>Validando sesión...</p>;
+  }
 
-  if (!session) {
-    return <Navigate to="/admin" />;
+  if (!authorized) {
+    return <Navigate to="/admin" replace />;
   }
 
   return children;

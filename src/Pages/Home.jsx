@@ -1,60 +1,65 @@
-import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { FaDoorOpen, FaTools, FaKey, FaUserShield } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import { FaDoorOpen, FaKey, FaTools, FaUserShield } from "react-icons/fa";
 import { supabase } from "../supabaseClient";
 import "./Home.css";
 
 function Home() {
   const navigate = useNavigate();
-
   const [showModal, setShowModal] = useState(false);
   const [modalMsg, setModalMsg] = useState("");
-  const [accesoId, setAccesoId] = useState("");
+  const [codigoSeguimiento, setCodigoSeguimiento] = useState("");
+  const [formulario, setFormulario] = useState("EQUIPOS");
   const [loading, setLoading] = useState(false);
 
+  const abrirValidacion = (tipo) => {
+    setFormulario(tipo);
+    setCodigoSeguimiento("");
+    setModalMsg("");
+    setShowModal(true);
+  };
+
   const validarAcceso = async () => {
-  if (!accesoId) return;
+    const codigo = codigoSeguimiento.trim();
+    if (!codigo) return;
 
-  if (isNaN(accesoId)) {
-    setModalMsg("El ID debe ser numérico");
-    setAccesoId("");
-    return;
-  }
+    setLoading(true);
+    const { data, error } = await supabase.rpc("validar_codigo_formulario", {
+      p_codigo: codigo,
+      p_formulario: formulario,
+    });
+    setLoading(false);
 
-  setLoading(true);
+    if (error) {
+      setModalMsg("El código no tiene un formato válido.");
+      return;
+    }
 
-  const { data, error } = await supabase
-    .rpc("validar_acceso_instalaciones", { p_id: Number(accesoId) });
+    const messages = {
+      NO_EXISTE: "El código de seguimiento no existe.",
+      NO_AUTORIZADO:
+        "La solicitud todavía no está aprobada o no requiere este formulario.",
+      DENEGADO: "La solicitud fue denegada.",
+      CANCELADO: "La solicitud fue cancelada.",
+      YA_REGISTRADO: "Este formulario ya fue registrado.",
+    };
 
-  setLoading(false);
+    if (data !== "AUTORIZADO") {
+      setModalMsg(messages[data] || "No se pudo validar la solicitud.");
+      return;
+    }
 
-  if (error) {
-    setModalMsg("Error interno al validar acceso.");
-    return;
-  }
-
-  if (data === "NO_EXISTE") {
-    setModalMsg("El ID ingresado no existe.");
-    setAccesoId("");
-    return;
-  }
-
-  if (data === "NO_AUTORIZADO") {
-    setModalMsg("Este acceso no está autorizado para gestionar instalaciones.");
-    setAccesoId("");
-    return;
-  }
-
-  if (data === "AUTORIZADO") {
     setShowModal(false);
-    navigate(`/instalaciones/${accesoId}`);
-  }
-};
+    navigate(
+      formulario === "EQUIPOS"
+        ? `/instalaciones/${codigo}`
+        : `/llaves/${codigo}`,
+    );
+  };
 
   return (
     <div className="home-container">
       <div className="home-card">
-
         <h1 className="brand-title">WI-NET</h1>
         <h2 className="home-title">Sistema de Solicitudes</h2>
 
@@ -64,54 +69,53 @@ function Home() {
             ACCESO
           </button>
 
-          <button onClick={() => setShowModal(true)}>
+          <button onClick={() => abrirValidacion("EQUIPOS")}>
             <FaTools />
-            GESTION DE EQUIPOS (INSTALACIONES , RETIRO , REEMPLAZO Y INGRESO DE F.O)
+            GESTIÓN DE EQUIPOS (INSTALACIONES, RETIRO, REEMPLAZO E INGRESO DE F.O.)
           </button>
 
-          <button onClick={() => navigate("/llaves")}>
+          <button onClick={() => abrirValidacion("LLAVES")}>
             <FaKey />
             LLAVES
           </button>
         </div>
 
-        <button
-          className="admin-btn"
-          onClick={() => navigate("/admin")}
-        >
+        <button className="admin-btn" onClick={() => navigate("/admin")}>
           <FaUserShield />
           INICIAR SESIÓN (ADMIN)
         </button>
-
       </div>
 
-      {/* MODAL PERSONALIZADO */}
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-box">
             <h3>
-  {modalMsg ? "Validación de acceso" : "Gestionar Instalaciones"}
-</h3>
+              {modalMsg
+                ? "Validación de solicitud"
+                : formulario === "EQUIPOS"
+                  ? "Gestionar equipos"
+                  : "Solicitar llave"}
+            </h3>
 
-<p
-  style={{
-    color: modalMsg ? "#dc3545" : "#555",
-    fontWeight: modalMsg ? "600" : "normal",
-    marginBottom: "15px"
-  }}
->
-  {modalMsg ? modalMsg : "Ingrese ID de acceso"}
-</p>
+            <p
+              style={{
+                color: modalMsg ? "#dc3545" : "#555",
+                fontWeight: modalMsg ? "600" : "normal",
+                marginBottom: "15px",
+              }}
+            >
+              {modalMsg ? modalMsg : "Ingrese su código de seguimiento"}
+            </p>
 
-          <input
-  type="number"
-  placeholder="Ej: 5"
-  value={accesoId}
-  onChange={(e) => {
-    setAccesoId(e.target.value);
-    if (modalMsg) setModalMsg(""); // 🔥 limpia el mensaje al escribir
-  }}
-/>
+            <input
+              type="text"
+              placeholder="Ej: a6aee268-71b8-466c-a711-1c35750ebe3b"
+              value={codigoSeguimiento}
+              onChange={(event) => {
+                setCodigoSeguimiento(event.target.value);
+                if (modalMsg) setModalMsg("");
+              }}
+            />
 
             <div className="modal-buttons">
               <button
@@ -123,14 +127,7 @@ function Home() {
 
               <button
                 className="btn-confirm"
-                onClick={() => {
-  if (modalMsg) {
-    setModalMsg("");
-    setShowModal(false);
-  } else {
-    validarAcceso();
-  }
-}}
+                onClick={validarAcceso}
                 disabled={loading}
               >
                 {loading ? "Validando..." : "Aceptar"}
@@ -139,7 +136,6 @@ function Home() {
           </div>
         </div>
       )}
-
     </div>
   );
 }

@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../supabaseClient";
-import dayjs from "dayjs";
+import {
+  cargarCatalogosPublicos,
+  registrarSolicitudAcceso,
+} from "../services/accesos";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { MobileTimePicker } from "@mui/x-date-pickers/MobileTimePicker";
@@ -35,9 +37,6 @@ function Acceso() {
 
   const [horaIngreso, setHoraIngreso] = useState(null);
   const [horaSalida, setHoraSalida] = useState(null);
-  const [viewIngreso, setViewIngreso] = useState("hours");
-  const [viewSalida, setViewSalida] = useState("hours");
-
   const [correoUser, setCorreoUser] = useState("");
 
 
@@ -63,23 +62,31 @@ const [archivo, setArchivo] = useState([]);
     { nombre:"", ap_paterno:"", ap_materno:"", tipo_doc_id:"", num_doc:"", telefono:"" }
   ]);
 
-  useEffect(()=>{ cargarCatalogos(); },[]);
+  useEffect(() => {
+    let active = true;
 
-  const cargarCatalogos = async ()=>{
-    const { data: nodos } = await supabase.from("nodos").select("*");
-    const { data: tiposDoc } = await supabase.from("tipos_documento").select("*");
-    const { data: niveles } = await supabase.from("niveles_acceso").select("*");
-    const { data: empresas } = await supabase.from("empresas").select("*");
-    const { data: areas } = await supabase.from("areas").select("*");
-    const { data: tiposTrabajo } = await supabase.from("tipos_trabajo").select("*");
+    const cargarCatalogos = async () => {
+      try {
+        const catalogos = await cargarCatalogosPublicos();
+        if (!active) return;
 
-    setNodos(nodos || []);
-    setTiposDoc(tiposDoc || []);
-    setNiveles(niveles || []);
-    setEmpresas(empresas || []);
-    setAreas(areas || []);
-    setTiposTrabajo(tiposTrabajo || []);
-  };
+        setNodos(catalogos.nodos);
+        setTiposDoc(catalogos.tiposDoc);
+        setNiveles(catalogos.niveles);
+        setEmpresas(catalogos.empresas);
+        setAreas(catalogos.areas);
+        setTiposTrabajo(catalogos.tiposTrabajo);
+      } catch (error) {
+        console.error(error);
+        alert(error.message);
+      }
+    };
+
+    cargarCatalogos();
+    return () => {
+      active = false;
+    };
+  }, []);
 
 const handleChange = (e)=>{
   const { name,value } = e.target;
@@ -100,6 +107,15 @@ const handleChange = (e)=>{
     return;
   }
 
+  if (name === "empresa_id") {
+    setForm((prev) => ({
+      ...prev,
+      empresa_id: value,
+      area_responsable_id: "",
+    }));
+    return;
+  }
+
   setForm(prev => ({
     ...prev,
     [name]: value
@@ -114,108 +130,43 @@ const handleChange = (e)=>{
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  try {
-    setSending(true);
-    setShowModal(true);
-
-    let sctrPaths = [];
-    let sctrFileNames = [];
-    let sctrSizes = [];
-
-    if (archivo.length === 0) {
-      alert("Debes subir al menos un PDF");
+    if (archivo.length < 1 || archivo.length > 3) {
+      alert("Debes adjuntar entre 1 y 3 archivos PDF");
       return;
     }
 
-    for (const file of archivo) {
-
-      if (file.type !== "application/pdf") {
-        alert("Solo se permiten archivos PDF");
-        return;
-      }
-
-      const cleanName = file.name
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^a-z0-9.]/g, "_");
-
-      const filePath = `${Date.now()}_${cleanName}`;
-
-      const { error: uploadError } =
-        await supabase.storage.from("sctr").upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      sctrPaths.push(filePath);
-      sctrFileNames.push(cleanName);
-      sctrSizes.push(file.size);
+    if (archivo.some((file) => file.type !== "application/pdf")) {
+      alert("Solo se permiten archivos PDF");
+      return;
     }
 
-    const { data: accesoInsertado, error: accesoError } =
-      await supabase
-        .from("accesos")
-        .insert([{
-  ...form,
+    try {
+      setSending(true);
+      setShowModal(true);
 
-  trabajo_contrata: form.trabajo_contrata === "SI",
+      const resultado = await registrarSolicitudAcceso({
+        acceso: {
+          ...form,
+          trabajo_contrata: form.trabajo_contrata === "SI",
+          nombre_contrata:
+            form.trabajo_contrata === "SI" ? form.nombre_contrata : null,
+        },
+        personal,
+        archivos: archivo,
+      });
 
-  nombre_contrata:
-    form.trabajo_contrata === "SI"
-      ? form.nombre_contrata
-      : null,
-
-  sctr_path: sctrPaths,
-  sctr_filename: sctrFileNames,
-  sctr_size: sctrSizes
-}])
-        .select()
-        .single();
-
-    if (accesoError) throw accesoError;
-
-    const personalInsert = personal.map(p => ({
-      ...p,
-      acceso_id: accesoInsertado.id
-    }));
-
-    const { error: personalError } =
-      await supabase.from("personal_acceso").insert(personalInsert);
-
-    if (personalError) throw personalError;
-
-    // ===============================
-    // LOGICA PARA MOSTRAR ID
-    // ===============================
-
-    const nodoSeleccionado = nodos.find(n => n.id == form.nodo_id);
-    const tipoTrabajoSeleccionado = tiposTrabajo.find(t => t.id == form.tipo_trabajo_id);
-
-    const trabajosValidos = [
-      "INSTALACION DE EQUIPOS",
-      "RETIRO DE EQUIPOS",
-      "REEMPLAZO DE EQUIPOS",
-      "INGRESO_FO"
-    ];
-
-    const mostrar =
-      nodoSeleccionado?.requiere_llave === true ||
-      trabajosValidos.includes(tipoTrabajoSeleccionado?.nombre);
-
-    setNuevoId(accesoInsertado.id);
-    setMostrarId(mostrar);
-
-    setSending(false);
-
-  } catch (err) {
-    console.error(err);
-    alert("Error al enviar solicitud");
-    setShowModal(false);
-    setSending(false);
-  }
-};
+      setNuevoId(resultado.codigo_seguimiento);
+      setMostrarId(true);
+    } catch (error) {
+      console.error(error);
+      alert(error.message || "Error al enviar la solicitud");
+      setShowModal(false);
+    } finally {
+      setSending(false);
+    }
+  };
   return (
     <><div className="brand-container">
       <div className="brandbar">
@@ -493,7 +444,9 @@ const handleChange = (e)=>{
       required
     >
       <option value="">Área responsable</option>
-      {areas.map(a => (
+      {areas
+        .filter((a) => String(a.empresa_id) === String(form.empresa_id))
+        .map(a => (
         <option key={a.id} value={a.id}>{a.nombre}</option>
       ))}
     </select>
@@ -767,7 +720,7 @@ const handleChange = (e)=>{
 
           {mostrarId && (
             <p style={{ fontWeight: "bold", fontSize: "16px" }}>
-              Su ID es: {nuevoId}
+              Código de seguimiento: {nuevoId}
             </p>
           )}
 

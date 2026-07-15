@@ -1,96 +1,19 @@
-const NETBOX_URL = "http://172.16.29.91:8484/api";
-const TOKEN = "bs49cKrnuP1pzzVekkpo16i6rphqLE1YiSDyZSQB";
+const MIGRATION_MESSAGE =
+  "La integración segura con NetBox todavía no está desplegada. " +
+  "El token ya no se utiliza desde el navegador.";
 
-/* ===================================== */
-/* GET */
-/* ===================================== */
-
-export async function netboxGet(endpoint) {
-
-  const res = await fetch(
-    `${NETBOX_URL}${endpoint}`,
-    {
-      headers: {
-        "Authorization": `Token ${TOKEN}`,
-        "Content-Type": "application/json"
-      }
-    }
-  );
-
-  if (!res.ok) {
-
-    throw new Error(
-      "Error GET NetBox"
-    );
-  }
-
-  return res.json();
+function pendingNetboxMigration() {
+  throw new Error(MIGRATION_MESSAGE);
 }
 
-/* ===================================== */
-/* PATCH */
-/* ===================================== */
-
-export async function netboxPatch(
-  endpoint,
-  body
-) {
-
-  const response = await fetch(
-
-    `${NETBOX_URL}${endpoint}`,
-
-    {
-      method: "PATCH",
-
-      headers: {
-        "Authorization": `Token ${TOKEN}`,
-        "Content-Type":
-          "application/json"
-      },
-
-      body: JSON.stringify(body)
-    }
-  );
-
-  if (!response.ok) {
-
-    throw new Error(
-      "Error PATCH NetBox"
-    );
-  }
-
-  return response.json();
+export async function netboxGet() {
+  return pendingNetboxMigration();
 }
 
-/* ===================================== */
-/* DELETE */
-/* ===================================== */
+export async function netboxPatch() {
+  return pendingNetboxMigration();
+}
 
-export async function netboxDelete(
-  endpoint
-) {
-
-  const response = await fetch(
-
-    `${NETBOX_URL}${endpoint}`,
-
-    {
-      method: "DELETE",
-
-      headers: {
-        "Authorization":
-          `Token ${TOKEN}`
-      }
-    }
-  );
-
-  if (!response.ok) {
-
-    throw new Error(
-      "Error DELETE NetBox"
-    );
-  }
-
-  return true;
+export async function netboxDelete() {
+  return pendingNetboxMigration();
 }

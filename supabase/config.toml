@@ -1,0 +1,3 @@
+[functions.registrar-acceso]
+verify_jwt = false
+

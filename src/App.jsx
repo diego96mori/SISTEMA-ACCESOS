@@ -14,8 +14,8 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/acceso" element={<Acceso />} />
-        <Route path="/instalaciones/:id" element={<Instalaciones />} />
-        <Route path="/llaves" element={<Llaves />} />
+        <Route path="/instalaciones/:codigo" element={<Instalaciones />} />
+        <Route path="/llaves/:codigo" element={<Llaves />} />
         <Route path="/admin" element={<AdminLogin />} />
         <Route path="/dashboard" element={<ProtectedRoute> <Dashboard /></ProtectedRoute>} />
         <Route path="/equipos" element={<Equipos />} />

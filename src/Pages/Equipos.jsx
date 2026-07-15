@@ -2,9 +2,6 @@ import { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
 import { useNavigate } from "react-router-dom";
 import {
-  netboxPatch
-} from "../Netbox";
-import {
   netboxDelete
 } from "../Netbox";
 
