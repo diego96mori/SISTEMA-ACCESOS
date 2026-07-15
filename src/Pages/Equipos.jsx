@@ -1,449 +1,294 @@
-import { useEffect, useState } from "react";
-import { supabase } from "../supabaseClient";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  netboxDelete
-} from "../Netbox";
+import { supabase } from "../supabaseClient";
+import { denegarMovimientoEquipos } from "../services/equipos";
+
+function detailTitle(detail) {
+  return detail.accion === "RETIRO"
+    ? detail.equipo_anterior_nombre
+    : detail.nombre_aprobado || detail.nombre_propuesto;
+}
 
 function Equipos() {
-
   const navigate = useNavigate();
-
   const [movimientos, setMovimientos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [mensaje, setMensaje] = useState("");
+  const [seleccionado, setSeleccionado] = useState(null);
+  const [procesandoId, setProcesandoId] = useState(null);
 
-  useEffect(() => {
-    cargarMovimientos();
-  }, []);
-
-  /* ===================================== */
-  /* CARGAR MOVIMIENTOS */
-  /* ===================================== */
-
-  const cargarMovimientos = async () => {
-
+  const cargarMovimientos = useCallback(async () => {
+    setLoading(true);
     const { data, error } = await supabase
       .from("movimientos")
       .select(`
         id,
         acceso_id,
         tipo_movimiento,
+        cantidad_items,
         estado,
+        observacion_admin,
+        error_general,
         aprobado_por,
         fecha_aprobacion,
         created_at,
-
         accesos (
           id,
+          codigo_seguimiento,
           fecha_ingreso,
-          nodos (
-            nombre
-          )
+          solicitante_nombre,
+          solicitante_ap_paterno,
+          nodos ( nombre, netbox_site_id )
         ),
-
         movimiento_detalle (
           id,
+          numero_item,
+          grupo_reemplazo,
           accion,
-          rack_name,
-          rack_netbox_id,
-          equipo_name,
-          equipo_netbox_id,
-          ru_inicio,
-          ru_fin
+          es_rackeable,
+          equipo_anterior_netbox_id,
+          equipo_anterior_nombre,
+          equipo_anterior_fabricante,
+          equipo_anterior_modelo,
+          equipo_anterior_serial,
+          equipo_anterior_rack_netbox_id,
+          equipo_anterior_rack_nombre,
+          equipo_anterior_ru_inicio,
+          equipo_anterior_cantidad_ru,
+          manufacturer_netbox_id,
+          device_type_netbox_id,
+          fabricante,
+          modelo,
+          serial,
+          nombre_propuesto,
+          nombre_aprobado,
+          rack_aprobado_netbox_id,
+          rack_aprobado_nombre,
+          ru_inicio_aprobada,
+          cantidad_ru,
+          equipo_resultado_netbox_id,
+          estado_ejecucion,
+          error_netbox
         )
       `)
-      .order("id", { ascending: false });
+      .order("created_at", { ascending: false });
 
     if (error) {
-      console.log(error);
+      console.error(error);
+      setMensaje(`No se pudieron cargar los movimientos: ${error.message}`);
+      setMovimientos([]);
+    } else {
+      setMovimientos(data ?? []);
     }
-
-    setMovimientos(data || []);
-
     setLoading(false);
-  };
+  }, []);
 
-  /* ===================================== */
-  /* APROBAR */
-  /* ===================================== */
-const aprobarMovimiento = async (movimientoId) => {
-
-  try {
-
-    const {
-      data: { user }
-    } = await supabase.auth.getUser();
-
-    /* ===================================== */
-    /* DETALLE */
-    /* ===================================== */
-
-    const {
-      data: detalles,
-      error: detalleError
-    } = await supabase
-      .from("movimiento_detalle")
-      .select("*")
-      .eq("movimiento_id", movimientoId);
-
-    if (detalleError) {
-
-      console.log(detalleError);
-
-      alert(
-        "Error obteniendo detalle"
-      );
-
-      return;
-    }
-
-    /* ===================================== */
-    /* RECORRER */
-    /* ===================================== */
-
-    for (const item of detalles) {
-
-      /* ===================================== */
-      /* RETIRO */
-      /* ===================================== */
-
-      if (item.accion === "RETIRO") {
-
-        await netboxDelete(
-
-  `/dcim/devices/${item.equipo_netbox_id}/`
-);
-      }
-    }
-
-    /* ===================================== */
-    /* APROBAR */
-    /* ===================================== */
-
-    const { error } = await supabase
-      .from("movimientos")
-      .update({
-
-        estado: "APROBADO",
-
-        aprobado_por:
-          user.email,
-
-        fecha_aprobacion:
-          new Date()
-      })
-      .eq("id", movimientoId);
-
-    if (error) {
-
-      console.log(error);
-
-      alert("Error aprobando");
-
-      return;
-    }
-
-    alert(
-      "Solicitud aprobada y sincronizada con NetBox"
-    );
-
+  useEffect(() => {
     cargarMovimientos();
+  }, [cargarMovimientos]);
 
-  } catch (err) {
-
-    console.log(err);
-
-    alert(
-      "Error sincronizando NetBox"
-    );
-  }
-};
-
-  /* ===================================== */
-  /* DENEGAR */
-  /* ===================================== */
-
-  const denegarMovimiento = async (movimientoId) => {
+  const denegar = async (movimiento) => {
+    const motivo = window.prompt("Indique el motivo de la denegación:");
+    if (!motivo?.trim()) return;
 
     try {
-
-      const {
-        data: { user }
-      } = await supabase.auth.getUser();
-
-      const { error } = await supabase
-        .from("movimientos")
-        .update({
-          estado: "DENEGADO",
-          aprobado_por: user.email,
-          fecha_aprobacion: new Date()
-        })
-        .eq("id", movimientoId);
-
-      if (error) {
-        console.log(error);
-        alert("Error denegando");
-        return;
-      }
-
-      alert("Solicitud denegada");
-
-      cargarMovimientos();
-
-    } catch (err) {
-
-      console.log(err);
-
-      alert("Error general");
+      setProcesandoId(movimiento.id);
+      await denegarMovimientoEquipos(movimiento.id, motivo);
+      setMensaje("Solicitud de equipos denegada correctamente");
+      setSeleccionado(null);
+      await cargarMovimientos();
+    } catch (error) {
+      console.error(error);
+      setMensaje(error.message);
+    } finally {
+      setProcesandoId(null);
     }
   };
 
   return (
-
     <div className="flex min-h-screen bg-gray-100">
-
-      {/* SIDEBAR */}
       <aside className="w-64 bg-white shadow-lg p-6">
-
-        <h2 className="text-xl font-bold mb-6">
-          WI-NET
-        </h2>
-
+        <h2 className="text-xl font-bold mb-6">WI-NET</h2>
         <button
           onClick={() => navigate("/dashboard")}
           className="w-full text-left px-4 py-2 rounded-lg hover:bg-gray-200"
         >
           Lista de Accesos
         </button>
-
-        <button
-          className="w-full text-left px-4 py-2 rounded-lg bg-blue-600 text-white mt-2"
-        >
+        <button className="w-full text-left px-4 py-2 rounded-lg bg-blue-600 text-white mt-2">
           Gestión Equipos
         </button>
-
         <button
           onClick={() => navigate("/racks")}
           className="w-full text-left px-4 py-2 rounded-lg hover:bg-gray-200 mt-2"
         >
           Vista de Racks
         </button>
-
       </aside>
 
-      {/* MAIN */}
-      <div className="flex-1 p-8">
-
-        <h1 className="text-2xl font-semibold mb-6">
-          Gestión de Equipos
-        </h1>
+      <main className="flex-1 p-8 overflow-hidden">
+        <h1 className="text-2xl font-semibold mb-6">Gestión de Equipos</h1>
+        {mensaje && (
+          <div className="mb-4 p-3 bg-blue-100 text-blue-900 rounded">
+            {mensaje}
+          </div>
+        )}
 
         <div className="bg-white rounded-xl shadow overflow-x-auto">
-
           {loading ? (
-
-            <p className="p-6">
-              Cargando...
-            </p>
-
+            <p className="p-6">Cargando...</p>
           ) : (
-
-            <table className="min-w-full text-sm">
-
+            <table className="min-w-full text-sm whitespace-nowrap">
               <thead className="bg-gray-100 text-xs uppercase">
-
                 <tr>
-
-                  <th className="p-4">
-                    ID
-                  </th>
-
-                  <th className="p-4">
-                    Nodo
-                  </th>
-
-                  <th className="p-4">
-                    Fecha
-                  </th>
-
-                  <th className="p-4">
-                    Tipo
-                  </th>
-
-                  <th className="p-4">
-                    Rack
-                  </th>
-
-                  <th className="p-4">
-                    Equipo
-                  </th>
-
-                  <th className="p-4">
-                    RU
-                  </th>
-
-                  <th className="p-4">
-                    Estado
-                  </th>
-
-                  <th className="p-4">
-                    Aprobación
-                  </th>
-
+                  <th className="p-4">Movimiento</th>
+                  <th className="p-4">Código</th>
+                  <th className="p-4">Nodo</th>
+                  <th className="p-4">Solicitante</th>
+                  <th className="p-4">Tipo</th>
+                  <th className="p-4">Items</th>
+                  <th className="p-4">Fecha</th>
+                  <th className="p-4">Estado</th>
+                  <th className="p-4">Acciones</th>
                 </tr>
-
               </thead>
-
               <tbody>
-
-                {movimientos.flatMap((m) =>
-
-                  (m.movimiento_detalle || []).map((d, i) => (
-
-                    <tr
-                      key={`${m.id}-${i}`}
-                      className="border-b"
-                    >
-
-                      {/* ID */}
-                      <td className="p-4">
-                        {m.accesos?.id}
-                      </td>
-
-                      {/* NODO */}
-                      <td className="p-4">
-                        {m.accesos?.nodos?.nombre}
-                      </td>
-
-                      {/* FECHA */}
-                      <td className="p-4">
-                        {m.accesos?.fecha_ingreso}
-                      </td>
-
-                      {/* MOVIMIENTO */}
-                      <td className="p-4">
-
-                        <div className="font-semibold text-red-600">
-                          {m.tipo_movimiento}
-                        </div>
-              
-                      </td>
-
-                      {/* RACK */}
-                      <td className="p-4">
-                        {d.rack_name || "-"}
-                      </td>
-
-                      {/* EQUIPO */}
-                      <td className="p-4">
-
-                        <div className="bg-gray-50 border rounded-lg p-2 text-xs inline-block">
-
-                          <div>
-                            <b>EQUIPO:</b>
-                            {" "}
-                            {d.equipo_name}
-                          </div>
-
-                          <div>
-                            <b>NETBOX ID:</b>
-                            {" "}
-                            {d.equipo_netbox_id}
-                          </div>
-
-                        </div>
-
-                      </td>
-
-                      {/* RU */}
-                      <td className="p-4">
-
-                        {d.ru_inicio && d.ru_fin
-                        ? `${d.ru_inicio} - ${d.ru_fin}`
-                        : "-"}
-
-
-                      </td>
-
-                      {/* ESTADO */}
-                      <td className="p-4">
-
-                        {m.estado === "PENDIENTE" && (
-                          <span className="text-yellow-600 font-semibold">
-                            PENDIENTE
-                          </span>
-                        )}
-
-                        {m.estado === "APROBADO" && (
-                          <span className="text-green-600 font-semibold">
-                            APROBADO
-                          </span>
-                        )}
-
-                        {m.estado === "DENEGADO" && (
-                          <span className="text-red-600 font-semibold">
-                            DENEGADO
-                          </span>
-                        )}
-
-                        {m.aprobado_por && (
-                          <div className="text-xs text-gray-500 mt-1">
-                            {m.aprobado_por}
-                          </div>
-                        )}
-
-                      </td>
-
-                      {/* BOTONES */}
-                      <td className="p-4">
-
-                        {m.estado === "PENDIENTE" ? (
-
-                          <div className="flex gap-2">
-
-                            <button
-                              className="bg-green-600 text-white px-3 py-1 rounded"
-                              onClick={() =>
-                                aprobarMovimiento(m.id)
-                              }
-                            >
-                              PROCEDER
-                            </button>
-
-                            <button
-                              className="bg-red-600 text-white px-3 py-1 rounded"
-                              onClick={() =>
-                                denegarMovimiento(m.id)
-                              }
-                            >
-                              DENEGAR
-                            </button>
-
-                          </div>
-
-                        ) : (
-
-                          <span className="text-gray-500 text-xs">
-                            Solicitud finalizada
-                          </span>
-
-                        )}
-
-                      </td>
-
-                    </tr>
-                  ))
-                )}
-
+                {movimientos.map((movimiento) => (
+                  <tr key={movimiento.id} className="border-b hover:bg-blue-50">
+                    <td className="p-4">{movimiento.id}</td>
+                    <td className="p-4 max-w-48 truncate" title={movimiento.accesos?.codigo_seguimiento}>
+                      {movimiento.accesos?.codigo_seguimiento}
+                    </td>
+                    <td className="p-4">{movimiento.accesos?.nodos?.nombre}</td>
+                    <td className="p-4">
+                      {movimiento.accesos?.solicitante_nombre}{" "}
+                      {movimiento.accesos?.solicitante_ap_paterno}
+                    </td>
+                    <td className="p-4 font-semibold">{movimiento.tipo_movimiento}</td>
+                    <td className="p-4">{movimiento.cantidad_items}</td>
+                    <td className="p-4">{movimiento.accesos?.fecha_ingreso}</td>
+                    <td className="p-4">
+                      <strong>{movimiento.estado}</strong>
+                      {movimiento.error_general && (
+                        <div className="text-xs text-red-600">{movimiento.error_general}</div>
+                      )}
+                    </td>
+                    <td className="p-4">
+                      <div className="flex gap-2">
+                        <button
+                          className="bg-blue-600 text-white px-3 py-1 rounded"
+                          onClick={() => setSeleccionado(movimiento)}
+                        >
+                          Revisar
+                        </button>
+                        <button
+                          className="bg-red-600 text-white px-3 py-1 rounded disabled:opacity-40"
+                          disabled={
+                            !["PENDIENTE", "EN_REVISION"].includes(movimiento.estado) ||
+                            procesandoId === movimiento.id
+                          }
+                          onClick={() => denegar(movimiento)}
+                        >
+                          Denegar
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
-
             </table>
           )}
-
         </div>
+      </main>
 
-      </div>
+      {seleccionado && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-auto">
+            <h2 className="text-xl font-bold mb-2">
+              Movimiento {seleccionado.id} · {seleccionado.tipo_movimiento}
+            </h2>
+            <p className="mb-4">
+              Código: {seleccionado.accesos?.codigo_seguimiento}
+            </p>
 
+            <div className="space-y-3">
+              {seleccionado.movimiento_detalle
+                ?.sort((a, b) =>
+                  a.numero_item - b.numero_item || a.accion.localeCompare(b.accion)
+                )
+                .map((detail) => (
+                  <div key={detail.id} className="border rounded-lg p-4">
+                    <h3 className="font-bold">
+                      Item {detail.numero_item} · {detail.accion}
+                    </h3>
+                    <p><strong>Equipo:</strong> {detailTitle(detail)}</p>
+                    <p>
+                      <strong>Condición:</strong>{" "}
+                      {detail.es_rackeable ? "Rackeable" : "No rackeable"}
+                    </p>
+                    {detail.accion === "RETIRO" ? (
+                      <>
+                        <p><strong>NetBox ID:</strong> {detail.equipo_anterior_netbox_id}</p>
+                        <p>
+                          <strong>Fabricante / modelo:</strong>{" "}
+                          {detail.equipo_anterior_fabricante} / {detail.equipo_anterior_modelo}
+                        </p>
+                        <p>
+                          <strong>Rack / RU:</strong>{" "}
+                          {detail.equipo_anterior_rack_nombre || "-"} / {detail.equipo_anterior_ru_inicio || "-"}
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p><strong>Fabricante:</strong> {detail.fabricante}</p>
+                        <p><strong>Modelo:</strong> {detail.modelo}</p>
+                        <p><strong>Nombre propuesto:</strong> {detail.nombre_propuesto}</p>
+                        <p><strong>RU requeridas:</strong> {detail.cantidad_ru}</p>
+                      </>
+                    )}
+                    <p><strong>Ejecución:</strong> {detail.estado_ejecucion}</p>
+                    {detail.error_netbox && (
+                      <p className="text-red-600">{detail.error_netbox}</p>
+                    )}
+                  </div>
+                ))}
+            </div>
+
+            <div className="mt-6 flex justify-between gap-3">
+              <button
+                className="bg-gray-500 text-white px-4 py-2 rounded"
+                onClick={() => setSeleccionado(null)}
+              >
+                Cerrar
+              </button>
+              <div className="flex gap-2">
+                <button
+                  className="bg-red-600 text-white px-4 py-2 rounded disabled:opacity-40"
+                  disabled={
+                    !["PENDIENTE", "EN_REVISION"].includes(seleccionado.estado) ||
+                    procesandoId === seleccionado.id
+                  }
+                  onClick={() => denegar(seleccionado)}
+                >
+                  Denegar
+                </button>
+                <button
+                  className="bg-green-600 text-white px-4 py-2 rounded opacity-50 cursor-not-allowed"
+                  disabled
+                  title="Se habilitará al desplegar el procesador seguro de NetBox"
+                >
+                  Proceder con NetBox
+                </button>
+              </div>
+            </div>
+
+            <p className="text-sm text-orange-700 mt-3">
+              La aprobación permanece bloqueada hasta desplegar el procesador seguro de NetBox.
+              React ya no elimina ni crea equipos directamente.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

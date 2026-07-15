@@ -1,3 +1,5 @@
 [functions.registrar-acceso]
 verify_jwt = false
 
+[functions.netbox-consulta]
+verify_jwt = false

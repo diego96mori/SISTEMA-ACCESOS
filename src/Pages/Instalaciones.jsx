@@ -1,914 +1,436 @@
-import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "../supabaseClient";
-import { netboxGet } from "../Netbox";
+import { useCallback, useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import {
+  consultarCatalogoNetbox,
+  obtenerContextoEquipos,
+  registrarMovimientoEquipos,
+} from "../services/equipos";
 import "./Instalaciones.css";
 
+function emptyItem() {
+  return {
+    retiroTipo: "",
+    retiroId: "",
+    retiro: null,
+    instalacionRackeable: "",
+    fabricanteId: "",
+    fabricante: "",
+    modeloId: "",
+    modelo: "",
+    cantidadRu: 1,
+    nombrePropuesto: "",
+    modelos: [],
+  };
+}
+
 function Instalaciones() {
-
-  const { id } = useParams();
+  const { codigo } = useParams();
   const navigate = useNavigate();
+  const [contexto, setContexto] = useState(null);
+  const [equiposNetbox, setEquiposNetbox] = useState([]);
+  const [fabricantes, setFabricantes] = useState([]);
+  const [cantidad, setCantidad] = useState("");
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  const [nodo, setNodo] = useState("");
-  const [siteId, setSiteId] = useState(null);
-  const [tipoTrabajo, setTipoTrabajo] = useState("");
+  const cargar = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError("");
+      const context = await obtenerContextoEquipos(codigo);
+      setContexto(context);
 
-  const [cantidadEquipos, setCantidadEquipos] =
-    useState(0);
+      if (context.movimiento_id) return;
 
-  const [cantidadSeleccionada,
-
-    setCantidadSeleccionada] =
-    useState("");
-
-  const [equiposSite, setEquiposSite] =
-    useState([]);
-
-  const [equiposRetiro,
-    setEquiposRetiro] =
-    useState([]);
-
-  const [loading, setLoading] =
-    useState(true);
-
-  const [movimientoExistente,
-    setMovimientoExistente] =
-    useState(null);
-
-  const [modoLectura,
-    setModoLectura] =
-    useState(false);
-
-  useEffect(() => {
-    validarAcceso();
-  }, []);
-
-  useEffect(() => {
-
-    if (siteId) {
-      cargarEquiposSite();
-    }
-
-  }, [siteId]);
-
-  /* ===================================== */
-  /* VALIDAR ACCESO */
-  /* ===================================== */
-
-  const validarAcceso = async () => {
-
-    const { data } = await supabase
-      .rpc(
-        "validar_acceso_instalaciones",
-        { p_id: Number(id) }
+      const needsExisting = ["RETIRO", "REEMPLAZO"].includes(
+        context.tipo_movimiento,
+      );
+      const needsNew = ["INSTALACION", "REEMPLAZO", "INGRESO_FO"].includes(
+        context.tipo_movimiento,
       );
 
-    if (data !== "AUTORIZADO") {
+      const [devices, manufacturers] = await Promise.all([
+        needsExisting
+          ? consultarCatalogoNetbox(codigo, "equipos")
+          : Promise.resolve([]),
+        needsNew
+          ? consultarCatalogoNetbox(codigo, "fabricantes")
+          : Promise.resolve([]),
+      ]);
+      setEquiposNetbox(devices);
+      setFabricantes(manufacturers);
+    } catch (loadError) {
+      console.error(loadError);
+      setError(loadError.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [codigo]);
 
-      navigate("/");
+  useEffect(() => {
+    cargar();
+  }, [cargar]);
 
+  const cambiarCantidad = (value) => {
+    const parsed = Number(value);
+    setCantidad(value);
+    setItems(
+      Number.isInteger(parsed) && parsed >= 1 && parsed <= 50
+        ? Array.from({ length: parsed }, emptyItem)
+        : [],
+    );
+  };
+
+  const updateItem = (index, changes) => {
+    setItems((current) => current.map((item, itemIndex) =>
+      itemIndex === index ? { ...item, ...changes } : item
+    ));
+  };
+
+  const seleccionarRetiro = (index, deviceId) => {
+    const device = equiposNetbox.find((item) => item.id === Number(deviceId));
+    updateItem(index, { retiroId: deviceId, retiro: device ?? null });
+  };
+
+  const seleccionarFabricante = async (index, manufacturerId) => {
+    const manufacturer = fabricantes.find(
+      (item) => item.id === Number(manufacturerId),
+    );
+    updateItem(index, {
+      fabricanteId: manufacturerId,
+      fabricante: manufacturer?.name ?? "",
+      modeloId: "",
+      modelo: "",
+      modelos: [],
+    });
+
+    if (!manufacturerId) return;
+
+    try {
+      const modelos = await consultarCatalogoNetbox(codigo, "modelos", {
+        fabricante_id: Number(manufacturerId),
+      });
+      updateItem(index, { modelos });
+    } catch (catalogError) {
+      setError(catalogError.message);
+    }
+  };
+
+  const seleccionarModelo = (index, modelId) => {
+    const item = items[index];
+    const model = item.modelos.find((option) => option.id === Number(modelId));
+    updateItem(index, {
+      modeloId: modelId,
+      modelo: model?.model ?? "",
+      cantidadRu: Number(model?.u_height) || 1,
+    });
+  };
+
+  const retiroDetail = (item, index, replacement = false) => {
+    const device = item.retiro;
+    return {
+      numero_item: index + 1,
+      grupo_reemplazo: replacement ? index + 1 : null,
+      accion: "RETIRO",
+      es_rackeable: Boolean(device.rack),
+      equipo_anterior_netbox_id: device.id,
+      equipo_anterior_nombre: device.name,
+      equipo_anterior_fabricante:
+        device.device_type?.manufacturer?.name || "SIN FABRICANTE",
+      equipo_anterior_modelo: device.device_type?.model || "SIN MODELO",
+      equipo_anterior_serial: device.serial || null,
+      equipo_anterior_rack_netbox_id: device.rack?.id || null,
+      equipo_anterior_rack_nombre: device.rack?.name || null,
+      equipo_anterior_ru_inicio: device.position || null,
+      equipo_anterior_cantidad_ru:
+        Number(device.device_type?.u_height) || 1,
+      cantidad_ru: Number(device.device_type?.u_height) || 1,
+    };
+  };
+
+  const installationDetail = (item, index, replacement = false) => ({
+    numero_item: index + 1,
+    grupo_reemplazo: replacement ? index + 1 : null,
+    accion: "INSTALACION",
+    es_rackeable: item.instalacionRackeable === "SI",
+    manufacturer_netbox_id: Number(item.fabricanteId),
+    device_type_netbox_id: Number(item.modeloId),
+    fabricante: item.fabricante,
+    modelo: item.modelo,
+    nombre_propuesto: item.nombrePropuesto.trim(),
+    cantidad_ru: Number(item.cantidadRu) || 1,
+  });
+
+  const enviar = async () => {
+    if (!contexto || items.length === 0) {
+      setError("Seleccione una cantidad válida");
       return;
     }
 
-    const { data: accesoData } =
-      await supabase
-        .from("accesos")
-        .select(`
-          nodo_id,
-          nodos (
-            nombre,
-            netbox_site_id
-          ),
-          tipos_trabajo (
-            nombre
-          )
-        `)
-        .eq("id", id)
-        .single();
-
-    setNodo(
-      accesoData.nodos.nombre
+    const needsExisting = ["RETIRO", "REEMPLAZO"].includes(
+      contexto.tipo_movimiento,
+    );
+    const needsNew = ["INSTALACION", "REEMPLAZO", "INGRESO_FO"].includes(
+      contexto.tipo_movimiento,
     );
 
-    setSiteId(
-      accesoData.nodos.netbox_site_id
-    );
-
-    setTipoTrabajo(
-      accesoData.tipos_trabajo.nombre
-    );
-
-    /* ===================================== */
-    /* VERIFICAR SI YA EXISTE */
-    /* ===================================== */
-
-    const {
-      data: movimientoData
-    } = await supabase
-      .from("movimientos")
-      .select(`
-        *,
-        movimiento_detalle (*)
-      `)
-      .eq("acceso_id", Number(id))
-      .single();
-
-    if (movimientoData) {
-
-      setMovimientoExistente(
-        movimientoData
-      );
-
-      setModoLectura(true);
-
-      setCantidadSeleccionada(
-        movimientoData
-          .movimiento_detalle
-          .length
-      );
-
-      const equipos =
-        movimientoData
-          .movimiento_detalle
-          .map(det => ({
-
-            tipoEquipo:
-              det.rack_name
-                ? "RACKEABLE"
-                : "NO_RACKEABLE",
-
-            listaEquipos: [],
-
-            equipoId:
-              det.equipo_netbox_id,
-
-            equipoNombre:
-              det.equipo_name,
-
-            fabricante:
-            det.fabricante || "",
-
-            modelo:
-              det.modelo || "",
-            rack:
-              det.rack_name || "",
-
-            rackNetboxId:
-              det.rack_netbox_id,
-
-            ruInicio:
-              det.ru_inicio || "",
-
-            cantidadRu:
-
-              det.ru_inicio &&
-              det.ru_fin
-
-                ? det.ru_inicio === det.ru_fin
-
-                  ? `${det.ru_inicio}`
-
-                  : `${det.ru_inicio} - ${det.ru_fin}`
-
-                : ""
-          }));
-
-      setEquiposRetiro(equipos);
+    if (needsExisting && items.some((item) => !item.retiro)) {
+      setError("Seleccione todos los equipos que serán retirados");
+      return;
     }
 
-    setLoading(false);
+    if (needsNew && items.some((item) =>
+      !item.fabricanteId ||
+      !item.modeloId ||
+      !item.instalacionRackeable ||
+      !item.nombrePropuesto.trim()
+    )) {
+      setError("Complete fabricante, modelo, condición y nombre de cada equipo");
+      return;
+    }
+
+    const selectedDevices = items.map((item) => item.retiroId).filter(Boolean);
+    if (new Set(selectedDevices).size !== selectedDevices.length) {
+      setError("No puede seleccionar el mismo equipo dos veces");
+      return;
+    }
+
+    const names = items
+      .map((item) => item.nombrePropuesto.trim().toLowerCase())
+      .filter(Boolean);
+    if (new Set(names).size !== names.length) {
+      setError("Los nombres propuestos no pueden repetirse");
+      return;
+    }
+
+    const detalles = [];
+    items.forEach((item, index) => {
+      if (contexto.tipo_movimiento === "RETIRO") {
+        detalles.push(retiroDetail(item, index));
+      } else if (contexto.tipo_movimiento === "REEMPLAZO") {
+        detalles.push(retiroDetail(item, index, true));
+        detalles.push(installationDetail(item, index, true));
+      } else {
+        detalles.push(installationDetail(item, index));
+      }
+    });
+
+    try {
+      setSending(true);
+      setError("");
+      const result = await registrarMovimientoEquipos(codigo, detalles);
+      setSuccess(
+        `Solicitud de equipos ${result.movimiento_id} registrada en estado PENDIENTE`,
+      );
+      setContexto((current) => ({
+        ...current,
+        movimiento_id: result.movimiento_id,
+        movimiento_estado: result.estado,
+      }));
+    } catch (submitError) {
+      console.error(submitError);
+      setError(submitError.message);
+    } finally {
+      setSending(false);
+    }
   };
 
-  /* ===================================== */
-  /* NETBOX */
-  /* ===================================== */
-
-  const cargarEquiposSite =
-    async () => {
-
-      try {
-
-        const data =
-          await netboxGet(
-            `/dcim/devices/?site_id=${siteId}`
-          );
-
-        const equipos =
-          data.results || [];
-
-        setEquiposSite(equipos);
-
-        setCantidadEquipos(
-          equipos.length
-        );
-
-      } catch (err) {
-
-        console.log(err);
-
-        alert(
-          "Error cargando equipos"
-        );
-      }
-    };
-
-  /* ===================================== */
-  /* CANTIDAD */
-  /* ===================================== */
-
-  const handleCantidad =
-    (cantidad) => {
-
-      setCantidadSeleccionada(
-        cantidad
-      );
-
-      const nuevos = [];
-
-      for (
-        let i = 0;
-        i < Number(cantidad);
-        i++
-      ) {
-
-        nuevos.push({
-
-          tipoEquipo: "",
-
-          listaEquipos: [],
-
-          equipoId: "",
-
-          equipoNombre: "",
-
-          fabricante: "",
-
-          modelo: "",
-
-          rack: "",
-
-          rackNetboxId: null,
-
-          ruInicio: "",
-
-          cantidadRu: ""
-        });
-      }
-
-      setEquiposRetiro(nuevos);
-    };
-
-  /* ===================================== */
-  /* TIPO EQUIPO */
-  /* ===================================== */
-
-  const handleTipoEquipo =
-    (index, valor) => {
-
-      const nuevos =
-        [...equiposRetiro];
-
-      nuevos[index].tipoEquipo =
-        valor;
-
-      nuevos[index].equipoId = "";
-
-      const usados =
-        nuevos
-          .map(x => x.equipoId)
-          .filter(Boolean);
-
-      let filtrados = [];
-
-      if (valor === "RACKEABLE") {
-
-        filtrados =
-          equiposSite.filter(eq =>
-            eq.rack !== null
-          );
-
-      } else {
-
-        filtrados =
-          equiposSite.filter(eq =>
-            eq.rack === null
-          );
-      }
-
-      filtrados =
-        filtrados.filter(
-          eq =>
-            !usados.includes(eq.id)
-        );
-
-      nuevos[index].listaEquipos =
-        filtrados;
-
-      setEquiposRetiro(nuevos);
-    };
-
-  /* ===================================== */
-  /* EQUIPO */
-  /* ===================================== */
-
-  const handleEquipo =
-    async (index, equipoId) => {
-
-      const nuevos =
-        [...equiposRetiro];
-
-      const equipo =
-        nuevos[index]
-          .listaEquipos
-          .find(
-            eq =>
-              eq.id ===
-              Number(equipoId)
-          );
-
-      if (!equipo) return;
-
-      let ruInicio = "-";
-
-      let ruFin = "-";
-
-      let cantidadRu = "-";
-
-      /* ===================================== */
-      /* RACKEABLE */
-      /* ===================================== */
-if (equipo.rack) {
-
-  ruInicio =
-    equipo.position || 0;
-
-  // 🔥 ALTURA REAL
-  let altura = 1;
-
-  // intenta leer altura del NetBox
-  if (
-    equipo.device_type?.u_height
-  ) {
-
-    altura = Number(
-      equipo.device_type.u_height
-    );
-  }
-
-  // fallback manual para OLT Huawei
-  if (
-    equipo.name?.includes("MA5800")
-  ) {
-
-    altura = 10;
-  }
-
-  ruFin =
-    ruInicio + altura - 1;
-
-  cantidadRu =
-    `${ruInicio} - ${ruFin}`;
-}
-      nuevos[index] = {
-
-        ...nuevos[index],
-
-        equipoId:
-          equipo.id,
-
-        equipoNombre:
-          equipo.name,
-
-        fabricante:
-          equipo.device_type
-            ?.manufacturer?.name || "-",
-
-        modelo:
-          equipo.device_type
-            ?.model || "-",
-
-        rack:
-          equipo.rack?.name || "",
-
-        rackNetboxId:
-          equipo.rack?.id || null,
-
-        ruInicio,
-
-        cantidadRu
-      };
-
-      setEquiposRetiro(nuevos);
-    };
-
-  /* ===================================== */
-  /* ENVIAR */
-  /* ===================================== */
-
-  const enviarSolicitud =
-    async () => {
-
-      try {
-
-        if (
-          equiposRetiro.length === 0
-        ) {
-
-          alert(
-            "Debe seleccionar equipos"
-          );
-
-          return;
-        }
-
-        const incompletos =
-          equiposRetiro.some(
-            eq => !eq.equipoId
-          );
-
-        if (incompletos) {
-
-          alert(
-            "Complete todos los equipos"
-          );
-
-          return;
-        }
-
-        const {
-          data: movimiento,
-          error: movError
-        } = await supabase
-          .from("movimientos")
-          .insert({
-
-            acceso_id:
-              Number(id),
-
-            tipo_movimiento:
-              tipoTrabajo,
-
-            estado:
-              "PENDIENTE"
-          })
-          .select()
-          .single();
-
-        if (movError) {
-
-          console.log(movError);
-
-          alert(
-            "Error creando movimiento"
-          );
-
-          return;
-        }
-
-        const detalles =
-          equiposRetiro.map(eq => ({
-
-            movimiento_id:
-              movimiento.id,
-
-            accion:
-              "RETIRO",
-
-            equipo_name:
-              eq.equipoNombre,
-              
-            fabricante:
-              eq.fabricante,
-
-            modelo:
-              eq.modelo,
-
-            equipo_netbox_id:
-              eq.equipoId,
-
-            rack_name:
-              eq.rack || null,
-
-            rack_netbox_id:
-              eq.rackNetboxId,
-
-            ru_inicio:
-
-              eq.ruInicio === "-" ||
-              eq.ruInicio === "" ||
-              eq.ruInicio === null
-
-                ? null
-
-                : Number(eq.ruInicio),
-
-            ru_fin:
-
-              typeof eq.cantidadRu ===
-              "string" &&
-              eq.cantidadRu.includes("-")
-
-                ? Number(
-                    eq.cantidadRu
-                      .split("-")[1]
-                      .trim()
-                  )
-
-                : (
-                    eq.ruInicio === "-"
-                      ? null
-                      : eq.ruInicio
-                  )
-          }));
-
-        const {
-          error: detalleError
-        } = await supabase
-          .from("movimiento_detalle")
-          .insert(detalles);
-
-        if (detalleError) {
-
-          console.log(
-            detalleError
-          );
-
-          alert(
-            detalleError.message
-          );
-
-          return;
-        }
-
-        alert(
-          "Solicitud enviada correctamente"
-        );
-
-        window.location.reload();
-
-      } catch (err) {
-
-        console.log(err);
-
-        alert("Error general");
-      }
-    };
-
   if (loading) {
+    return <h3 style={{ padding: "2rem" }}>Validando solicitud...</h3>;
+  }
 
+  if (error && !contexto) {
     return (
-      <h3>
-        Validando acceso...
-      </h3>
+      <div className="home-container">
+        <div className="home-card">
+          <h3>No se pudo abrir Gestión de Equipos</h3>
+          <p className="text-danger">{error}</p>
+          <button className="btn btn-secondary" onClick={() => navigate("/")}>
+            Volver
+          </button>
+        </div>
+      </div>
     );
   }
 
   return (
-
     <div className="home-container">
+      <div className="home-card" style={{ maxWidth: "900px" }}>
+        <h2>Gestión de Equipos</h2>
+        <p><strong>Código:</strong> {codigo}</p>
+        <p><strong>Nodo:</strong> {contexto?.nodo}</p>
+        <p><strong>Tipo:</strong> {contexto?.tipo_trabajo}</p>
+        <p><strong>Solicitante:</strong> {contexto?.solicitante}</p>
+        <p><strong>Empresa/contrata:</strong> {contexto?.empresa}</p>
 
-      <div className="home-card">
+        {error && <div className="alert alert-danger">{error}</div>}
+        {success && <div className="alert alert-success">{success}</div>}
 
-        <h2>
-          Gestion de Equipos
-        </h2>
-
-        <p>
-          ID de Acceso:
-          <strong> {id}</strong>
-        </p>
-
-        {/* NODO */}
-
-        <div className="form-row">
-
-          <label>
-            Nodo
-          </label>
-
-          <input
-            value={nodo}
-            className="form-control"
-            disabled
-          />
-
-        </div>
-
-        {/* TIPO */}
-
-        <div className="form-row">
-
-          <label>
-            Tipo de trabajo
-          </label>
-
-          <input
-            value={tipoTrabajo}
-            className="form-control"
-            disabled
-          />
-
-        </div>
-
-        {/* CANTIDAD */}
-
-        <div className="form-row">
-
-          <label>
-            Cantidad de equipos
-          </label>
-
-          <select
-            className="form-control"
-            value={
-              cantidadSeleccionada
-            }
-            disabled={modoLectura}
-            onChange={(e) =>
-              handleCantidad(
-                e.target.value
-              )
-            }
-          >
-
-            <option value="">
-              Seleccione
-            </option>
-
-            {Array.from({
-              length:
-                cantidadEquipos
-            }).map((_, i) => (
-
-              <option
-                key={i + 1}
-                value={i + 1}
-              >
-                {i + 1}
-              </option>
-
-            ))}
-
-          </select>
-
-        </div>
-
-        {/* BLOQUES */}
-
-        {equiposRetiro.map(
-          (item, index) => (
-
-          <div
-            key={index}
-            className="equipo-box"
-          >
-
-            <h5
-              style={{
-                color: "red"
-              }}
-            >
-              🔴 Equipo {index + 1}
-            </h5>
-
-            {/* TIPO */}
-
+        {contexto?.movimiento_id ? (
+          <div className="alert alert-info">
+            El formulario ya fue registrado. Estado: {contexto.movimiento_estado}
+          </div>
+        ) : (
+          <>
             <div className="form-row">
-
-              <label>
-                Tipo de equipo
-              </label>
-
-              <select
+              <label>Cantidad de items</label>
+              <input
+                type="number"
+                min="1"
+                max="50"
+                value={cantidad}
+                onChange={(event) => cambiarCantidad(event.target.value)}
                 className="form-control"
-                value={
-                  item.tipoEquipo
-                }
-                disabled={modoLectura}
-                onChange={(e) =>
-                  handleTipoEquipo(
-                    index,
-                    e.target.value
-                  )
-                }
-              >
-
-                <option value="">
-                  Seleccione
-                </option>
-
-                <option value="RACKEABLE">
-                  Rackeable
-                </option>
-
-                <option value="NO_RACKEABLE">
-                  No Rackeable
-                </option>
-
-              </select>
-
+              />
             </div>
 
-            {/* EQUIPO */}
+            {items.map((item, index) => (
+              <div className="equipo-box" key={index}>
+                <h5>
+                  {contexto?.tipo_movimiento === "REEMPLAZO"
+                    ? `Reemplazo ${index + 1}`
+                    : `Equipo ${index + 1}`}
+                </h5>
 
-            {item.tipoEquipo && (
-
-              <div className="form-row">
-
-                <label>
-                  Equipo
-                </label>
-
-                <select
-                  className="form-control"
-                  value={
-                    item.equipoId
-                  }
-                  disabled={modoLectura}
-                  onChange={(e) =>
-                    handleEquipo(
-                      index,
-                      e.target.value
-                    )
-                  }
-                >
-
-                  <option value="">
-                    Seleccione Equipo
-                  </option>
-
-                  {modoLectura ? (
-
-                    <option value={item.equipoId}>
-                      {item.equipoNombre}
-                    </option>
-
-                  ) : (
-
-                    item.listaEquipos
-                      .map(eq => (
-
-                      <option
-                        key={eq.id}
-                        value={eq.id}
-                      >
-                        {eq.name}
-                      </option>
-
-                    ))
-                  )}
-
-                </select>
-
-              </div>
-            )}
-
-            {/* DETALLES */}
-
-            {item.equipoId && (
-
-              <>
-
-                <div className="form-row">
-
-                  <label>
-                    Fabricante
-                  </label>
-
-                  <input
-                    className="form-control"
-                    value={
-                      item.fabricante
-                    }
-                    disabled
-                  />
-
-                </div>
-
-                <div className="form-row">
-
-                  <label>
-                    Modelo
-                  </label>
-
-                  <input
-                    className="form-control"
-                    value={
-                      item.modelo
-                    }
-                    disabled
-                  />
-
-                </div>
-
-                {/* SOLO SI RACKEABLE */}
-
-                {item.tipoEquipo ===
-                  "RACKEABLE" && (
-
+                {["RETIRO", "REEMPLAZO"].includes(contexto?.tipo_movimiento) && (
                   <>
-
+                    <h6>Equipo existente</h6>
                     <div className="form-row">
-
-                      <label>
-                        Rack
-                      </label>
-
-                      <input
+                      <label>Condición</label>
+                      <select
                         className="form-control"
-                        value={
-                          item.rack
-                        }
-                        disabled
-                      />
-
+                        value={item.retiroTipo}
+                        onChange={(event) => updateItem(index, {
+                          retiroTipo: event.target.value,
+                          retiroId: "",
+                          retiro: null,
+                        })}
+                      >
+                        <option value="">Seleccione</option>
+                        <option value="RACKEABLE">Rackeable</option>
+                        <option value="NO_RACKEABLE">No rackeable</option>
+                      </select>
                     </div>
-
                     <div className="form-row">
-
-                      <label>
-                        RU Inicial
-                      </label>
-
-                      <input
+                      <label>Equipo</label>
+                      <select
                         className="form-control"
-                        value={
-                          item.ruInicio
-                        }
-                        disabled
-                      />
-
+                        value={item.retiroId}
+                        disabled={!item.retiroTipo}
+                        onChange={(event) => seleccionarRetiro(index, event.target.value)}
+                      >
+                        <option value="">Seleccione</option>
+                        {equiposNetbox
+                          .filter((device) =>
+                            item.retiroTipo === "RACKEABLE"
+                              ? Boolean(device.rack)
+                              : !device.rack
+                          )
+                          .map((device) => (
+                            <option value={device.id} key={device.id}>
+                              {device.name}
+                            </option>
+                          ))}
+                      </select>
                     </div>
-
-                    <div className="form-row">
-
-                      <label>
-                        Cantidad RU
-                      </label>
-
-                      <input
-                        className="form-control"
-                        value={
-                          item.cantidadRu
-                        }
-                        disabled
-                      />
-
-                    </div>
-
+                    {item.retiro && (
+                      <div className="alert alert-secondary">
+                        {item.retiro.device_type?.manufacturer?.name} · {item.retiro.device_type?.model}
+                        {item.retiro.rack && (
+                          <> · Rack {item.retiro.rack.name}, RU {item.retiro.position}</>
+                        )}
+                      </div>
+                    )}
                   </>
                 )}
 
-              </>
+                {["INSTALACION", "REEMPLAZO", "INGRESO_FO"].includes(
+                  contexto?.tipo_movimiento,
+                ) && (
+                  <>
+                    <h6>Equipo nuevo</h6>
+                    <div className="form-row">
+                      <label>Condición</label>
+                      <select
+                        className="form-control"
+                        value={item.instalacionRackeable}
+                        onChange={(event) => updateItem(index, {
+                          instalacionRackeable: event.target.value,
+                        })}
+                      >
+                        <option value="">Seleccione</option>
+                        <option value="SI">Rackeable</option>
+                        <option value="NO">No rackeable</option>
+                      </select>
+                    </div>
+                    <div className="form-row">
+                      <label>Fabricante</label>
+                      <select
+                        className="form-control"
+                        value={item.fabricanteId}
+                        onChange={(event) => seleccionarFabricante(index, event.target.value)}
+                      >
+                        <option value="">Seleccione</option>
+                        {fabricantes.map((manufacturer) => (
+                          <option value={manufacturer.id} key={manufacturer.id}>
+                            {manufacturer.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="form-row">
+                      <label>Modelo</label>
+                      <select
+                        className="form-control"
+                        value={item.modeloId}
+                        disabled={!item.fabricanteId}
+                        onChange={(event) => seleccionarModelo(index, event.target.value)}
+                      >
+                        <option value="">Seleccione</option>
+                        {item.modelos.map((model) => (
+                          <option value={model.id} key={model.id}>
+                            {model.model}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="form-row">
+                      <label>Nombre propuesto</label>
+                      <input
+                        className="form-control"
+                        value={item.nombrePropuesto}
+                        onChange={(event) => updateItem(index, {
+                          nombrePropuesto: event.target.value,
+                        })}
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+            ))}
 
-            )}
-
-          </div>
-        ))}
-
-        {/* BOTON */}
-
-        {!modoLectura ? (
-
-          <button
-            className="btn btn-success mt-3"
-            onClick={enviarSolicitud}
-          >
-            ENVIAR SOLICITUD
-          </button>
-
-        ) : (
-
-          <div
-            style={{
-              marginTop: "20px",
-              fontWeight: "bold",
-              color:
-
-                movimientoExistente
-                  ?.estado === "APROBADO"
-
-                    ? "green"
-
-                    : movimientoExistente
-                      ?.estado === "DENEGADO"
-
-                        ? "red"
-
-                        : "orange"
-            }}
-          >
-
-            SOLICITUD {
-              movimientoExistente
-                ?.estado
-            }
-
-          </div>
+            <button
+              type="button"
+              className="btn btn-success"
+              disabled={sending || items.length === 0}
+              onClick={enviar}
+            >
+              {sending ? "Enviando..." : "Enviar solicitud de equipos"}
+            </button>
+          </>
         )}
 
+        <button
+          type="button"
+          className="btn btn-secondary ms-2"
+          onClick={() => navigate("/")}
+        >
+          Volver
+        </button>
       </div>
-
     </div>
   );
 }
