@@ -1,6 +1,8 @@
 import { supabase, supabaseUrl } from "../supabaseClient";
 
-const netboxConsultaUrl = `${supabaseUrl}/functions/v1/netbox-consulta`;
+const netboxConsultaUrl =
+  import.meta.env.VITE_NETBOX_BACKEND_URL ||
+  `${supabaseUrl}/functions/v1/netbox-consulta`;
 
 export async function obtenerContextoEquipos(codigo) {
   const { data, error } = await supabase.rpc("obtener_contexto_equipos", {

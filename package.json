@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "netbox:proxy": "node --env-file=.env.netbox.local server/netbox-proxy.mjs",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
