@@ -1,6 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaDoorOpen, FaKey, FaTools, FaUserShield } from "react-icons/fa";
+import {
+  FaArrowRight,
+  FaCheckCircle,
+  FaDoorOpen,
+  FaKey,
+  FaTimes,
+  FaTools,
+  FaUserShield,
+} from "react-icons/fa";
 import { supabase } from "../supabaseClient";
 import "./Home.css";
 
@@ -56,16 +64,16 @@ function Home() {
       if (!trackingError && tracking) {
         const movementMessages = {
           PENDIENTE:
-            "El formulario fue registrado y esta pendiente de revision.",
+            "El formulario fue registrado y está pendiente de revisión.",
           EN_REVISION:
-            "El formulario esta siendo revisado por el administrador.",
+            "El formulario está siendo revisado por el administrador.",
           PROCESANDO:
-            "La solicitud se esta procesando actualmente en NetBox.",
+            "La solicitud se está procesando actualmente en NetBox.",
           APROBADO:
             "La solicitud fue aprobada y procesada correctamente en NetBox.",
           DENEGADO: "La solicitud de equipos fue denegada.",
           ERROR:
-            "Ocurrio un error al procesar la solicitud. El administrador debe revisarla.",
+            "Ocurrió un error al procesar la solicitud. El administrador debe revisarla.",
         };
         setModalMsg(
           movementMessages[tracking.estado_movimiento] ||
@@ -90,37 +98,133 @@ function Home() {
 
   return (
     <div className="home-container">
-      <div className="home-card">
-        <h1 className="brand-title">WI-NET</h1>
-        <h2 className="home-title">Sistema de Solicitudes</h2>
+      <main className="home-shell">
+        <section className="home-intro" aria-labelledby="home-heading">
+          <div className="brand-lockup">
+            <span className="brand-mark" aria-hidden="true">
+              <FaDoorOpen />
+            </span>
+            <span>
+              <strong className="brand-name">WI-NET</strong>
+              <small className="brand-caption">Gestión de operaciones</small>
+            </span>
+          </div>
 
-        <div className="home-buttons">
-          <button onClick={() => navigate("/acceso")}>
-            <FaDoorOpen />
-            ACCESO
-          </button>
+          <div className="home-copy">
+            <p className="home-eyebrow">
+              <FaCheckCircle aria-hidden="true" /> Plataforma centralizada
+            </p>
+            <h1 className="home-heading" id="home-heading">
+              Sistema de <span>solicitudes</span>
+            </h1>
+            <p className="home-description">
+              Gestiona accesos, movimientos de equipos y llaves desde un solo
+              lugar, con seguimiento seguro durante todo el proceso.
+            </p>
+          </div>
 
-          <button onClick={() => abrirValidacion("EQUIPOS")}>
-            <FaTools />
-            GESTIÓN DE EQUIPOS (INSTALACIONES, RETIRO, REEMPLAZO E INGRESO DE F.O.)
-          </button>
+          <div className="home-trust">
+            <span className="trust-icon" aria-hidden="true">
+              <FaUserShield />
+            </span>
+            <span>Acceso controlado y trazabilidad de cada solicitud</span>
+          </div>
+        </section>
 
-          <button onClick={() => abrirValidacion("LLAVES")}>
-            <FaKey />
-            LLAVES
-          </button>
-        </div>
+        <section className="home-panel" aria-labelledby="panel-heading">
+          <header className="panel-header">
+            <div>
+              <p className="panel-kicker">Menú principal</p>
+              <h2 id="panel-heading">¿Qué deseas gestionar?</h2>
+            </div>
+            <span className="panel-status">Sistema disponible</span>
+          </header>
 
-        <button className="admin-btn" onClick={() => navigate("/admin")}>
-          <FaUserShield />
-          INICIAR SESIÓN (ADMIN)
-        </button>
-      </div>
+          <div className="home-actions">
+            <button className="action-card" onClick={() => navigate("/acceso")}>
+              <span className="action-icon" aria-hidden="true">
+                <FaDoorOpen />
+              </span>
+              <span className="action-content">
+                <strong>Acceso</strong>
+                <span>Registra una nueva solicitud de ingreso.</span>
+              </span>
+              <FaArrowRight className="action-arrow" aria-hidden="true" />
+            </button>
+
+            <button
+              className="action-card"
+              onClick={() => abrirValidacion("EQUIPOS")}
+            >
+              <span className="action-icon" aria-hidden="true">
+                <FaTools />
+              </span>
+              <span className="action-content">
+                <strong>Gestión de equipos</strong>
+                <span>Instalaciones, retiro, reemplazo e ingreso de F.O.</span>
+              </span>
+              <FaArrowRight className="action-arrow" aria-hidden="true" />
+            </button>
+
+            <button
+              className="action-card"
+              onClick={() => abrirValidacion("LLAVES")}
+            >
+              <span className="action-icon" aria-hidden="true">
+                <FaKey />
+              </span>
+              <span className="action-content">
+                <strong>Llaves</strong>
+                <span>Solicita y administra el préstamo de llaves.</span>
+              </span>
+              <FaArrowRight className="action-arrow" aria-hidden="true" />
+            </button>
+          </div>
+
+          <footer className="panel-footer">
+            <div className="panel-footer-copy">
+              <span>¿Eres administrador?</span>
+              <strong>Ingresa al panel de control</strong>
+            </div>
+            <button className="admin-btn" onClick={() => navigate("/admin")}>
+              <FaUserShield aria-hidden="true" />
+              Iniciar sesión
+            </button>
+          </footer>
+        </section>
+      </main>
 
       {showModal && (
-        <div className="modal-overlay">
-          <div className="modal-box">
-            <h3>
+        <div
+          className="modal-overlay"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setShowModal(false);
+          }}
+        >
+          <form
+            className="modal-box"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="validation-title"
+            onSubmit={(event) => {
+              event.preventDefault();
+              validarAcceso();
+            }}
+          >
+            <button
+              type="button"
+              className="modal-close"
+              aria-label="Cerrar ventana"
+              onClick={() => setShowModal(false)}
+            >
+              <FaTimes aria-hidden="true" />
+            </button>
+
+            <span className="modal-icon" aria-hidden="true">
+              {formulario === "EQUIPOS" ? <FaTools /> : <FaKey />}
+            </span>
+
+            <h3 id="validation-title">
               {modalMsg
                 ? "Validación de solicitud"
                 : formulario === "EQUIPOS"
@@ -128,43 +232,45 @@ function Home() {
                   : "Solicitar llave"}
             </h3>
 
-            <p
-              style={{
-                color: modalMsg ? "#dc3545" : "#555",
-                fontWeight: modalMsg ? "600" : "normal",
-                marginBottom: "15px",
-              }}
-            >
-              {modalMsg ? modalMsg : "Ingrese su código de seguimiento"}
+            <p className={`modal-message${modalMsg ? " is-error" : ""}`}>
+              {modalMsg
+                ? modalMsg
+                : "Ingresa el código recibido al registrar tu solicitud."}
             </p>
 
-            <input
-              type="text"
-              placeholder="Ej: a6aee268-71b8-466c-a711-1c35750ebe3b"
-              value={codigoSeguimiento}
-              onChange={(event) => {
-                setCodigoSeguimiento(event.target.value);
-                if (modalMsg) setModalMsg("");
-              }}
-            />
+            <div className="modal-field">
+              <label htmlFor="codigo-seguimiento">Código de seguimiento</label>
+              <input
+                id="codigo-seguimiento"
+                type="text"
+                autoFocus
+                autoComplete="off"
+                placeholder="Ej: a6aee268-71b8-466c-a711-1c35750ebe3b"
+                value={codigoSeguimiento}
+                onChange={(event) => {
+                  setCodigoSeguimiento(event.target.value);
+                  if (modalMsg) setModalMsg("");
+                }}
+              />
+            </div>
 
             <div className="modal-buttons">
               <button
+                type="button"
                 className="btn-cancel"
                 onClick={() => setShowModal(false)}
               >
                 Cancelar
               </button>
-
               <button
+                type="submit"
                 className="btn-confirm"
-                onClick={validarAcceso}
-                disabled={loading}
+                disabled={loading || !codigoSeguimiento.trim()}
               >
                 {loading ? "Validando..." : "Aceptar"}
               </button>
             </div>
-          </div>
+          </form>
         </div>
       )}
     </div>
