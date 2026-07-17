@@ -7,6 +7,7 @@ import "./login.css";
 function AdminLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [recoveryMessage, setRecoveryMessage] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -49,6 +50,25 @@ function AdminLogin() {
     }
   };
 
+  const handlePasswordRecovery = async () => {
+    const normalizedEmail = email.trim();
+    if (!normalizedEmail) {
+      setRecoveryMessage("Escribe primero el correo del administrador");
+      return;
+    }
+
+    const { error } = await supabase.auth.resetPasswordForEmail(
+      normalizedEmail,
+      { redirectTo: `${window.location.origin}/reset-password` },
+    );
+
+    setRecoveryMessage(
+      error
+        ? `No se pudo enviar el correo: ${error.message}`
+        : "Revisa tu correo para cambiar la contrasena",
+    );
+  };
+
   return (
     <div className="login-wrapper">
       <div className="login-card">
@@ -78,6 +98,18 @@ function AdminLogin() {
           />
 
           <button type="submit">LOGIN</button>
+          <button
+            type="button"
+            onClick={handlePasswordRecovery}
+            style={{ marginTop: "10px" }}
+          >
+            OLVIDE MI CONTRASENA
+          </button>
+          {recoveryMessage && (
+            <p style={{ marginTop: "12px", textAlign: "center" }}>
+              {recoveryMessage}
+            </p>
+          )}
         </form>
       </div>
     </div>

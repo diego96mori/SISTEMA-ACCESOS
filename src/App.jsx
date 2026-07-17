@@ -8,6 +8,7 @@ import Dashboard from "./Pages/Dashboard";
 import ProtectedRoute from "./Pages/ProtectedRoute";
 import Equipos from "./Pages/Equipos";
 import RacksView from "./Pages/RacksView";
+import ResetPassword from "./Pages/ResetPassword";
 function App() {
   return (
     <BrowserRouter>
@@ -17,6 +18,7 @@ function App() {
         <Route path="/instalaciones/:codigo" element={<Instalaciones />} />
         <Route path="/llaves/:codigo" element={<Llaves />} />
         <Route path="/admin" element={<AdminLogin />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route
           path="/dashboard"
           element={<ProtectedRoute><Dashboard /></ProtectedRoute>}
