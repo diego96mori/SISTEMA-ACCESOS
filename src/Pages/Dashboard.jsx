@@ -12,11 +12,12 @@ function Dashboard() {
   const [procesandoId, setProcesandoId] = useState(null);
   const [sincronizandoNodos, setSincronizandoNodos] = useState(false);
   const [accesoSeleccionado, setAccesoSeleccionado] = useState(null);
+  const [controlExistente, setControlExistente] = useState(false);
+  const [editandoControl, setEditandoControl] = useState(false);
   const [control, setControl] = useState({
     hora_ingreso_real: "",
     hora_salida_real: "",
-    estado_acceso: "PENDIENTE",
-    motivo_cancelacion: "",
+    estado_acceso: "EN_NODO",
   });
 
   const cargarAccesos = useCallback(async () => {
@@ -113,11 +114,11 @@ function Dashboard() {
   const resolverSolicitud = async (acceso, decision) => {
     if (acceso.estado_aprobacion !== "PENDIENTE") return;
 
-    const observacion = decision === "DENEGADO"
-      ? window.prompt("Indique el motivo de la denegación:")
+    const observacion = decision === "CANCELADO"
+      ? window.prompt("Indique el motivo de la cancelación:")
       : null;
 
-    if (decision === "DENEGADO" && !observacion?.trim()) return;
+    if (decision === "CANCELADO" && !observacion?.trim()) return;
 
     try {
       setProcesandoId(acceso.id);
@@ -132,7 +133,7 @@ function Dashboard() {
       setMensaje(
         decision === "APROBADO"
           ? "Solicitud aprobada correctamente"
-          : "Solicitud denegada correctamente",
+          : "Solicitud cancelada correctamente",
       );
       await cargarAccesos();
     } catch (error) {
@@ -157,40 +158,75 @@ function Dashboard() {
   };
 
   const abrirControl = (acceso) => {
+    if (acceso.estado_aprobacion !== "APROBADO") return;
+
+    const tieneControl = Boolean(
+      acceso.hora_ingreso_real ||
+      acceso.hora_salida_real ||
+      ["EN_NODO", "ATENDIDO"].includes(acceso.estado_acceso),
+    );
+
     setAccesoSeleccionado(acceso);
+    setControlExistente(tieneControl);
+    setEditandoControl(!tieneControl);
     setControl({
       hora_ingreso_real: acceso.hora_ingreso_real || "",
       hora_salida_real: acceso.hora_salida_real || "",
-      estado_acceso: acceso.estado_acceso || "PENDIENTE",
-      motivo_cancelacion: acceso.motivo_cancelacion || "",
+      estado_acceso: ["EN_NODO", "ATENDIDO"].includes(acceso.estado_acceso)
+        ? acceso.estado_acceso
+        : "EN_NODO",
     });
   };
 
   const guardarControl = async () => {
-    if (!accesoSeleccionado) return;
-    if (control.estado_acceso === "CANCELADO" && !control.motivo_cancelacion.trim()) {
-      setMensaje("Debe indicar el motivo de la cancelación");
+    if (!accesoSeleccionado || !editandoControl) return;
+    if (accesoSeleccionado.estado_aprobacion !== "APROBADO") {
+      setMensaje("Solo una solicitud aprobada puede registrar el control de acceso");
+      return;
+    }
+    if (!control.hora_ingreso_real) {
+      setMensaje("Debe indicar la hora real de ingreso");
+      return;
+    }
+    if (control.estado_acceso === "ATENDIDO" && !control.hora_salida_real) {
+      setMensaje("Para marcar como atendido debe indicar la hora real de salida");
       return;
     }
 
-    const { error } = await supabase
+    setProcesandoId(accesoSeleccionado.id);
+    const { data, error } = await supabase
       .from("accesos")
       .update({
-        ...control,
         hora_ingreso_real: control.hora_ingreso_real || null,
         hora_salida_real: control.hora_salida_real || null,
-        motivo_cancelacion: control.motivo_cancelacion.trim() || null,
+        estado_acceso: control.estado_acceso,
       })
-      .eq("id", accesoSeleccionado.id);
+      .eq("id", accesoSeleccionado.id)
+      .eq("estado_aprobacion", "APROBADO")
+      .select("id, hora_ingreso_real, hora_salida_real, estado_acceso")
+      .maybeSingle();
 
     if (error) {
       setMensaje(error.message);
+      setProcesandoId(null);
+      return;
+    }
+    if (!data) {
+      setMensaje("No se actualizó el control porque la solicitud no está aprobada");
+      setProcesandoId(null);
       return;
     }
 
     setAccesoSeleccionado(null);
-    setMensaje("Control de acceso actualizado");
+    setControlExistente(false);
+    setEditandoControl(false);
+    setMensaje(
+      controlExistente
+        ? "Control de acceso editado correctamente"
+        : "Control de acceso guardado correctamente",
+    );
     await cargarAccesos();
+    setProcesandoId(null);
   };
 
   return (
@@ -259,7 +295,7 @@ function Dashboard() {
                   <th className="p-3">Solicitante</th>
                   <th className="p-3">Empresa / Área</th>
                   <th className="p-3">Trabajo</th>
-                  <th className="p-3">Personal</th>
+                  <th className="p-3">Personal que ingresará</th>
                   <th className="p-3">SCTR</th>
                   <th className="p-3">Aprobación</th>
                   <th className="p-3">Acceso</th>
@@ -298,9 +334,16 @@ function Dashboard() {
                       </div>
                     </td>
                     <td className="p-3">
-                      {acceso.personal_acceso?.map((persona) => (
-                        <div key={persona.id} className="text-xs">
-                          {persona.orden}) {persona.nombre} {persona.ap_paterno}
+                      {[...(acceso.personal_acceso ?? [])]
+                        .sort((a, b) => a.orden - b.orden)
+                        .map((persona) => (
+                        <div key={persona.id} className="text-xs mb-2 last:mb-0 min-w-52">
+                          <strong>
+                            {persona.orden}) {persona.nombre} {persona.ap_paterno} {persona.ap_materno}
+                          </strong>
+                          <div className="text-gray-500">
+                            Doc. {persona.num_doc} · Tel. {persona.telefono}
+                          </div>
                         </div>
                       ))}
                     </td>
@@ -345,15 +388,19 @@ function Dashboard() {
                             acceso.estado_aprobacion !== "PENDIENTE" ||
                             procesandoId === acceso.id
                           }
-                          onClick={() => resolverSolicitud(acceso, "DENEGADO")}
+                          onClick={() => resolverSolicitud(acceso, "CANCELADO")}
                           className="px-2 py-1 rounded bg-red-600 text-white disabled:opacity-40"
                         >
-                          Denegar
+                          Cancelar
                         </button>
                         <button
                           type="button"
+                          disabled={
+                            acceso.estado_aprobacion !== "APROBADO" ||
+                            procesandoId === acceso.id
+                          }
                           onClick={() => abrirControl(acceso)}
-                          className="px-2 py-1 rounded bg-blue-600 text-white"
+                          className="px-2 py-1 rounded bg-blue-600 text-white disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                           Control
                         </button>
@@ -376,48 +423,39 @@ function Dashboard() {
             <input
               type="time"
               value={control.hora_ingreso_real}
+              disabled={!editandoControl}
               onChange={(event) => setControl((prev) => ({
                 ...prev,
                 hora_ingreso_real: event.target.value,
               }))}
-              className="w-full border p-2 mb-3"
+              className="w-full border p-2 mb-3 disabled:bg-gray-100 disabled:text-gray-600"
             />
 
             <label>Hora salida real</label>
             <input
               type="time"
               value={control.hora_salida_real}
+              disabled={!editandoControl}
               onChange={(event) => setControl((prev) => ({
                 ...prev,
                 hora_salida_real: event.target.value,
               }))}
-              className="w-full border p-2 mb-3"
+              className="w-full border p-2 mb-3 disabled:bg-gray-100 disabled:text-gray-600"
             />
 
             <label>Estado</label>
             <select
               value={control.estado_acceso}
+              disabled={!editandoControl}
               onChange={(event) => setControl((prev) => ({
                 ...prev,
                 estado_acceso: event.target.value,
               }))}
-              className="w-full border p-2 mb-3"
+              className="w-full border p-2 mb-4 disabled:bg-gray-100 disabled:text-gray-600"
             >
-              <option>PENDIENTE</option>
               <option>EN_NODO</option>
               <option>ATENDIDO</option>
-              <option>CANCELADO</option>
             </select>
-
-            <label>Motivo de cancelación</label>
-            <input
-              value={control.motivo_cancelacion}
-              onChange={(event) => setControl((prev) => ({
-                ...prev,
-                motivo_cancelacion: event.target.value,
-              }))}
-              className="w-full border p-2 mb-4"
-            />
 
             <div className="flex justify-between">
               <button
@@ -426,12 +464,22 @@ function Dashboard() {
               >
                 Cerrar
               </button>
-              <button
-                onClick={guardarControl}
-                className="px-4 py-2 bg-blue-600 text-white rounded"
-              >
-                Guardar
-              </button>
+              {editandoControl ? (
+                <button
+                  onClick={guardarControl}
+                  disabled={procesandoId === accesoSeleccionado.id}
+                  className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-40"
+                >
+                  {procesandoId === accesoSeleccionado.id ? "Guardando..." : "Guardar"}
+                </button>
+              ) : (
+                <button
+                  onClick={() => setEditandoControl(true)}
+                  className="px-4 py-2 bg-amber-600 text-white rounded"
+                >
+                  Editar
+                </button>
+              )}
             </div>
           </div>
         </div>

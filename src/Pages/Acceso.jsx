@@ -105,6 +105,7 @@ function Acceso() {
   const [showModal, setShowModal] = useState(false);
   const [sending, setSending] = useState(false);
   const [nuevoId, setNuevoId] = useState(null);
+  const [formulariosSiguientes, setFormulariosSiguientes] = useState([]);
   const [nodos, setNodos] = useState([]);
   const [tiposDoc, setTiposDoc] = useState([]);
   const [niveles, setNiveles] = useState([]);
@@ -349,6 +350,9 @@ function Acceso() {
         archivos,
       });
       setNuevoId(result.codigo_seguimiento);
+      setFormulariosSiguientes(
+        result.requiere_equipos ? ["Gestión de equipos"] : [],
+      );
     } catch (error) {
       console.error(error);
       setShowModal(false);
@@ -615,7 +619,24 @@ function Acceso() {
             {sending ? (
               <><div className="access-spinner" /><h2 id="access-result-title">Enviando solicitud</h2><p>Estamos validando la información y guardando tus documentos.</p></>
             ) : (
-              <><span className="access-success-icon"><FaCheckCircle /></span><h2 id="access-result-title">Solicitud enviada</h2><p>Guarda este código para realizar el seguimiento:</p><strong className="access-tracking-code">{nuevoId}</strong><button type="button" className="access-btn access-btn-primary" onClick={() => { setShowModal(false); navigate("/"); }}>Volver al inicio</button></>
+              <>
+                <span className="access-success-icon"><FaCheckCircle /></span>
+                <h2 id="access-result-title">Solicitud enviada</h2>
+                {formulariosSiguientes.length > 0 ? (
+                  <>
+                    <p>Guarda este código para realizar los siguientes formularios:</p>
+                    <div className="access-next-forms" aria-label="Formularios siguientes">
+                      {formulariosSiguientes.map((formulario) => (
+                        <span key={formulario}>{formulario}</span>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <p>Guarda este código para realizar el seguimiento:</p>
+                )}
+                <strong className="access-tracking-code">{nuevoId}</strong>
+                <button type="button" className="access-btn access-btn-primary" onClick={() => { setShowModal(false); navigate("/"); }}>Volver al inicio</button>
+              </>
             )}
           </div>
         </div>

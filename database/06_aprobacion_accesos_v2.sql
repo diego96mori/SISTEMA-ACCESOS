@@ -19,7 +19,7 @@ CREATE OR REPLACE FUNCTION public.resolver_solicitud_acceso(
 )
 RETURNS public.accesos
 LANGUAGE plpgsql
-SECURITY DEFINER
+SECURITY INVOKER
 SET search_path = public
 AS $$
 DECLARE
@@ -31,12 +31,12 @@ BEGIN
     RAISE EXCEPTION 'No autorizado';
   END IF;
 
-  IF v_decision NOT IN ('APROBADO', 'DENEGADO') THEN
-    RAISE EXCEPTION 'La decision debe ser APROBADO o DENEGADO';
+  IF v_decision NOT IN ('APROBADO', 'DENEGADO', 'CANCELADO') THEN
+    RAISE EXCEPTION 'La decision debe ser APROBADO, DENEGADO o CANCELADO';
   END IF;
 
-  IF v_decision = 'DENEGADO' AND v_observacion IS NULL THEN
-    RAISE EXCEPTION 'Debe indicar el motivo de la denegacion';
+  IF v_decision IN ('DENEGADO', 'CANCELADO') AND v_observacion IS NULL THEN
+    RAISE EXCEPTION 'Debe indicar el motivo de la denegacion o cancelacion';
   END IF;
 
   SELECT * INTO v_acceso
@@ -56,7 +56,7 @@ BEGIN
   SET
     estado_aprobacion = v_decision,
     estado_acceso = CASE
-      WHEN v_decision = 'DENEGADO' THEN 'CANCELADO'
+      WHEN v_decision IN ('DENEGADO', 'CANCELADO') THEN 'CANCELADO'
       ELSE estado_acceso
     END,
     observacion_aprobacion = v_observacion,
@@ -72,6 +72,9 @@ $$;
 REVOKE ALL ON FUNCTION public.resolver_solicitud_acceso(
   BIGINT, TEXT, TEXT
 ) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.resolver_solicitud_acceso(
+  BIGINT, TEXT, TEXT
+) FROM anon;
 GRANT EXECUTE ON FUNCTION public.resolver_solicitud_acceso(
   BIGINT, TEXT, TEXT
 ) TO authenticated;

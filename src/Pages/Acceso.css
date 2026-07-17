@@ -786,6 +786,24 @@
   letter-spacing: 0.08em;
 }
 
+.access-next-forms {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin: -8px 0 16px;
+}
+
+.access-next-forms span {
+  padding: 7px 11px;
+  border: 1px solid #d0c6b9;
+  border-radius: 999px;
+  color: #55442f;
+  background: #e9e2d8;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
 .access-spinner {
   width: 42px;
   height: 42px;
