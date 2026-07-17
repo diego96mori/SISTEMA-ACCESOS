@@ -97,8 +97,12 @@ function Dashboard() {
   }, [mensaje]);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/");
+    const { error } = await supabase.auth.signOut({ scope: "global" });
+    if (error) {
+      setMensaje("No se pudo cerrar la sesión. Inténtalo nuevamente.");
+      return;
+    }
+    navigate("/admin", { replace: true });
   };
 
   const sincronizarNodos = async () => {

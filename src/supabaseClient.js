@@ -10,6 +10,8 @@ export const supabaseUrl = (
 export const supabasePublishableKey =
   import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim() ?? "";
 
+const authStorageKey = `sb-${supabaseProjectRef}-auth-token`;
+
 // Alias temporal para componentes antiguos mientras termina la migracion.
 export const supabaseAnonKey = supabasePublishableKey;
 
@@ -26,6 +28,10 @@ if (!supabasePublishableKey) {
   );
 }
 
+// La sesión administrativa vive solo durante la pestaña/ventana actual.
+// Se elimina la clave anterior para no reutilizar sesiones persistidas en localStorage.
+window.localStorage.removeItem(authStorageKey);
+
 export const supabase = createClient(
   supabaseUrl,
   supabasePublishableKey,
@@ -34,6 +40,8 @@ export const supabase = createClient(
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
+      storageKey: authStorageKey,
+      storage: window.sessionStorage,
     },
   },
 );
