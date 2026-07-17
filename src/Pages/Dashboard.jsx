@@ -90,6 +90,12 @@ function Dashboard() {
     iniciar();
   }, [cargarAccesos, navigate]);
 
+  useEffect(() => {
+    if (!mensaje) return undefined;
+    const timeoutId = window.setTimeout(() => setMensaje(""), 3000);
+    return () => window.clearTimeout(timeoutId);
+  }, [mensaje]);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/");

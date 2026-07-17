@@ -1,8 +1,17 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
+  FaArrowLeft,
+  FaBoxOpen,
+  FaCheckCircle,
+  FaClipboardList,
+  FaMapMarkerAlt,
+  FaServer,
+} from "react-icons/fa";
+import {
   consultarCatalogoNetbox,
   obtenerContextoEquipos,
+  obtenerResumenMovimientoEquipos,
   registrarMovimientoEquipos,
 } from "../services/equipos";
 import "./Instalaciones.css";
@@ -27,6 +36,7 @@ function Instalaciones() {
   const { codigo } = useParams();
   const navigate = useNavigate();
   const [contexto, setContexto] = useState(null);
+  const [resumenMovimiento, setResumenMovimiento] = useState(null);
   const [equiposNetbox, setEquiposNetbox] = useState([]);
   const [fabricantes, setFabricantes] = useState([]);
   const [cantidad, setCantidad] = useState("");
@@ -34,7 +44,6 @@ function Instalaciones() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
 
   const cargar = useCallback(async () => {
     try {
@@ -43,7 +52,11 @@ function Instalaciones() {
       const context = await obtenerContextoEquipos(codigo);
       setContexto(context);
 
-      if (context.movimiento_id) return;
+      if (context.movimiento_id) {
+        const summary = await obtenerResumenMovimientoEquipos(codigo);
+        setResumenMovimiento(summary);
+        return;
+      }
 
       const needsExisting = ["RETIRO", "REEMPLAZO"].includes(
         context.tipo_movimiento,
@@ -222,9 +235,11 @@ function Instalaciones() {
       setSending(true);
       setError("");
       const result = await registrarMovimientoEquipos(codigo, detalles);
-      setSuccess(
-        `Solicitud de equipos ${result.movimiento_id} registrada en estado PENDIENTE`,
-      );
+      setResumenMovimiento({
+        movimiento_id: result.movimiento_id,
+        estado: result.estado,
+        detalles: [],
+      });
       setContexto((current) => ({
         ...current,
         movimiento_id: result.movimiento_id,
@@ -239,17 +254,23 @@ function Instalaciones() {
   };
 
   if (loading) {
-    return <h3 style={{ padding: "2rem" }}>Validando solicitud...</h3>;
+    return (
+      <div className="equipment-public-page equipment-public-center">
+        <div className="equipment-loader" aria-label="Validando solicitud" />
+        <p>Validando solicitud...</p>
+      </div>
+    );
   }
 
   if (error && !contexto) {
     return (
-      <div className="home-container">
-        <div className="home-card">
-          <h3>No se pudo abrir Gestión de Equipos</h3>
-          <p className="text-danger">{error}</p>
-          <button className="btn btn-secondary" onClick={() => navigate("/")}>
-            Volver
+      <div className="equipment-public-page equipment-public-center">
+        <div className="equipment-error-card">
+          <FaBoxOpen aria-hidden="true" />
+          <h2>No se pudo abrir Gestión de Equipos</h2>
+          <p>{error}</p>
+          <button type="button" onClick={() => navigate("/")}>
+            <FaArrowLeft aria-hidden="true" /> Volver al inicio
           </button>
         </div>
       </div>
@@ -257,180 +278,130 @@ function Instalaciones() {
   }
 
   return (
-    <div className="home-container">
-      <div className="home-card" style={{ maxWidth: "900px" }}>
-        <h2>Gestión de Equipos</h2>
-        <p><strong>Código:</strong> {codigo}</p>
-        <p><strong>Nodo:</strong> {contexto?.nodo}</p>
-        <p><strong>Tipo:</strong> {contexto?.tipo_trabajo}</p>
-        <p><strong>Solicitante:</strong> {contexto?.solicitante}</p>
-        <p><strong>Empresa/contrata:</strong> {contexto?.empresa}</p>
+    <div className="equipment-public-page">
+      <main className="equipment-public-shell">
+        <header className="equipment-public-header">
+          <div className="equipment-public-title">
+            <span><FaServer aria-hidden="true" /></span>
+            <div>
+              <p>Formulario complementario</p>
+              <h1>Gestión de Equipos</h1>
+            </div>
+          </div>
+          <span className={`equipment-status equipment-status-${String(resumenMovimiento?.estado || "NUEVO").toLowerCase()}`}>
+            {resumenMovimiento?.estado || "NUEVO"}
+          </span>
+        </header>
 
-        {error && <div className="alert alert-danger">{error}</div>}
-        {success && <div className="alert alert-success">{success}</div>}
+        <section className="equipment-context-card" aria-label="Datos de la solicitud">
+          <div className="equipment-context-code">
+            <span>Código</span>
+            <strong>{codigo}</strong>
+          </div>
+          <div className="equipment-context-grid">
+            <div><span><FaMapMarkerAlt /> Nodo</span><strong>{contexto?.nodo}</strong></div>
+            <div><span><FaClipboardList /> Tipo</span><strong>{contexto?.tipo_trabajo}</strong></div>
+            <div><span>Solicitante</span><strong>{contexto?.solicitante}</strong></div>
+            <div><span>Empresa/contrata</span><strong>{contexto?.empresa}</strong></div>
+          </div>
+        </section>
+
+        {error && <div className="equipment-message equipment-message-error" role="alert">{error}</div>}
 
         {contexto?.movimiento_id ? (
-          <div className="alert alert-info">
-            El formulario ya fue registrado. Estado: {contexto.movimiento_estado}
-          </div>
+          <section className="equipment-result-section">
+            {resumenMovimiento?.estado === "APROBADO" && (
+              <div className="equipment-approved-list">
+                {(resumenMovimiento.detalles ?? []).map((detalle) => (
+                  <article className="equipment-approved-card" key={detalle.id}>
+                    <div>
+                      <span>Item {detalle.numero_item} · {detalle.accion}</span>
+                      <h3>{detalle.equipo || "Equipo sin nombre"}</h3>
+                    </div>
+                    <dl>
+                      <div><dt>Rack</dt><dd>{detalle.rack || "No aplica"}</dd></div>
+                      <div><dt>RU</dt><dd>{detalle.ru ?? "No aplica"}</dd></div>
+                    </dl>
+                  </article>
+                ))}
+              </div>
+            )}
+            <div className={`equipment-message ${resumenMovimiento?.estado === "APROBADO" ? "equipment-message-success" : "equipment-message-pending"}`}>
+              {resumenMovimiento?.estado === "APROBADO" ? (
+                <><FaCheckCircle aria-hidden="true" /> Solicitud aprobada</>
+              ) : (
+                <>Solicitud registrada · Estado {resumenMovimiento?.estado || contexto.movimiento_estado}</>
+              )}
+            </div>
+          </section>
         ) : (
-          <>
-            <div className="form-row">
-              <label>Cantidad de items</label>
-              <input
-                type="number"
-                min="1"
-                max="50"
-                value={cantidad}
-                onChange={(event) => cambiarCantidad(event.target.value)}
-                className="form-control"
-              />
+          <section className="equipment-form-section">
+            <div className="equipment-quantity-row">
+              <div>
+                <h2>Equipos involucrados</h2>
+                <p>Indica la cantidad y completa la información de cada equipo.</p>
+              </div>
+              <label>
+                Cantidad de ítems
+                <input type="number" min="1" max="50" value={cantidad} onChange={(event) => cambiarCantidad(event.target.value)} />
+              </label>
             </div>
 
-            {items.map((item, index) => (
-              <div className="equipo-box" key={index}>
-                <h5>
-                  {contexto?.tipo_movimiento === "REEMPLAZO"
-                    ? `Reemplazo ${index + 1}`
-                    : `Equipo ${index + 1}`}
-                </h5>
+            <div className="equipment-items-list">
+              {items.map((item, index) => (
+                <article className="equipment-item-card" key={index}>
+                  <div className="equipment-item-heading">
+                    <span>{String(index + 1).padStart(2, "0")}</span>
+                    <div>
+                      <p>{contexto?.tipo_movimiento === "REEMPLAZO" ? "Reemplazo" : "Equipo"}</p>
+                      <h3>Ítem {index + 1} de {items.length}</h3>
+                    </div>
+                  </div>
 
-                {["RETIRO", "REEMPLAZO"].includes(contexto?.tipo_movimiento) && (
-                  <>
-                    <h6>Equipo existente</h6>
-                    <div className="form-row">
-                      <label>Condición</label>
-                      <select
-                        className="form-control"
-                        value={item.retiroTipo}
-                        onChange={(event) => updateItem(index, {
-                          retiroTipo: event.target.value,
-                          retiroId: "",
-                          retiro: null,
-                        })}
-                      >
-                        <option value="">Seleccione</option>
-                        <option value="RACKEABLE">Rackeable</option>
-                        <option value="NO_RACKEABLE">No rackeable</option>
-                      </select>
-                    </div>
-                    <div className="form-row">
-                      <label>Equipo</label>
-                      <select
-                        className="form-control"
-                        value={item.retiroId}
-                        disabled={!item.retiroTipo}
-                        onChange={(event) => seleccionarRetiro(index, event.target.value)}
-                      >
-                        <option value="">Seleccione</option>
-                        {equiposNetbox
-                          .filter((device) =>
-                            item.retiroTipo === "RACKEABLE"
-                              ? Boolean(device.rack)
-                              : !device.rack
-                          )
-                          .map((device) => (
-                            <option value={device.id} key={device.id}>
-                              {device.name}
-                            </option>
-                          ))}
-                      </select>
-                    </div>
-                    {item.retiro && (
-                      <div className="alert alert-secondary">
-                        {item.retiro.device_type?.manufacturer?.name} · {item.retiro.device_type?.model}
-                        {item.retiro.rack && (
-                          <> · Rack {item.retiro.rack.name}, RU {item.retiro.position}</>
-                        )}
+                  {["RETIRO", "REEMPLAZO"].includes(contexto?.tipo_movimiento) && (
+                    <div className="equipment-subsection">
+                      <h4>Equipo que se retirará</h4>
+                      <div className="equipment-field-grid">
+                        <label>Condición<select value={item.retiroTipo} onChange={(event) => updateItem(index, { retiroTipo: event.target.value, retiroId: "", retiro: null })}><option value="">Seleccionar</option><option value="RACKEABLE">Rackeable</option><option value="NO_RACKEABLE">No rackeable</option></select></label>
+                        <label>Equipo<select value={item.retiroId} disabled={!item.retiroTipo} onChange={(event) => seleccionarRetiro(index, event.target.value)}><option value="">Seleccionar equipo</option>{equiposNetbox.filter((device) => item.retiroTipo === "RACKEABLE" ? Boolean(device.rack) : !device.rack).map((device) => <option value={device.id} key={device.id}>{device.name}</option>)}</select></label>
                       </div>
-                    )}
-                  </>
-                )}
+                      {item.retiro && (
+                        <dl className="equipment-location-summary">
+                          <div><dt>Rack</dt><dd>{item.retiro.rack?.name || "No aplica"}</dd></div>
+                          <div><dt>RU</dt><dd>{item.retiro.position ?? "No aplica"}</dd></div>
+                        </dl>
+                      )}
+                    </div>
+                  )}
 
-                {["INSTALACION", "REEMPLAZO", "INGRESO_FO"].includes(
-                  contexto?.tipo_movimiento,
-                ) && (
-                  <>
-                    <h6>Equipo nuevo</h6>
-                    <div className="form-row">
-                      <label>Condición</label>
-                      <select
-                        className="form-control"
-                        value={item.instalacionRackeable}
-                        onChange={(event) => updateItem(index, {
-                          instalacionRackeable: event.target.value,
-                        })}
-                      >
-                        <option value="">Seleccione</option>
-                        <option value="SI">Rackeable</option>
-                        <option value="NO">No rackeable</option>
-                      </select>
+                  {["INSTALACION", "REEMPLAZO", "INGRESO_FO"].includes(contexto?.tipo_movimiento) && (
+                    <div className="equipment-subsection">
+                      <h4>Equipo nuevo</h4>
+                      <div className="equipment-field-grid">
+                        <label>Condición<select value={item.instalacionRackeable} onChange={(event) => updateItem(index, { instalacionRackeable: event.target.value })}><option value="">Seleccionar</option><option value="SI">Rackeable</option><option value="NO">No rackeable</option></select></label>
+                        <label>Fabricante<select value={item.fabricanteId} onChange={(event) => seleccionarFabricante(index, event.target.value)}><option value="">Seleccionar</option>{fabricantes.map((manufacturer) => <option value={manufacturer.id} key={manufacturer.id}>{manufacturer.name}</option>)}</select></label>
+                        <label>Modelo<select value={item.modeloId} disabled={!item.fabricanteId} onChange={(event) => seleccionarModelo(index, event.target.value)}><option value="">Seleccionar</option>{item.modelos.map((model) => <option value={model.id} key={model.id}>{model.model}</option>)}</select></label>
+                        <label>Nombre propuesto<input value={item.nombrePropuesto} onChange={(event) => updateItem(index, { nombrePropuesto: event.target.value })} /></label>
+                      </div>
                     </div>
-                    <div className="form-row">
-                      <label>Fabricante</label>
-                      <select
-                        className="form-control"
-                        value={item.fabricanteId}
-                        onChange={(event) => seleccionarFabricante(index, event.target.value)}
-                      >
-                        <option value="">Seleccione</option>
-                        {fabricantes.map((manufacturer) => (
-                          <option value={manufacturer.id} key={manufacturer.id}>
-                            {manufacturer.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="form-row">
-                      <label>Modelo</label>
-                      <select
-                        className="form-control"
-                        value={item.modeloId}
-                        disabled={!item.fabricanteId}
-                        onChange={(event) => seleccionarModelo(index, event.target.value)}
-                      >
-                        <option value="">Seleccione</option>
-                        {item.modelos.map((model) => (
-                          <option value={model.id} key={model.id}>
-                            {model.model}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="form-row">
-                      <label>Nombre propuesto</label>
-                      <input
-                        className="form-control"
-                        value={item.nombrePropuesto}
-                        onChange={(event) => updateItem(index, {
-                          nombrePropuesto: event.target.value,
-                        })}
-                      />
-                    </div>
-                  </>
-                )}
-              </div>
-            ))}
+                  )}
+                </article>
+              ))}
+            </div>
 
-            <button
-              type="button"
-              className="btn btn-success"
-              disabled={sending || items.length === 0}
-              onClick={enviar}
-            >
-              {sending ? "Enviando..." : "Enviar solicitud de equipos"}
-            </button>
-          </>
+            <div className="equipment-public-actions">
+              <button type="button" className="equipment-btn equipment-btn-secondary" onClick={() => navigate("/")}><FaArrowLeft /> Volver</button>
+              <button type="button" className="equipment-btn equipment-btn-primary" disabled={sending || items.length === 0} onClick={enviar}>{sending ? "Enviando..." : "Enviar solicitud"}</button>
+            </div>
+          </section>
         )}
 
-        <button
-          type="button"
-          className="btn btn-secondary ms-2"
-          onClick={() => navigate("/")}
-        >
-          Volver
-        </button>
-      </div>
+        {contexto?.movimiento_id && (
+          <div className="equipment-public-actions equipment-public-actions-single">
+            <button type="button" className="equipment-btn equipment-btn-secondary" onClick={() => navigate("/")}><FaArrowLeft /> Volver al inicio</button>
+          </div>
+        )}
+      </main>
     </div>
   );
 }

@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  FaBoxOpen,
+  FaCheckCircle,
+  FaMapMarkerAlt,
+  FaServer,
+  FaTimes,
+} from "react-icons/fa";
 import { supabase } from "../supabaseClient";
 import {
   consultarCatalogoNetboxAdmin,
@@ -370,54 +377,91 @@ function Equipos() {
       </main>
 
       {seleccionado && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-5xl max-h-[92vh] overflow-auto">
-            <h2 className="text-xl font-bold mb-2">Movimiento {seleccionado.id} - {seleccionado.tipo_movimiento}</h2>
-            <p className="mb-1"><strong>Codigo:</strong> {seleccionado.accesos?.codigo_seguimiento}</p>
-            <p className="mb-4"><strong>Nodo:</strong> {seleccionado.accesos?.nodos?.nombre}</p>
-            {catalogLoading && <p className="p-3 bg-yellow-100 rounded mb-3">Consultando roles, racks y posiciones disponibles...</p>}
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-stone-50 border border-white/20 rounded-2xl w-full max-w-5xl max-h-[92vh] overflow-auto shadow-2xl">
+            <header className="sticky top-0 z-10 flex items-start justify-between gap-5 px-6 py-5 border-b border-stone-200 bg-stone-100/95 backdrop-blur">
+              <div className="flex items-center gap-3">
+                <span className="grid place-items-center w-11 h-11 rounded-xl bg-stone-800 text-white"><FaServer /></span>
+                <div>
+                  <p className="text-xs font-bold tracking-wider uppercase text-amber-800">Revisión de solicitud</p>
+                  <h2 className="text-xl font-bold text-slate-900">Movimiento {seleccionado.id} · {seleccionado.tipo_movimiento}</h2>
+                </div>
+              </div>
+              <button type="button" aria-label="Cerrar revisión" onClick={() => setSeleccionado(null)} className="grid place-items-center w-9 h-9 rounded-lg text-slate-600 bg-stone-200 hover:bg-stone-300"><FaTimes /></button>
+            </header>
 
-            <div className="space-y-3">
+            <div className="p-6">
+              <section className="grid grid-cols-1 md:grid-cols-3 gap-px overflow-hidden rounded-xl border border-stone-200 bg-stone-200 mb-5">
+                <div className="bg-white p-4 md:col-span-2">
+                  <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Código de seguimiento</span>
+                  <strong className="font-mono text-sm text-slate-800 break-all">{seleccionado.accesos?.codigo_seguimiento}</strong>
+                </div>
+                <div className="bg-white p-4">
+                  <span className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1"><FaMapMarkerAlt /> Nodo</span>
+                  <strong className="text-sm text-slate-800">{seleccionado.accesos?.nodos?.nombre}</strong>
+                </div>
+                <div className="bg-white p-4">
+                  <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Solicitante</span>
+                  <strong className="text-sm text-slate-800">{seleccionado.accesos?.solicitante_nombre} {seleccionado.accesos?.solicitante_ap_paterno}</strong>
+                </div>
+                <div className="bg-white p-4">
+                  <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Cantidad</span>
+                  <strong className="text-sm text-slate-800">{seleccionado.cantidad_items} {seleccionado.cantidad_items === 1 ? "ítem" : "ítems"}</strong>
+                </div>
+                <div className="bg-white p-4">
+                  <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Estado</span>
+                  <strong className="text-sm text-slate-800">{seleccionado.estado}</strong>
+                </div>
+              </section>
+
+              {catalogLoading && <p className="p-3 border border-amber-200 bg-amber-50 text-amber-900 rounded-xl mb-4 text-sm">Consultando roles, racks y posiciones disponibles...</p>}
+
+              <div className="space-y-4">
               {sortedDetails(seleccionado).map((detail) => {
                 const approval = aprobaciones[detail.id] || {};
                 const available = posiciones[detail.id];
                 return (
-                  <div key={detail.id} className="border rounded-lg p-4">
-                    <h3 className="font-bold">Item {detail.numero_item} - {detail.accion}</h3>
-                    <p><strong>Equipo:</strong> {detailTitle(detail)}</p>
-                    <p><strong>Condicion:</strong> {detail.es_rackeable ? "Rackeable" : "No rackeable"}</p>
-                    {detail.accion === "RETIRO" ? (
-                      <div className="grid md:grid-cols-2 gap-2 mt-2">
-                        <p><strong>NetBox ID:</strong> {detail.equipo_anterior_netbox_id}</p>
-                        <p><strong>Fabricante / modelo:</strong> {detail.equipo_anterior_fabricante} / {detail.equipo_anterior_modelo}</p>
-                        <p><strong>Rack:</strong> {detail.equipo_anterior_rack_nombre || "-"}</p>
-                        <p><strong>RU:</strong> {detail.equipo_anterior_ru_inicio || "-"}</p>
+                  <article key={detail.id} className="overflow-hidden border border-stone-200 rounded-xl bg-white shadow-sm">
+                    <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 border-b border-stone-200 bg-stone-100">
+                      <div className="flex items-center gap-3">
+                        <span className="grid place-items-center w-9 h-9 rounded-lg bg-amber-100 text-amber-800"><FaBoxOpen /></span>
+                        <div><p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Ítem {detail.numero_item}</p><h3 className="font-bold text-slate-900">{detailTitle(detail)}</h3></div>
                       </div>
+                      <div className="flex gap-2"><span className="px-2.5 py-1 rounded-full bg-stone-200 text-[11px] font-bold text-slate-700">{detail.accion}</span><span className="px-2.5 py-1 rounded-full bg-stone-200 text-[11px] font-bold text-slate-700">{detail.es_rackeable ? "Rackeable" : "No rackeable"}</span></div>
+                    </div>
+                    {detail.accion === "RETIRO" ? (
+                      <dl className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 p-5">
+                        <div className="p-3 rounded-lg bg-stone-50"><dt className="text-[11px] font-bold uppercase text-slate-500">NetBox ID</dt><dd className="mt-1 font-semibold text-sm">{detail.equipo_anterior_netbox_id}</dd></div>
+                        <div className="p-3 rounded-lg bg-stone-50"><dt className="text-[11px] font-bold uppercase text-slate-500">Fabricante / modelo</dt><dd className="mt-1 font-semibold text-sm">{detail.equipo_anterior_fabricante} / {detail.equipo_anterior_modelo}</dd></div>
+                        <div className="p-3 rounded-lg bg-stone-50"><dt className="text-[11px] font-bold uppercase text-slate-500">Rack</dt><dd className="mt-1 font-semibold text-sm">{detail.equipo_anterior_rack_nombre || "No aplica"}</dd></div>
+                        <div className="p-3 rounded-lg bg-stone-50"><dt className="text-[11px] font-bold uppercase text-slate-500">RU</dt><dd className="mt-1 font-semibold text-sm">{detail.equipo_anterior_ru_inicio || "No aplica"}</dd></div>
+                      </dl>
                     ) : (
-                      <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <label>Fabricante<input className="border rounded p-2 w-full bg-gray-100" value={detail.fabricante || ""} disabled /></label>
-                        <label>Modelo<input className="border rounded p-2 w-full bg-gray-100" value={detail.modelo || ""} disabled /></label>
-                        <label>Nombre aprobado<input className="border rounded p-2 w-full" value={approval.nombre_aprobado || ""} disabled={!processableStates.includes(seleccionado.estado)} onChange={(event) => updateApproval(detail.id, { nombre_aprobado: event.target.value })} /></label>
-                        <label>Rol de dispositivo<select className="border rounded p-2 w-full" value={approval.device_role_netbox_id || ""} disabled={!processableStates.includes(seleccionado.estado)} onChange={(event) => changeRole(detail.id, event.target.value)}><option value="">Seleccione</option>{roles.map((role) => <option key={role.id} value={role.id}>{role.name}</option>)}</select></label>
+                      <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <label className="text-xs font-bold text-slate-600">Fabricante<input className="mt-1.5 border border-stone-300 rounded-lg p-2.5 w-full bg-stone-100 font-normal" value={detail.fabricante || ""} disabled /></label>
+                        <label className="text-xs font-bold text-slate-600">Modelo<input className="mt-1.5 border border-stone-300 rounded-lg p-2.5 w-full bg-stone-100 font-normal" value={detail.modelo || ""} disabled /></label>
+                        <label className="text-xs font-bold text-slate-600">Nombre aprobado<input className="mt-1.5 border border-stone-300 rounded-lg p-2.5 w-full font-normal disabled:bg-stone-100" value={approval.nombre_aprobado || ""} disabled={!processableStates.includes(seleccionado.estado)} onChange={(event) => updateApproval(detail.id, { nombre_aprobado: event.target.value })} /></label>
+                        <label className="text-xs font-bold text-slate-600">Rol de dispositivo<select className="mt-1.5 border border-stone-300 rounded-lg p-2.5 w-full font-normal disabled:bg-stone-100" value={approval.device_role_netbox_id || ""} disabled={!processableStates.includes(seleccionado.estado)} onChange={(event) => changeRole(detail.id, event.target.value)}><option value="">Seleccione</option>{roles.map((role) => <option key={role.id} value={role.id}>{role.name}</option>)}</select></label>
                         {detail.es_rackeable && <>
-                          <label>Rack<select className="border rounded p-2 w-full" value={approval.rack_aprobado_netbox_id || ""} disabled={!processableStates.includes(seleccionado.estado)} onChange={(event) => changeRack(seleccionado, detail, event.target.value)}><option value="">Seleccione</option>{racks.map((rack) => <option key={rack.id} value={rack.id}>{rack.name}</option>)}</select></label>
-                          <label>RU disponible<select className="border rounded p-2 w-full" value={approval.ru_inicio_aprobada || ""} disabled={!processableStates.includes(seleccionado.estado) || available === null} onChange={(event) => updateApproval(detail.id, { ru_inicio_aprobada: event.target.value })}><option value="">{available === null ? "Consultando..." : "Seleccione"}</option>{(available || []).map((position) => <option key={position.position} value={position.position}>{position.label}</option>)}</select></label>
+                          <label className="text-xs font-bold text-slate-600">Rack<select className="mt-1.5 border border-stone-300 rounded-lg p-2.5 w-full font-normal disabled:bg-stone-100" value={approval.rack_aprobado_netbox_id || ""} disabled={!processableStates.includes(seleccionado.estado)} onChange={(event) => changeRack(seleccionado, detail, event.target.value)}><option value="">Seleccione</option>{racks.map((rack) => <option key={rack.id} value={rack.id}>{rack.name}</option>)}</select></label>
+                          <label className="text-xs font-bold text-slate-600">RU disponible<select className="mt-1.5 border border-stone-300 rounded-lg p-2.5 w-full font-normal disabled:bg-stone-100" value={approval.ru_inicio_aprobada || ""} disabled={!processableStates.includes(seleccionado.estado) || available === null} onChange={(event) => updateApproval(detail.id, { ru_inicio_aprobada: event.target.value })}><option value="">{available === null ? "Consultando..." : "Seleccione"}</option>{(available || []).map((position) => <option key={position.position} value={position.position}>{position.label}</option>)}</select></label>
                         </>}
                       </div>
                     )}
-                    <p className="mt-2"><strong>Ejecucion:</strong> {detail.estado_ejecucion}</p>
-                    {detail.error_netbox && <p className="text-red-600">{detail.error_netbox}</p>}
-                  </div>
+                    <div className="flex items-center gap-2 px-5 py-3 border-t border-stone-200 text-xs text-slate-600"><FaCheckCircle className={detail.estado_ejecucion === "EJECUTADO" ? "text-emerald-600" : "text-stone-400"} /><strong>Ejecución:</strong> {detail.estado_ejecucion}</div>
+                    {detail.error_netbox && <p className="px-5 pb-4 text-sm text-red-600">{detail.error_netbox}</p>}
+                  </article>
                 );
               })}
-            </div>
-
-            <div className="mt-6 flex justify-between gap-3">
-              <button className="bg-gray-500 text-white px-4 py-2 rounded" onClick={() => setSeleccionado(null)}>Cerrar</button>
-              <div className="flex gap-2">
-                <button className="bg-red-600 text-white px-4 py-2 rounded disabled:opacity-40" disabled={!['PENDIENTE', 'EN_REVISION'].includes(seleccionado.estado) || procesandoId === seleccionado.id} onClick={() => denegar(seleccionado)}>Denegar</button>
-                <button className="bg-green-600 text-white px-4 py-2 rounded disabled:opacity-40" disabled={!processableStates.includes(seleccionado.estado) || catalogLoading || procesandoId === seleccionado.id} onClick={() => proceder(seleccionado)}>{procesandoId === seleccionado.id ? "Procesando..." : "Proceder con NetBox"}</button>
               </div>
+
+              <footer className="mt-6 pt-5 border-t border-stone-200 flex flex-wrap justify-between gap-3">
+              <button className="bg-stone-600 hover:bg-stone-700 text-white px-4 py-2.5 rounded-lg font-semibold text-sm" onClick={() => setSeleccionado(null)}>Cerrar</button>
+              <div className="flex gap-2">
+                <button className="bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-lg font-semibold text-sm disabled:opacity-40" disabled={!['PENDIENTE', 'EN_REVISION'].includes(seleccionado.estado) || procesandoId === seleccionado.id} onClick={() => denegar(seleccionado)}>Denegar</button>
+                <button className="bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2.5 rounded-lg font-semibold text-sm disabled:opacity-40" disabled={!processableStates.includes(seleccionado.estado) || catalogLoading || procesandoId === seleccionado.id} onClick={() => proceder(seleccionado)}>{procesandoId === seleccionado.id ? "Procesando..." : "Aprobar en NetBox"}</button>
+              </div>
+              </footer>
             </div>
           </div>
         </div>

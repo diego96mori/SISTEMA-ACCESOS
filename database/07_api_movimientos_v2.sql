@@ -35,10 +35,10 @@ AS $$
     n.netbox_site_id,
     tt.nombre,
     CASE tt.nombre
-      WHEN 'INSTALACION DE EQUIPOS' THEN 'INSTALACION'
+      WHEN 'INSTALACIÓN DE EQUIPOS' THEN 'INSTALACION'
       WHEN 'RETIRO DE EQUIPOS' THEN 'RETIRO'
-      WHEN 'REEMPLAZO DE EQUIPOS' THEN 'REEMPLAZO'
-      WHEN 'INGRESO_FO' THEN 'INGRESO_FO'
+      WHEN 'REEMPLAZO DE EQUIPO' THEN 'REEMPLAZO'
+      WHEN 'INGRESO DE F.O.' THEN 'INGRESO_FO'
     END,
     CONCAT_WS(
       ' ',
@@ -63,6 +63,58 @@ $$;
 
 REVOKE ALL ON FUNCTION public.obtener_contexto_equipos(UUID) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.obtener_contexto_equipos(UUID)
+  TO anon, authenticated;
+
+CREATE OR REPLACE FUNCTION public.obtener_resumen_movimiento_equipos(
+  p_codigo UUID
+)
+RETURNS JSONB
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT jsonb_build_object(
+    'movimiento_id', m.id,
+    'estado', m.estado,
+    'tipo_movimiento', m.tipo_movimiento,
+    'cantidad_items', m.cantidad_items,
+    'detalles', COALESCE(
+      jsonb_agg(
+        jsonb_build_object(
+          'id', d.id,
+          'numero_item', d.numero_item,
+          'accion', d.accion,
+          'equipo', CASE
+            WHEN d.accion = 'RETIRO' THEN d.equipo_anterior_nombre
+            ELSE COALESCE(d.nombre_aprobado, d.nombre_propuesto)
+          END,
+          'condicion', CASE WHEN d.es_rackeable THEN 'RACKEABLE' ELSE 'NO_RACKEABLE' END,
+          'rack', COALESCE(d.rack_aprobado_nombre, d.equipo_anterior_rack_nombre),
+          'ru', COALESCE(d.ru_inicio_aprobada, d.equipo_anterior_ru_inicio),
+          'fabricante', COALESCE(d.fabricante, d.equipo_anterior_fabricante),
+          'modelo', COALESCE(d.modelo, d.equipo_anterior_modelo),
+          'estado_ejecucion', d.estado_ejecucion
+        )
+        ORDER BY d.numero_item, d.accion
+      ),
+      '[]'::JSONB
+    )
+  )
+  FROM public.accesos a
+  JOIN public.tipos_trabajo tt ON tt.id = a.tipo_trabajo_id
+  JOIN public.movimientos m ON m.acceso_id = a.id
+  JOIN public.movimiento_detalle d ON d.movimiento_id = m.id
+  WHERE a.codigo_seguimiento = p_codigo
+    AND a.estado_aprobacion = 'APROBADO'
+    AND a.estado_acceso <> 'CANCELADO'
+    AND tt.gestiona_equipos = TRUE
+  GROUP BY m.id;
+$$;
+
+REVOKE ALL ON FUNCTION public.obtener_resumen_movimiento_equipos(UUID)
+  FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.obtener_resumen_movimiento_equipos(UUID)
   TO anon, authenticated;
 
 CREATE OR REPLACE FUNCTION public.registrar_movimiento_equipos(
@@ -125,10 +177,10 @@ BEGIN
   END IF;
 
   v_tipo := CASE v_acceso.tipo_trabajo
-    WHEN 'INSTALACION DE EQUIPOS' THEN 'INSTALACION'
+    WHEN 'INSTALACIÓN DE EQUIPOS' THEN 'INSTALACION'
     WHEN 'RETIRO DE EQUIPOS' THEN 'RETIRO'
-    WHEN 'REEMPLAZO DE EQUIPOS' THEN 'REEMPLAZO'
-    WHEN 'INGRESO_FO' THEN 'INGRESO_FO'
+    WHEN 'REEMPLAZO DE EQUIPO' THEN 'REEMPLAZO'
+    WHEN 'INGRESO DE F.O.' THEN 'INGRESO_FO'
     ELSE NULL
   END;
 

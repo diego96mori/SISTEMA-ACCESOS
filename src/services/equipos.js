@@ -49,6 +49,15 @@ export async function obtenerContextoEquipos(codigo) {
   return contexto;
 }
 
+export async function obtenerResumenMovimientoEquipos(codigo) {
+  const { data, error } = await supabase.rpc(
+    "obtener_resumen_movimiento_equipos",
+    { p_codigo: codigo },
+  );
+  if (error) throw new Error(error.message);
+  return data ?? null;
+}
+
 export async function consultarCatalogoNetbox(codigo, recurso, filtros = {}) {
   const response = await fetch(netboxConsultaUrl, {
     method: "POST",
