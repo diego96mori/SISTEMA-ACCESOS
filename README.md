@@ -1,4 +1,38 @@
-# React + Vite
+# Proyecto de Accesos
+
+## Supabase oficial
+
+Este repositorio trabaja exclusivamente con el proyecto Supabase
+`stkgsygonyxtrdhlgusx`:
+
+```text
+https://stkgsygonyxtrdhlgusx.supabase.co
+```
+
+El frontend toma `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY` de
+`.env.local`. El proxy de NetBox toma `SUPABASE_URL` y
+`SUPABASE_PUBLISHABLE_KEY` de `.env.netbox.local`. Ambos procesos validan la
+URL y se detienen si apunta a otro proyecto.
+
+Las claves secretas o `service_role` nunca deben colocarse en variables
+`VITE_*`, porque esas variables se incluyen en el navegador.
+
+## Desarrollo local
+
+```bash
+npm install
+npm run dev
+```
+
+Para iniciar también el proxy local de NetBox:
+
+```bash
+npm run netbox:proxy
+```
+
+## Base de la plantilla
+
+Este proyecto fue creado con React y Vite.
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 

@@ -16,6 +16,8 @@ const netboxWriteTokenKey = String(process.env.NETBOX_WRITE_TOKEN_KEY || "");
 const netboxAuthScheme = String(process.env.NETBOX_AUTH_SCHEME || "Bearer");
 const activeStatus = String(process.env.NETBOX_ACTIVE_STATUS || "active");
 const retiredStatus = String(process.env.NETBOX_RETIRED_STATUS || "offline");
+const supabaseProjectRef = "stkgsygonyxtrdhlgusx";
+const expectedSupabaseUrl = `https://${supabaseProjectRef}.supabase.co`;
 const supabaseUrl = String(process.env.SUPABASE_URL || "").replace(/\/$/, "");
 const supabaseKey = String(process.env.SUPABASE_PUBLISHABLE_KEY || "");
 const allowedOrigins = String(process.env.ALLOWED_ORIGINS || "")
@@ -46,6 +48,14 @@ if (
 ) {
   console.error(
     "Falta completar .env.netbox.local con NETBOX_TOKEN y SUPABASE_PUBLISHABLE_KEY reales",
+  );
+  process.exit(1);
+}
+
+if (supabaseUrl !== expectedSupabaseUrl) {
+  console.error(
+    `SUPABASE_URL debe apuntar al proyecto ${supabaseProjectRef}. ` +
+      `Valor recibido: ${supabaseUrl}`,
   );
   process.exit(1);
 }
