@@ -32,6 +32,15 @@ function emptyItem() {
   };
 }
 
+const movementStatusMessages = {
+  PENDIENTE: "Solicitud pendiente",
+  EN_REVISION: "Solicitud en revisión",
+  PROCESANDO: "Solicitud procesándose en NetBox",
+  APROBADO: "Solicitud aprobada",
+  DENEGADO: "Solicitud denegada",
+  ERROR: "La solicitud requiere revisión",
+};
+
 function Instalaciones() {
   const { codigo } = useParams();
   const navigate = useNavigate();
@@ -310,7 +319,7 @@ function Instalaciones() {
 
         {contexto?.movimiento_id ? (
           <section className="equipment-result-section">
-            {resumenMovimiento?.estado === "APROBADO" && (
+            {(resumenMovimiento?.detalles ?? []).length > 0 && (
               <div className="equipment-approved-list">
                 {(resumenMovimiento.detalles ?? []).map((detalle) => (
                   <article className="equipment-approved-card" key={detalle.id}>
@@ -326,11 +335,11 @@ function Instalaciones() {
                 ))}
               </div>
             )}
-            <div className={`equipment-message ${resumenMovimiento?.estado === "APROBADO" ? "equipment-message-success" : "equipment-message-pending"}`}>
+            <div className={`equipment-message ${resumenMovimiento?.estado === "APROBADO" ? "equipment-message-success" : "equipment-message-pending"}`} role="status">
               {resumenMovimiento?.estado === "APROBADO" ? (
                 <><FaCheckCircle aria-hidden="true" /> Solicitud aprobada</>
               ) : (
-                <>Solicitud registrada · Estado {resumenMovimiento?.estado || contexto.movimiento_estado}</>
+                <>{movementStatusMessages[resumenMovimiento?.estado || contexto.movimiento_estado] || `Estado: ${resumenMovimiento?.estado || contexto.movimiento_estado}`}</>
               )}
             </div>
           </section>

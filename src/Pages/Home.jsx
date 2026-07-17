@@ -53,6 +53,12 @@ function Home() {
     };
 
     if (data === "YA_REGISTRADO") {
+      if (formulario === "EQUIPOS") {
+        setShowModal(false);
+        navigate(`/instalaciones/${codigo}`);
+        return;
+      }
+
       const { data: trackingRows, error: trackingError } = await supabase.rpc(
         "consultar_seguimiento",
         { p_codigo: codigo },
