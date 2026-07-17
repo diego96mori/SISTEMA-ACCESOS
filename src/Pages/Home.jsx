@@ -44,6 +44,37 @@ function Home() {
       YA_REGISTRADO: "Este formulario ya fue registrado.",
     };
 
+    if (data === "YA_REGISTRADO") {
+      const { data: trackingRows, error: trackingError } = await supabase.rpc(
+        "consultar_seguimiento",
+        { p_codigo: codigo },
+      );
+      const tracking = Array.isArray(trackingRows)
+        ? trackingRows[0]
+        : trackingRows;
+
+      if (!trackingError && tracking) {
+        const movementMessages = {
+          PENDIENTE:
+            "El formulario fue registrado y esta pendiente de revision.",
+          EN_REVISION:
+            "El formulario esta siendo revisado por el administrador.",
+          PROCESANDO:
+            "La solicitud se esta procesando actualmente en NetBox.",
+          APROBADO:
+            "La solicitud fue aprobada y procesada correctamente en NetBox.",
+          DENEGADO: "La solicitud de equipos fue denegada.",
+          ERROR:
+            "Ocurrio un error al procesar la solicitud. El administrador debe revisarla.",
+        };
+        setModalMsg(
+          movementMessages[tracking.estado_movimiento] ||
+            "Este formulario ya fue registrado.",
+        );
+        return;
+      }
+    }
+
     if (data !== "AUTORIZADO") {
       setModalMsg(messages[data] || "No se pudo validar la solicitud.");
       return;

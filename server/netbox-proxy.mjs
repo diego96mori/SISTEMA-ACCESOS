@@ -203,6 +203,33 @@ async function getAdminMovement(movementId, accessToken) {
   return movement;
 }
 
+async function handleSyncSites(request) {
+  const { accessToken } = await requireAdmin(request);
+  const data = await netboxRequest("/dcim/sites/?limit=1000");
+  const sites = normalizeResults(data).map((site) => ({
+    netbox_site_id: positiveInteger(site.id, "netbox_site_id"),
+    nombre: String(site.name || "").trim(),
+  }));
+
+  if (sites.length === 0 || sites.some((site) => !site.nombre)) {
+    throw new HttpError(502, "NetBox no devolvio una lista valida de sites");
+  }
+
+  const rows = await supabaseRequest("/rest/v1/rpc/sincronizar_nodos_netbox", {
+    accessToken,
+    method: "POST",
+    body: { p_sites: sites },
+  });
+  const result = Array.isArray(rows) ? rows[0] : rows;
+
+  return {
+    ok: true,
+    insertados: Number(result?.insertados) || 0,
+    actualizados: Number(result?.actualizados) || 0,
+    total: Number(result?.total) || sites.length,
+  };
+}
+
 function normalizeResults(data) {
   if (Array.isArray(data)) return data;
   return Array.isArray(data?.results) ? data.results : [];
@@ -592,6 +619,8 @@ const server = createServer(async (request, response) => {
     let result;
     if (request.url === "/api/netbox/consulta") {
       result = await handlePublicCatalog(body);
+    } else if (request.url === "/api/netbox/admin/sync-sites") {
+      result = await handleSyncSites(request);
     } else if (request.url === "/api/netbox/admin/catalogo") {
       result = await handleAdminCatalog(request, body);
     } else if (request.url === "/api/netbox/admin/racks-view") {

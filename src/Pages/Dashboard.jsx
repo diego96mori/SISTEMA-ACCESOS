@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
+import { sincronizarNodosNetbox } from "../services/equipos";
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -9,6 +10,7 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [mensaje, setMensaje] = useState("");
   const [procesandoId, setProcesandoId] = useState(null);
+  const [sincronizandoNodos, setSincronizandoNodos] = useState(false);
   const [accesoSeleccionado, setAccesoSeleccionado] = useState(null);
   const [control, setControl] = useState({
     hora_ingreso_real: "",
@@ -90,6 +92,22 @@ function Dashboard() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/");
+  };
+
+  const sincronizarNodos = async () => {
+    try {
+      setSincronizandoNodos(true);
+      setMensaje("Sincronizando sites de NetBox...");
+      const result = await sincronizarNodosNetbox();
+      setMensaje(
+        `Nodos sincronizados: ${result.total}. Nuevos: ${result.insertados}. Actualizados: ${result.actualizados}.`,
+      );
+    } catch (error) {
+      console.error(error);
+      setMensaje(error.message || "No se pudieron sincronizar los nodos");
+    } finally {
+      setSincronizandoNodos(false);
+    }
   };
 
   const resolverSolicitud = async (acceso, decision) => {
@@ -191,12 +209,20 @@ function Dashboard() {
         >
           Gestión Equipos
         </button>
-        <button
-          onClick={() => navigate("/racks")}
+          <button
+            onClick={() => navigate("/racks")}
           className="w-full text-left px-4 py-2 rounded-lg hover:bg-gray-200 mt-2"
         >
-          Vista de Racks
-        </button>
+            Vista de Racks
+          </button>
+          <button
+            type="button"
+            onClick={sincronizarNodos}
+            disabled={sincronizandoNodos}
+            className="w-full text-left px-4 py-2 rounded-lg hover:bg-gray-200 mt-2 disabled:opacity-50"
+          >
+            {sincronizandoNodos ? "Sincronizando..." : "Sincronizar nodos NetBox"}
+          </button>
       </aside>
 
       <main className="flex-1 p-8 overflow-hidden">

@@ -87,6 +87,10 @@ export async function consultarRacksAdmin(nodoId) {
   return result.results ?? [];
 }
 
+export async function sincronizarNodosNetbox() {
+  return adminRequest("sync-sites", {});
+}
+
 export async function consultarElevacionRackAdmin(nodoId, rackId) {
   const result = await adminRequest("racks-view", {
     nodo_id: nodoId,
