@@ -16,6 +16,7 @@ const netboxWriteTokenKey = String(process.env.NETBOX_WRITE_TOKEN_KEY || "");
 const netboxAuthScheme = String(process.env.NETBOX_AUTH_SCHEME || "Bearer");
 const activeStatus = String(process.env.NETBOX_ACTIVE_STATUS || "active");
 const retiredStatus = String(process.env.NETBOX_RETIRED_STATUS || "offline");
+const netboxTimeoutMs = Number(process.env.NETBOX_TIMEOUT_MS || 12000);
 const supabaseProjectRef = "stkgsygonyxtrdhlgusx";
 const expectedSupabaseUrl = `https://${supabaseProjectRef}.supabase.co`;
 const supabaseUrl = String(process.env.SUPABASE_URL || "").replace(/\/$/, "");
@@ -162,11 +163,27 @@ async function netboxRequest(endpoint, { method = "GET", body, write = false } =
   };
   if (body !== undefined) headers["Content-Type"] = "application/json";
 
-  const response = await fetch(`${netboxUrl}${endpoint}`, {
-    method,
-    headers,
-    body: body === undefined ? undefined : JSON.stringify(body),
-  });
+  let response;
+  try {
+    response = await fetch(`${netboxUrl}${endpoint}`, {
+      method,
+      headers,
+      body: body === undefined ? undefined : JSON.stringify(body),
+      signal: AbortSignal.timeout(netboxTimeoutMs),
+    });
+  } catch (error) {
+    console.error("NetBox connection failed", {
+      method,
+      endpoint,
+      name: error?.name,
+      code: error?.cause?.code,
+      message: error?.message,
+    });
+    throw new HttpError(
+      503,
+      "NetBox no esta disponible. Verifique la red o VPN y vuelva a intentarlo.",
+    );
+  }
   const data = await parseResponse(response);
   if (!response.ok) {
     console.error("NetBox response", { status: response.status, method, endpoint });

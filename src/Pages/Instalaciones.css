@@ -193,6 +193,43 @@
   background: #f9ebeb;
 }
 
+.equipment-message-with-action {
+  align-items: center;
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+}
+
+.equipment-message-with-action button {
+  align-items: center;
+  background: #fff;
+  border: 1px solid currentColor;
+  border-radius: 8px;
+  color: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  flex: 0 0 auto;
+  font: inherit;
+  font-weight: 700;
+  gap: 7px;
+  padding: 8px 12px;
+}
+
+.equipment-message-with-action button:hover {
+  background: rgba(255, 255, 255, 0.58);
+}
+
+@media (max-width: 640px) {
+  .equipment-message-with-action {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .equipment-message-with-action button {
+    justify-content: center;
+  }
+}
+
 .equipment-quantity-row {
   display: flex;
   align-items: flex-end;

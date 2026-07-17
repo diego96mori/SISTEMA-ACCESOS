@@ -6,6 +6,7 @@ import {
   FaCheckCircle,
   FaClipboardList,
   FaMapMarkerAlt,
+  FaRedo,
   FaServer,
 } from "react-icons/fa";
 import {
@@ -315,7 +316,14 @@ function Instalaciones() {
           </div>
         </section>
 
-        {error && <div className="equipment-message equipment-message-error" role="alert">{error}</div>}
+        {error && (
+          <div className="equipment-message equipment-message-error equipment-message-with-action" role="alert">
+            <span>{error}</span>
+            <button type="button" onClick={cargar} disabled={loading}>
+              <FaRedo aria-hidden="true" /> Volver a intentar
+            </button>
+          </div>
+        )}
 
         {contexto?.movimiento_id ? (
           <section className="equipment-result-section">

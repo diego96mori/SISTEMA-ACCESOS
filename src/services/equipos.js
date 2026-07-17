@@ -15,6 +15,16 @@ async function parseResponse(response) {
   return result;
 }
 
+async function requestNetbox(url, options) {
+  try {
+    return await fetch(url, options);
+  } catch {
+    throw new Error(
+      "No se pudo conectar al servicio de NetBox. Verifique la red o VPN y vuelva a intentarlo.",
+    );
+  }
+}
+
 async function adminRequest(path, body) {
   if (!netboxBackendBase) {
     throw new Error(
@@ -27,7 +37,7 @@ async function adminRequest(path, body) {
     throw new Error("La sesion del administrador expiro");
   }
 
-  const response = await fetch(`${netboxBackendBase}/admin/${path}`, {
+  const response = await requestNetbox(`${netboxBackendBase}/admin/${path}`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${data.session.access_token}`,
@@ -59,7 +69,7 @@ export async function obtenerResumenMovimientoEquipos(codigo) {
 }
 
 export async function consultarCatalogoNetbox(codigo, recurso, filtros = {}) {
-  const response = await fetch(netboxConsultaUrl, {
+  const response = await requestNetbox(netboxConsultaUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ codigo, recurso, ...filtros }),
