@@ -1,9 +1,11 @@
 import { supabase, supabaseUrl } from "../supabaseClient";
 
-const netboxConsultaUrl =
-  import.meta.env.VITE_NETBOX_BACKEND_URL ||
+const configuredNetboxBackendUrl = import.meta.env.VITE_NETBOX_BACKEND_URL?.trim();
+const netboxConsultaUrl = configuredNetboxBackendUrl ||
   `${supabaseUrl}/functions/v1/netbox-consulta`;
-const netboxBackendBase = netboxConsultaUrl.replace(/\/consulta\/?$/, "");
+const netboxBackendBase = configuredNetboxBackendUrl
+  ? configuredNetboxBackendUrl.replace(/\/consulta\/?$/, "")
+  : null;
 
 async function parseResponse(response) {
   const result = await response.json().catch(() => null);
@@ -14,6 +16,12 @@ async function parseResponse(response) {
 }
 
 async function adminRequest(path, body) {
+  if (!netboxBackendBase) {
+    throw new Error(
+      "Falta configurar VITE_NETBOX_BACKEND_URL para administrar NetBox",
+    );
+  }
+
   const { data, error } = await supabase.auth.getSession();
   if (error || !data.session?.access_token) {
     throw new Error("La sesion del administrador expiro");

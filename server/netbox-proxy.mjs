@@ -493,13 +493,26 @@ async function handleProcessMovement(request, body) {
   const movementId = positiveInteger(body.movimiento_id, "movimiento_id");
   const approvals = Array.isArray(body.aprobaciones) ? body.aprobaciones : [];
 
-  await supabaseRequest("/rest/v1/rpc/preparar_procesamiento_movimiento", {
-    accessToken,
-    method: "POST",
-    body: { p_movimiento_id: movementId, p_aprobaciones: approvals },
-  });
-
   try {
+    try {
+      await supabaseRequest("/rest/v1/rpc/recuperar_procesamientos_vencidos", {
+        accessToken,
+        method: "POST",
+        body: {},
+      });
+    } catch (recoveryError) {
+      console.error(
+        "No se pudieron revisar procesamientos vencidos",
+        recoveryError.message,
+      );
+    }
+
+    await supabaseRequest("/rest/v1/rpc/preparar_procesamiento_movimiento", {
+      accessToken,
+      method: "POST",
+      body: { p_movimiento_id: movementId, p_aprobaciones: approvals },
+    });
+
     const movement = await getAdminMovement(movementId, accessToken);
     const execution = await executeMovement(movement);
     try {
@@ -538,16 +551,19 @@ async function handleProcessMovement(request, body) {
   } catch (error) {
     if (!error.uncertainCommit) {
       try {
-        await supabaseRequest("/rest/v1/rpc/finalizar_procesamiento_movimiento", {
-          accessToken,
-          method: "POST",
-          body: {
-            p_movimiento_id: movementId,
-            p_exito: false,
-            p_resultados: [],
-            p_error: error.message,
-          },
-        });
+        const current = await getAdminMovement(movementId, accessToken);
+        if (current.estado === "PROCESANDO") {
+          await supabaseRequest("/rest/v1/rpc/finalizar_procesamiento_movimiento", {
+            accessToken,
+            method: "POST",
+            body: {
+              p_movimiento_id: movementId,
+              p_exito: false,
+              p_resultados: [],
+              p_error: error.message,
+            },
+          });
+        }
       } catch (finalizeError) {
         console.error("No se pudo registrar el error en Supabase", finalizeError.message);
       }
